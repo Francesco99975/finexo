@@ -1,0 +1,32 @@
+services:
+  finexo:
+    container_name: finexo
+    image: finexo
+    labels:
+      - traefik.http.routers.finexo.rule=Host(`finexo.example.com`)
+      - traefik.http.routers.finexo.entrypoints=web,websecure
+      - traefik.http.routers.finexo.service=finexo
+      - traefik.http.services.finexo.loadbalancer.server.port=5869
+      - traefik.http.routers.finexo.tls=true
+      - traefik.http.routers.finexo.tls.certresolver=le
+      - traefik.port=80
+    networks:
+      - finexonet
+      - proxy
+    ports:
+      - 5869:5869
+
+networks:
+  proxy:
+    external: true
+  finexonet:
+    driver: bridge
+    external: false
+
+volumes:
+  finexopgdata:
+    driver: local
+  finexopgconf:
+    driver: local
+  finexopglog:
+    driver: local

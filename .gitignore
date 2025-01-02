@@ -1,0 +1,17 @@
+node_modules
+*.env
+.env
+data
+vendor
+node_modules
+.gomon
+.vscode
+*.log
+static/dist/*
+build/postgres
+data
+*.pdf
+build
+*.tar
+tmp
+seeds

@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* @font-face {
+  font-family: "JosefineSans";
+  src: url("../fonts/JosefinSansRegular-x3LYV.ttf");
+  font-display: swap;
+} */
+
+@layer base {
+  :root {
+    --color-std: 216 201 155;
+    --color-primary: 39 62 71;
+    --color-accent: 174 246 199;
+    --color-success: 86 229 46;
+    --color-error: 138 18 18;
+  }
+}
+
+@layer {
+  #logout {
+    @apply w-full !bg-red-500 p-2 tracking-widest !border-red-500 !border-2 shadow-md !font-bold;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  /* font-family: "JosefineSans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; */
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}

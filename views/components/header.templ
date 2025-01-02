@@ -1,0 +1,64 @@
+package components
+
+templ Header() {
+	<header class="flex justify-between items-center bg-std text-center text-primary rounded-b w-full h-24 p-4 sticky top-0 right-0 z-20">
+		<div class="flex items-center p-2 w-[35%]">
+			<img src="/assets/images/logo.webp" alt="App Logo" width="85px" height="85px"/>
+			<h1 class="ml-8 text-3xl"><a href="/">Title</a></h1>
+		</div>
+		<nav class="md:w-auto">
+			<!-- Burger menu icon for small screens -->
+			<div id="burgerMenu" class="burger-menu md:hidden cursor-pointer">
+				<div id="bar1" class="bar w-6 h-1 bg-primary my-1 rounded transition-transform transform rotate-0"></div>
+				<div id="bar2" class="bar w-6 h-1 bg-primary my-1 rounded transition-transform transform rotate-0"></div>
+				<div id="bar3" class="bar w-6 h-1 bg-primary my-1 rounded transition-transform transform rotate-0"></div>
+			</div>
+			<!-- Navigation links for larger screens -->
+			<ul id="navLinks" class="nav-links md:flex flex-row space-x-4 hidden">
+				<li><a href="/#page1" class="text-primary text-xl md:text-2xl">Page 1</a></li>
+				<li><a href="/#page2" class="text-primary text-xl md:text-2xl">Page 2</a></li>
+				<li><a href="/#page3" class="text-primary text-xl md:text-2xl">Page 3</a></li>
+				<li><a href="/#page4" class="text-primary text-xl md:text-2xl">Page 4</a></li>
+				<li><a href="/#page5" class="text-primary text-xl md:text-2xl">Page 5</a></li>
+			</ul>
+			<!-- Navigation links for mobile view -->
+			<ul id="mobileNavLinks" class="nav-links-mobile md:hidden absolute top-24 left-0 w-full hidden z-30 transition-all ease-in">
+				<li class="bg-std w-full px-4 py-2"><a href="/#page1" class="text-primary text-center  text-xl md:text-2xl">Page 1</a></li>
+				<li class="bg-std w-full px-4 py-2"><a href="/#page2" class="text-primary text-center  text-xl md:text-2xl">Page 2</a></li>
+				<li class="bg-std w-full px-4 py-2"><a href="/#page3" class="text-primary text-center  text-xl md:text-2xl">Page 3</a></li>
+				<li class="bg-std w-full px-4 py-2"><a href="/#page4" class="text-primary text-center  text-xl md:text-2xl">Page 4</a></li>
+				<li class="bg-std w-full px-4 py-2"><a href="/#page5" class="text-primary text-center  text-xl md:text-2xl">Page 5</a></li>
+			</ul>
+		</nav>
+		<script>
+
+            var burgerMenu = document.getElementById('burgerMenu');
+            var navLinks = document.getElementById('mobileNavLinks');
+            var bar1 = document.getElementById('bar1');
+            var bar2 = document.getElementById('bar2');
+            var bar3 = document.getElementById('bar3');
+
+            burgerMenu.addEventListener('click', function () {
+                navLinks.classList.toggle('hidden');
+                  if (bar1.classList.contains('rotate-0')) {
+                    bar1.classList.remove('rotate-0');
+                    bar1.classList.add('rotate-45', 'translate-y-2');
+
+                    bar2.classList.remove('rotate-0');
+                    bar2.classList.add('opacity-0');
+
+                    bar3.classList.remove('rotate-0');
+                    bar3.classList.add('-rotate-45', '-translate-y-2');
+                } else {
+                    bar1.classList.remove('rotate-45', 'translate-y-2');
+                    bar1.classList.add('rotate-0');
+
+                    bar2.classList.remove('opacity-0');
+                    bar3.classList.remove('-rotate-45', '-translate-y-2');
+                    bar3.classList.add('rotate-0');
+                }
+            });
+
+        </script>
+	</header>
+}
