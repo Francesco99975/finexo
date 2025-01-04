@@ -14,7 +14,7 @@ type Config struct {
 	DSN   string
 }
 
-var Environment = &Config{}
+var Environment *Config
 
 func LoadEnvVariables() error {
 	err := godotenv.Load(".env")
@@ -22,10 +22,12 @@ func LoadEnvVariables() error {
 		return fmt.Errorf("cannot load environment variables")
 	}
 
-	Environment.Port = os.Getenv("PORT")
-	Environment.Host = os.Getenv("HOST")
-	Environment.GoEnv = os.Getenv("GO_ENV")
-	Environment.DSN = os.Getenv("DSN")
+	Environment = &Config{
+		Port:  os.Getenv("PORT"),
+		Host:  os.Getenv("HOST"),
+		GoEnv: os.Getenv("GO_ENV"),
+		DSN:   os.Getenv("DSN"),
+	}
 
 	return err
 }

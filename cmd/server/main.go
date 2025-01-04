@@ -17,6 +17,10 @@ func main() {
 		panic(err)
 	}
 
+	if boot.Environment == nil {
+		panic("environment is nil")
+	}
+
 	// Create a root ctx and a CancelFunc which can be used to cancel retentionMap goroutine
 	rootCtx := context.Background()
 	ctx, cancel := context.WithCancel(rootCtx)

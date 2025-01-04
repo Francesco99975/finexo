@@ -1,9 +1,9 @@
 # Project configuration
 PROJECT_NAME := finexo
-DB_CONTAINER := finexodb
-DB_USER := admin
+DB_CONTAINER := localdb
+DB_USER := kalairen
 DB_HOST := localhost
-DB_NAME := finexodb
+DB_NAME := secdb
 IMAGE_NAME := $(PROJECT_NAME):latest
 
 # Default target
