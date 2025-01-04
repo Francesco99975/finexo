@@ -306,7 +306,7 @@ func (s *Security) Scan(src any) error {
 		if dividendData, ok := data["dividend"].(map[string]any); ok {
 			dividend := &Dividend{}
 			dividend.Ticker = dividendData["ticker"].(string)
-			dividend.Country = dividendData["cc"].(string)
+			dividend.Exchange = dividendData["exchange"].(string)
 			dividend.Rate = int(dividendData["rate"].(int64))
 			s.Dividend = dividend
 		}
@@ -321,7 +321,7 @@ func (s *Security) Scan(src any) error {
 // Dividend represents a row from the dividends table.
 type Dividend struct {
 	Ticker        string         `db:"ticker" json:"ticker"`
-	Country       string         `db:"cc" json:"country"`
+	Exchange      string         `db:"cc" json:"country"`
 	Rate          int            `db:"rate" json:"rate"`
 	RateType      string         `db:"trate" json:"rateType"`
 	Yield         string         `db:"yield" json:"yield"`
@@ -362,4 +362,111 @@ type REIT struct {
 	FFOType  sql.NullString    `db:"tffo" json:"ffoType,omitempty"`
 	PFFO     sql.NullInt64     `db:"pffo" json:"pffo,omitempty"`
 	PFFOType sql.NullString    `db:"tpffo" json:"pffoType,omitempty"`
+}
+
+func GetAllSecurities(db *sqlx.DB, typology, exchange, country *string) ([]Security, error) {
+	query := `
+		SELECT *
+		FROM securities
+		WHERE (:typology IS NULL OR typology = :typology)
+		  AND (:exchange IS NULL OR exchange = :exchange)
+		  AND (:country IS NULL OR cc = :country)
+	`
+
+	var securities []Security
+	err := db.Select(&securities, query, map[string]interface{}{
+		"typology": typology,
+		"exchange": exchange,
+		"country":  country,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch securities: %w", err)
+	}
+
+	return securities, nil
+}
+
+func GetAllStocks(db *sqlx.DB, exchange *string, minPE, maxPE *float64) ([]Stock, error) {
+	query := `
+		SELECT s.*, st.*
+		FROM securities s
+		JOIN stocks st ON s.ticker = st.ticker AND s.exchange = st.exchange
+		WHERE (:exchange IS NULL OR s.exchange = :exchange)
+		  AND (:minPE IS NULL OR st.pe >= :minPE)
+		  AND (:maxPE IS NULL OR st.pe <= :maxPE)
+	`
+
+	var stocks []Stock
+	err := db.Select(&stocks, query, map[string]interface{}{
+		"exchange": exchange,
+		"minPE":    minPE,
+		"maxPE":    maxPE,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch stocks: %w", err)
+	}
+
+	return stocks, nil
+}
+
+func GetAllETFs(db *sqlx.DB, minAUM, maxExpenseRatio *float64) ([]ETF, error) {
+	query := `
+		SELECT s.*, e.*
+		FROM securities s
+		JOIN etfs e ON s.ticker = e.ticker AND s.exchange = e.exchange
+		WHERE (:minAUM IS NULL OR e.aum >= :minAUM)
+		  AND (:maxExpenseRatio IS NULL OR e.er <= :maxExpenseRatio)
+	`
+
+	var etfs []ETF
+	err := db.Select(&etfs, query, map[string]interface{}{
+		"minAUM":          minAUM,
+		"maxExpenseRatio": maxExpenseRatio,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch ETFs: %w", err)
+	}
+
+	return etfs, nil
+}
+
+func GetAllREITs(db *sqlx.DB, minFFO, maxPFFO *float64) ([]REIT, error) {
+	query := `
+		SELECT s.*, r.*
+		FROM securities s
+		JOIN reits r ON s.ticker = r.ticker AND s.exchange = r.exchange
+		WHERE (:minFFO IS NULL OR r.ffo >= :minFFO)
+		  AND (:maxPFFO IS NULL OR r.pffo <= :maxPFFO)
+	`
+
+	var reits []REIT
+	err := db.Select(&reits, query, map[string]interface{}{
+		"minFFO":  minFFO,
+		"maxPFFO": maxPFFO,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch REITs: %w", err)
+	}
+
+	return reits, nil
+}
+
+func GetSecurityByTickerAndExchange(db *sqlx.DB, ticker, exchange string) (*Security, error) {
+	query := `
+		SELECT *
+		FROM securities
+		WHERE ticker = :ticker
+		  AND exchange = :exchange
+	`
+
+	var security Security
+	err := db.Get(&security, query, map[string]interface{}{
+		"ticker":   ticker,
+		"exchange": exchange,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch security: %w", err)
+	}
+
+	return &security, nil
 }

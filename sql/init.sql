@@ -54,58 +54,58 @@ CREATE TABLE IF NOT EXISTS securities (
     currency VARCHAR(3) NOT NULL,                -- Currency code (e.g., USD, CAD)
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (ticker, cc)           -- Composite primary key
+    PRIMARY KEY (ticker, exchange)           -- Composite primary key
 );
 
 SELECT apply_update_trigger('securities');
 
 CREATE TABLE IF NOT EXISTS stocks (
     ticker VARCHAR(20) NOT NULL,
-    cc VARCHAR(3) NOT NULL,
+    exchange VARCHAR(50) NOT NULL,
     eps VARCHAR(10),                                -- Earnings Per Share (e.g., 7.84)
     teps VARCHAR(10) CHECK (teps IN ('FWD', 'TTM')), -- EPS type (Forward or TTM)
     pe VARCHAR(10),                                 -- Price-to-Earnings ratio (e.g., 9.75)
     tpe VARCHAR(10) CHECK (tpe IN ('FWD', 'TTM')),   -- PE type (Forward or TTM)
-    PRIMARY KEY (ticker, cc),
-    FOREIGN KEY (ticker, cc) REFERENCES securities (ticker, cc) ON DELETE CASCADE
+    PRIMARY KEY (ticker, exchange),
+    FOREIGN KEY (ticker, exchange) REFERENCES securities (ticker, exchange) ON DELETE CASCADE
 );
 
 
 CREATE TABLE IF NOT EXISTS etfs (
     ticker VARCHAR(20) NOT NULL,
-    cc VARCHAR(3) NOT NULL,
+    exchange VARCHAR(50) NOT NULL,
     holdings INT NOT NULL,                 -- Number of holdings (e.g., 100)
     aum VARCHAR(50),                             -- Assets Under Management (e.g., 500M)
     er VARCHAR(10),                   -- Expense ratio (e.g., 0.5%)
-    PRIMARY KEY (ticker, cc),
-    FOREIGN KEY (ticker, cc) REFERENCES securities (ticker, cc) ON DELETE CASCADE
+    PRIMARY KEY (ticker, exchange),
+    FOREIGN KEY (ticker, exchange) REFERENCES securities (ticker, exchange) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS etf_related_securities (
     etf_ticker VARCHAR(20) NOT NULL,
-    etf_cc VARCHAR(3) NOT NULL,
+    etf_exchange VARCHAR(3) NOT NULL,
     related_ticker VARCHAR(20) NOT NULL,
-    related_cc VARCHAR(3) NOT NULL,
-    PRIMARY KEY (etf_ticker, etf_cc, related_ticker, related_cc),
-    FOREIGN KEY (etf_ticker, etf_cc) REFERENCES etfs (ticker, cc) ON DELETE CASCADE,
-    FOREIGN KEY (related_ticker, related_cc) REFERENCES securities (ticker, cc) ON DELETE CASCADE
+    related_exchange VARCHAR(3) NOT NULL,
+    PRIMARY KEY (etf_ticker, etf_exchange, related_ticker, related_exchange),
+    FOREIGN KEY (etf_ticker, etf_exchange) REFERENCES etfs (ticker, exchange) ON DELETE CASCADE,
+    FOREIGN KEY (related_ticker, related_exchange) REFERENCES securities (ticker, exchange) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS reits (
     ticker VARCHAR(20) NOT NULL,
-    cc VARCHAR(3) NOT NULL,
+    exchange VARCHAR(50) NOT NULL,
     ffo INT,                                      -- Funds from Operations in cents
     tffo VARCHAR(10) CHECK (tffo IN ('FWD', 'TTM')), -- FFO type
     pffo INT,                                    -- Price/FFO ratio in cents
     tpffo VARCHAR(10) CHECK (tpffo IN ('FWD', 'TTM')), -- PFFO type
-    PRIMARY KEY (ticker, cc),
-    FOREIGN KEY (ticker, cc) REFERENCES securities (ticker, cc) ON DELETE CASCADE
+    PRIMARY KEY (ticker, exchange),
+    FOREIGN KEY (ticker, exchange) REFERENCES securities (ticker, exchange) ON DELETE CASCADE
 );
 
 
 CREATE TABLE IF NOT EXISTS dividends (
     ticker VARCHAR(20) NOT NULL,
-    cc VARCHAR(3) NOT NULL,
+    exchange VARCHAR(50) NOT NULL,
     rate INT NOT NULL,                            -- Dividend rate in cents
     trate VARCHAR(10) NOT NULL CHECK (trate IN ('FWD', 'TTM')), -- Rate type
     yield VARCHAR(10) NOT NULL,                  -- Dividend yield (e.g., 5.50%)
@@ -119,12 +119,12 @@ CREATE TABLE IF NOT EXISTS dividends (
     frequency VARCHAR(50),                       -- Frequency (e.g., Quarterly)
     edd TIMESTAMP,                               -- Ex-Dividend Date
     pd TIMESTAMP,                                -- Payout Date
-    PRIMARY KEY (ticker, cc),
-    FOREIGN KEY (ticker, cc) REFERENCES securities (ticker, cc) ON DELETE CASCADE
+    PRIMARY KEY (ticker, exchange),
+    FOREIGN KEY (ticker, exchange) REFERENCES securities (ticker, exchange) ON DELETE CASCADE
 );
 
 
-CREATE INDEX IF NOT EXISTS idx_securities_ticker_country ON securities(ticker, cc);
+CREATE INDEX IF NOT EXISTS idx_securities_ticker_exchange ON securities(ticker, exchange);
 CREATE INDEX IF NOT EXISTS idx_securities_typology ON securities(typology);
 CREATE INDEX IF NOT EXISTS idx_dividends_rate ON dividends(rate);
 CREATE INDEX IF NOT EXISTS idx_etfs_aum ON etfs(aum);
