@@ -10,7 +10,6 @@ import (
 	"github.com/Francesco99975/finexo/cmd/boot"
 	"github.com/Francesco99975/finexo/internal/api"
 
-	
 	"github.com/Francesco99975/finexo/internal/controllers"
 	"github.com/Francesco99975/finexo/internal/middlewares"
 	"github.com/Francesco99975/finexo/internal/models"
@@ -32,8 +31,6 @@ func createRouter(ctx context.Context) *echo.Echo {
 
 	e.Static("/assets", "./static")
 
-	
-	
 	web := e.Group("")
 
 	if boot.Environment.GoEnv == "development" {
@@ -60,13 +57,19 @@ func createRouter(ctx context.Context) *echo.Echo {
 		},
 	}))
 
-	
 	web.GET("/", controllers.Index())
 
 	apigrp := e.Group("/api")
 
 	apiv1 := apigrp.Group("/v1")
-	apiv1.GET("/", api.PlaceholderGet())
+	apiv1.GET("/stocks", api.GetStocks())
+	apiv1.GET("/stock/:id", api.GetStock())
+
+	apiv1.GET("/etfs", api.GetETFs())
+	apiv1.GET("/etf/:id", api.GetETF())
+
+	apiv1.GET("/reits", api.GetREITs())
+	apiv1.GET("/reit/:id", api.GetREIT())
 
 	e.HTTPErrorHandler = serverErrorHandler
 

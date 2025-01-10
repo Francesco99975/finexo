@@ -8,16 +8,16 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var db *sqlx.DB
+var DB *sqlx.DB
 
 func Setup(dsn string) {
 	var err error
-	db, err = sqlx.Connect("postgres", dsn)
+	DB, err = sqlx.Connect("postgres", dsn)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	err = db.Ping()
+	err = DB.Ping()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -27,5 +27,5 @@ func Setup(dsn string) {
 		log.Fatalln(err)
 	}
 
-	db.MustExec(string(schema))
+	DB.MustExec(string(schema))
 }

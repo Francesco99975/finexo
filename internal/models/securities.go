@@ -2,249 +2,14 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/gommon/log"
 )
-
-func CreateStock(db *sqlx.DB, stock *Stock) error {
-	// Start a transaction
-	tx, err := db.Beginx()
-	if err != nil {
-		return fmt.Errorf("failed to start transaction: %w", err)
-	}
-
-	defer func() {
-		if p := recover(); p != nil {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("Failed to rollback transaction: %v\n", err)
-			}
-			panic(p)
-		} else if err != nil {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("Failed to rollback transaction: %v\n", err)
-			}
-		} else {
-			err = tx.Commit()
-			if err != nil {
-				log.Errorf("Failed to commit transaction: %v\n", err)
-			}
-		}
-	}()
-
-	// Insert into securities table
-	securitiesQuery := `
-		INSERT INTO securities (
-			ticker, cc, suffix, exchange, typology, fullname, price, pc, ppc,
-			yrange, drange, marketcap, volume, avgvlm, beta, pclose, copen, bid, bidsz,
-			ask, asksz, currency, created, updated
-		) VALUES (
-			:ticker, :cc, :suffix, :exchange, 'stock', :fullname, :price, :pc, :ppc,
-			:yrange, :drange, :marketcap, :volume, :avgvlm, :beta, :pclose, :copen, :bid, :bidsz,
-			:ask, :asksz, :currency, :created, :updated
-		)
-	`
-	_, err = tx.NamedExec(securitiesQuery, &stock.Security)
-	if err != nil {
-		return fmt.Errorf("failed to insert security: %w", err)
-	}
-
-	// Insert into stocks table
-	stocksQuery := `
-		INSERT INTO stocks (ticker, cc, eps, teps, pe, tpe)
-		VALUES (:ticker, :cc, :eps, :epsType, :pe, :peType)
-	`
-	_, err = tx.NamedExec(stocksQuery, stock)
-	if err != nil {
-		return fmt.Errorf("failed to insert stock: %w", err)
-	}
-
-	// Insert into dividends table if provided
-	if stock.Security.Dividend != nil {
-		dividendsQuery := `
-			INSERT INTO dividends (
-				ticker, cc, rate, trate, yield, tyield, ap, tap, pr, lgr, yog, lad, frequency, edd, pd
-			) VALUES (
-				:ticker, :cc, :rate, :rateType, :yield, :yieldType, :annualPayout, :apType,
-				:payoutRatio, :growthRate, :yearsGrowth, :lastAnnounced, :frequency, :exDivDate, :payoutDate
-			)
-		`
-		_, err = tx.NamedExec(dividendsQuery, stock.Security.Dividend)
-		if err != nil {
-			return fmt.Errorf("failed to insert dividend: %w", err)
-		}
-	}
-
-	// Commit transaction
-	return nil
-}
-
-func CreateETF(db *sqlx.DB, etf *ETF) error {
-	tx, err := db.Beginx()
-	if err != nil {
-		return fmt.Errorf("failed to start transaction: %w", err)
-	}
-
-	defer func() {
-		if p := recover(); p != nil {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("Failed to rollback transaction: %v\n", err)
-			}
-			panic(p)
-		} else if err != nil {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("Failed to rollback transaction: %v\n", err)
-			}
-		} else {
-			err = tx.Commit()
-			if err != nil {
-				log.Errorf("Failed to commit transaction: %v\n", err)
-			}
-		}
-	}()
-
-	// Insert into securities table
-	securitiesQuery := `
-		INSERT INTO securities (
-			ticker, cc, suffix, exchange, typology, fullname, price, pc, ppc,
-			yrange, drange, marketcap, volume, avgvlm, beta, pclose, copen, bid, bidsz,
-			ask, asksz, currency, created, updated
-		) VALUES (
-			:ticker, :cc, :suffix, :exchange, 'etf', :fullname, :price, :pc, :ppc,
-			:yrange, :drange, :marketcap, :volume, :avgvlm, :beta, :pclose, :copen, :bid, :bidsz,
-			:ask, :asksz, :currency, :created, :updated
-		)
-	`
-	_, err = tx.NamedExec(securitiesQuery, &etf.Security)
-	if err != nil {
-		return fmt.Errorf("failed to insert security: %w", err)
-	}
-
-	// Insert into etfs table
-	etfsQuery := `
-		INSERT INTO etfs (ticker, cc, holdings, aum, er)
-		VALUES (:ticker, :cc, :holdings, :aum, :expenseRatio)
-	`
-	_, err = tx.NamedExec(etfsQuery, etf)
-	if err != nil {
-		return fmt.Errorf("failed to insert etf: %w", err)
-	}
-
-	// Insert related securities
-	if len(etf.RelatedSecurities) > 0 {
-		relatedQuery := `
-			INSERT INTO etf_related_securities (etf_ticker, etf_cc, related_ticker, related_cc)
-			VALUES (:etf_ticker, :etf_cc, :related_ticker, :related_cc)
-		`
-		for _, related := range etf.RelatedSecurities {
-			_, err = tx.NamedExec(relatedQuery, map[string]interface{}{
-				"etf_ticker":     etf.Ticker,
-				"etf_cc":         etf.Country,
-				"related_ticker": related.Ticker,
-				"related_cc":     related.Country,
-			})
-			if err != nil {
-				return fmt.Errorf("failed to insert related security: %w", err)
-			}
-		}
-	}
-
-	// Insert into dividends table if provided
-	if etf.Security.Dividend != nil {
-		dividendsQuery := `
-			INSERT INTO dividends (
-				ticker, cc, rate, trate, yield, tyield, ap, tap, pr, lgr, yog, lad, frequency, edd, pd
-			) VALUES (
-				:ticker, :cc, :rate, :rateType, :yield, :yieldType, :annualPayout, :apType,
-				:payoutRatio, :growthRate, :yearsGrowth, :lastAnnounced, :frequency, :exDivDate, :payoutDate
-			)
-		`
-		_, err = tx.NamedExec(dividendsQuery, etf.Security.Dividend)
-		if err != nil {
-			return fmt.Errorf("failed to insert dividend: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func CreateReit(db *sqlx.DB, reit *REIT) error {
-	tx, err := db.Beginx()
-	if err != nil {
-		return fmt.Errorf("failed to start transaction: %w", err)
-	}
-
-	defer func() {
-		if p := recover(); p != nil {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("Failed to rollback transaction: %v\n", err)
-			}
-			panic(p)
-		} else if err != nil {
-			err = tx.Rollback()
-			if err != nil {
-				log.Errorf("Failed to rollback transaction: %v\n", err)
-			}
-		} else {
-			err = tx.Commit()
-			if err != nil {
-				log.Errorf("Failed to commit transaction: %v\n", err)
-			}
-		}
-	}()
-
-	// Insert into securities table
-	securitiesQuery := `
-		INSERT INTO securities (
-			ticker, cc, suffix, exchange, typology, fullname, price, pc, ppc,
-			yrange, drange, marketcap, volume, avgvlm, beta, pclose, copen, bid, bidsz,
-			ask, asksz, currency, created, updated
-		) VALUES (
-			:ticker, :cc, :suffix, :exchange, 'reit', :fullname, :price, :pc, :ppc,
-			:yrange, :drange, :marketcap, :volume, :avgvlm, :beta, :pclose, :copen, :bid, :bidsz,
-			:ask, :asksz, :currency, :created, :updated
-		)
-	`
-	_, err = tx.NamedExec(securitiesQuery, &reit.Security)
-	if err != nil {
-		return fmt.Errorf("failed to insert security: %w", err)
-	}
-
-	// Insert into reits table
-	reitsQuery := `
-		INSERT INTO reits (ticker, cc, ffo, tffo, pffo, tpffo)
-		VALUES (:ticker, :cc, :ffo, :ffoType, :pffo, :pffoType)
-	`
-	_, err = tx.NamedExec(reitsQuery, reit)
-	if err != nil {
-		return fmt.Errorf("failed to insert reit: %w", err)
-	}
-
-	// Insert into dividends table if provided
-	if reit.Security.Dividend != nil {
-		dividendsQuery := `
-			INSERT INTO dividends (
-				ticker, cc, rate, trate, yield, tyield, ap, tap, pr, lgr, yog, lad, frequency, edd, pd
-			) VALUES (
-				:ticker, :cc, :rate, :rateType, :yield, :yieldType, :annualPayout, :apType,
-				:payoutRatio, :growthRate, :yearsGrowth, :lastAnnounced, :frequency, :exDivDate, :payoutDate
-			)
-		`
-		_, err = tx.NamedExec(dividendsQuery, reit.Security.Dividend)
-		if err != nil {
-			return fmt.Errorf("failed to insert dividend: %w", err)
-		}
-	}
-
-	return nil
-}
 
 // Security represents a row from the securities table.
 type Security struct {
@@ -352,7 +117,69 @@ type ETF struct {
 	Holdings          int               `db:"holdings" json:"holdings"`
 	AUM               sql.NullString    `db:"aum" json:"aum,omitempty"`
 	ExpenseRatio      sql.NullString    `db:"er" json:"expenseRatio,omitempty"`
-	RelatedSecurities []Security        `json:"relatedSecurities"` // Related securities for the ETF
+	RelatedSecurities []string          `json:"relatedSecurities"` // Related securities for the ETF
+}
+
+func (etf *ETF) Scan(rows *sqlx.Rows) error {
+	// Temporary variables for related securities and nullable fields
+	var relatedSecurities string
+
+	// Scan all fields
+	err := rows.Scan(
+		&etf.Security.Ticker,
+		&etf.Security.Country,
+		&etf.Security.Suffix,
+		&etf.Security.Exchange,
+		&etf.Security.Typology,
+		&etf.Security.Fullname,
+		&etf.Security.Price,
+		&etf.Security.PriceChange,
+		&etf.Security.PricePct,
+		&etf.Security.YearRange,
+		&etf.Security.DayRange,
+		&etf.Security.MarketCap,
+		&etf.Security.Volume,
+		&etf.Security.AvgVolume,
+		&etf.Security.Beta,
+		&etf.Security.PClose,
+		&etf.Security.COpen,
+		&etf.Security.Bid,
+		&etf.Security.BidSize,
+		&etf.Security.Ask,
+		&etf.Security.AskSize,
+		&etf.Security.Currency,
+		&etf.Security.Created,
+		&etf.Security.Updated,
+		&etf.Holdings,
+		&etf.AUM,
+		&etf.ExpenseRatio,
+		&relatedSecurities, // Comma-separated related securities
+		&etf.Security.Dividend.Rate,
+		&etf.Security.Dividend.RateType,
+		&etf.Security.Dividend.Yield,
+		&etf.Security.Dividend.YieldType,
+		&etf.Security.Dividend.AnnualPayout,
+		&etf.Security.Dividend.APType,
+		&etf.Security.Dividend.PayoutRatio,
+		&etf.Security.Dividend.GrowthRate,
+		&etf.Security.Dividend.YearsGrowth,
+		&etf.Security.Dividend.LastAnnounced,
+		&etf.Security.Dividend.Frequency,
+		&etf.Security.Dividend.ExDivDate,
+		&etf.Security.Dividend.PayoutDate,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to scan ETF fields: %w", err)
+	}
+
+	// Parse related securities
+	if relatedSecurities != "" {
+		etf.RelatedSecurities = strings.Split(relatedSecurities, ",")
+	} else {
+		etf.RelatedSecurities = []string{}
+	}
+
+	return nil
 }
 
 // REIT represents a row from the reits table.
@@ -364,109 +191,675 @@ type REIT struct {
 	PFFOType sql.NullString    `db:"tpffo" json:"pffoType,omitempty"`
 }
 
-func GetAllSecurities(db *sqlx.DB, typology, exchange, country *string) ([]Security, error) {
-	query := `
-		SELECT *
-		FROM securities
-		WHERE (:typology IS NULL OR typology = :typology)
-		  AND (:exchange IS NULL OR exchange = :exchange)
-		  AND (:country IS NULL OR cc = :country)
-	`
-
-	var securities []Security
-	err := db.Select(&securities, query, map[string]interface{}{
-		"typology": typology,
-		"exchange": exchange,
-		"country":  country,
-	})
+func CreateStock(db *sqlx.DB, stock *Stock) error {
+	// Start a transaction
+	tx, err := db.Beginx()
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch securities: %w", err)
+		return fmt.Errorf("failed to start transaction: %w", err)
 	}
 
-	return securities, nil
+	defer func() {
+		if p := recover(); p != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Errorf("Failed to rollback transaction: %v\n", err)
+			}
+			panic(p)
+		} else if err != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Errorf("Failed to rollback transaction: %v\n", err)
+			}
+		} else {
+			err = tx.Commit()
+			if err != nil {
+				log.Errorf("Failed to commit transaction: %v\n", err)
+			}
+		}
+	}()
+
+	// Insert into securities table
+	securitiesQuery := `
+		INSERT INTO securities (
+			ticker, cc, suffix, exchange, typology, fullname, price, pc, ppc,
+			yrange, drange, marketcap, volume, avgvlm, beta, pclose, copen, bid, bidsz,
+			ask, asksz, currency, created, updated
+		) VALUES (
+			:ticker, :cc, :suffix, :exchange, 'stock', :fullname, :price, :pc, :ppc,
+			:yrange, :drange, :marketcap, :volume, :avgvlm, :beta, :pclose, :copen, :bid, :bidsz,
+			:ask, :asksz, :currency, :created, :updated
+		)
+	`
+	_, err = tx.NamedExec(securitiesQuery, &stock.Security)
+	if err != nil {
+		return fmt.Errorf("failed to insert security: %w", err)
+	}
+
+	// Insert into stocks table
+	stocksQuery := `
+		INSERT INTO stocks (ticker, cc, eps, teps, pe, tpe)
+		VALUES (:ticker, :cc, :eps, :epsType, :pe, :peType)
+	`
+	_, err = tx.NamedExec(stocksQuery, stock)
+	if err != nil {
+		return fmt.Errorf("failed to insert stock: %w", err)
+	}
+
+	// Insert into dividends table if provided
+	if stock.Security.Dividend != nil {
+		dividendsQuery := `
+			INSERT INTO dividends (
+				ticker, cc, rate, trate, yield, tyield, ap, tap, pr, lgr, yog, lad, frequency, edd, pd
+			) VALUES (
+				:ticker, :cc, :rate, :rateType, :yield, :yieldType, :annualPayout, :apType,
+				:payoutRatio, :growthRate, :yearsGrowth, :lastAnnounced, :frequency, :exDivDate, :payoutDate
+			)
+		`
+		_, err = tx.NamedExec(dividendsQuery, stock.Security.Dividend)
+		if err != nil {
+			return fmt.Errorf("failed to insert dividend: %w", err)
+		}
+	}
+
+	// Commit transaction
+	return nil
 }
 
-func GetAllStocks(db *sqlx.DB, exchange *string, minPE, maxPE *float64) ([]Stock, error) {
+func CreateETF(db *sqlx.DB, etf *ETF) error {
+	// Start a transaction
+	tx, err := db.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Errorf("Failed to rollback transaction: %v\n", err)
+			}
+			panic(p)
+		} else if err != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Errorf("Failed to rollback transaction: %v\n", err)
+			}
+		} else {
+			err = tx.Commit()
+			if err != nil {
+				log.Errorf("Failed to commit transaction: %v\n", err)
+			}
+		}
+	}()
+
+	// Step 1: Insert into the securities table
+	securitiesQuery := `
+		INSERT INTO securities (
+			ticker, cc, suffix, exchange, typology, fullname, price, pc, ppc,
+			yrange, drange, marketcap, volume, avgvlm, beta, pclose, copen, bid, bidsz,
+			ask, asksz, currency, created, updated
+		) VALUES (
+			:ticker, :cc, :suffix, :exchange, 'ETF', :fullname, :price, :pc, :ppc,
+			:yrange, :drange, :marketcap, :volume, :avgvlm, :beta, :pclose, :copen, :bid, :bidsz,
+			:ask, :asksz, :currency, :created, :updated
+		)
+	`
+	_, err = tx.NamedExec(securitiesQuery, &etf.Security)
+	if err != nil {
+		return fmt.Errorf("failed to insert security: %w", err)
+	}
+
+	// Step 2: Insert into the etfs table
+	etfsQuery := `
+		INSERT INTO etfs (ticker, exchange, holdings, aum, er)
+		VALUES (:ticker, :exchange, :holdings, :aum, :expenseRatio)
+	`
+	_, err = tx.NamedExec(etfsQuery, etf)
+	if err != nil {
+		return fmt.Errorf("failed to insert etf: %w", err)
+	}
+
+	// Step 3: Insert related securities into the etf_related_securities table
+	if len(etf.RelatedSecurities) > 0 {
+		relatedQuery := `
+			INSERT INTO etf_related_securities (etf_ticker, etf_exchange, related_ticker, related_exchange)
+			VALUES (:etf_ticker, :etf_exchange, :related_ticker, :related_exchange)
+		`
+
+		for _, related := range etf.RelatedSecurities {
+			// Parse the related security string (e.g., "AAPL:NASDAQ")
+			parts := strings.Split(related, ":")
+			if len(parts) != 2 {
+				return fmt.Errorf("invalid related security format: %s", related)
+			}
+
+			_, err = tx.NamedExec(relatedQuery, map[string]interface{}{
+				"etf_ticker":       etf.Ticker,
+				"etf_exchange":     etf.Exchange,
+				"related_ticker":   parts[0], // Ticker
+				"related_exchange": parts[1], // Exchange
+			})
+			if err != nil {
+				return fmt.Errorf("failed to insert related security '%s': %w", related, err)
+			}
+		}
+	}
+
+	// Step 4: Insert into dividends table if provided
+	if etf.Security.Dividend != nil {
+		dividendsQuery := `
+			INSERT INTO dividends (
+				ticker, exchange, rate, trate, yield, tyield, ap, tap, pr, lgr, yog, lad, frequency, edd, pd
+			) VALUES (
+				:ticker, :exchange, :rate, :trate, :yield, :tyield, :ap, :tap,
+				:pr, :lgr, :yog, :lad, :frequency, :edd, :pd
+			)
+		`
+		_, err = tx.NamedExec(dividendsQuery, etf.Security.Dividend)
+		if err != nil {
+			return fmt.Errorf("failed to insert dividend: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func CreateReit(db *sqlx.DB, reit *REIT) error {
+	tx, err := db.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+
+	defer func() {
+		if p := recover(); p != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Errorf("Failed to rollback transaction: %v\n", err)
+			}
+			panic(p)
+		} else if err != nil {
+			err = tx.Rollback()
+			if err != nil {
+				log.Errorf("Failed to rollback transaction: %v\n", err)
+			}
+		} else {
+			err = tx.Commit()
+			if err != nil {
+				log.Errorf("Failed to commit transaction: %v\n", err)
+			}
+		}
+	}()
+
+	// Insert into securities table
+	securitiesQuery := `
+		INSERT INTO securities (
+			ticker, cc, suffix, exchange, typology, fullname, price, pc, ppc,
+			yrange, drange, marketcap, volume, avgvlm, beta, pclose, copen, bid, bidsz,
+			ask, asksz, currency, created, updated
+		) VALUES (
+			:ticker, :cc, :suffix, :exchange, 'reit', :fullname, :price, :pc, :ppc,
+			:yrange, :drange, :marketcap, :volume, :avgvlm, :beta, :pclose, :copen, :bid, :bidsz,
+			:ask, :asksz, :currency, :created, :updated
+		)
+	`
+	_, err = tx.NamedExec(securitiesQuery, &reit.Security)
+	if err != nil {
+		return fmt.Errorf("failed to insert security: %w", err)
+	}
+
+	// Insert into reits table
+	reitsQuery := `
+		INSERT INTO reits (ticker, cc, ffo, tffo, pffo, tpffo)
+		VALUES (:ticker, :cc, :ffo, :ffoType, :pffo, :pffoType)
+	`
+	_, err = tx.NamedExec(reitsQuery, reit)
+	if err != nil {
+		return fmt.Errorf("failed to insert reit: %w", err)
+	}
+
+	// Insert into dividends table if provided
+	if reit.Security.Dividend != nil {
+		dividendsQuery := `
+			INSERT INTO dividends (
+				ticker, cc, rate, trate, yield, tyield, ap, tap, pr, lgr, yog, lad, frequency, edd, pd
+			) VALUES (
+				:ticker, :cc, :rate, :rateType, :yield, :yieldType, :annualPayout, :apType,
+				:payoutRatio, :growthRate, :yearsGrowth, :lastAnnounced, :frequency, :exDivDate, :payoutDate
+			)
+		`
+		_, err = tx.NamedExec(dividendsQuery, reit.Security.Dividend)
+		if err != nil {
+			return fmt.Errorf("failed to insert dividend: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func GetStocks(
+	db *sqlx.DB,
+	exchange, country *string,
+	minPrice, maxPrice *int,
+	orderBy, orderDirection *string,
+	limit *int,
+	dividend bool,
+) ([]Stock, error) {
+	// Base query with dynamic JOIN clause
 	query := `
-		SELECT s.*, st.*
+		SELECT
+			s.*,
+			st.eps,
+			st.teps AS epsType,
+			st.pe,
+			st.tpe AS peType,
+			d.rate AS "dividend.rate",
+			d.trate AS "dividend.rateType",
+			d.yield AS "dividend.yield",
+			d.tyield AS "dividend.yieldType",
+			d.ap AS "dividend.annualPayout",
+			d.tap AS "dividend.apType",
+			d.pr AS "dividend.payoutRatio",
+			d.lgr AS "dividend.growthRate",
+			d.yog AS "dividend.yearsGrowth",
+			d.lad AS "dividend.lastAnnounced",
+			d.frequency AS "dividend.frequency",
+			d.edd AS "dividend.exDivDate",
+			d.pd AS "dividend.payoutDate"
 		FROM securities s
 		JOIN stocks st ON s.ticker = st.ticker AND s.exchange = st.exchange
-		WHERE (:exchange IS NULL OR s.exchange = :exchange)
-		  AND (:minPE IS NULL OR st.pe >= :minPE)
-		  AND (:maxPE IS NULL OR st.pe <= :maxPE)
 	`
 
-	var stocks []Stock
-	err := db.Select(&stocks, query, map[string]interface{}{
+	// Adjust JOIN type based on dividend parameter
+	if dividend {
+		query += " INNER JOIN dividends d ON s.ticker = d.ticker AND s.cc = d.cc"
+	} else {
+		query += " LEFT JOIN dividends d ON s.ticker = d.ticker AND s.cc = d.cc"
+	}
+
+	// WHERE conditions
+	query += `
+		WHERE (:exchange IS NULL OR s.exchange = :exchange)
+		  AND (:country IS NULL OR s.cc = :country)
+		  AND (:minPrice IS NULL OR s.price >= :minPrice)
+		  AND (:maxPrice IS NULL OR s.price <= :maxPrice)
+	`
+
+	// Ordering
+	orderColumn := map[string]string{
+		"price":     "s.price",
+		"volume":    "s.volume",
+		"avgvolume": "s.avgvlm",
+		"marketcap": "s.marketcap",
+		"pc":        "s.pc",
+		"ppc":       "s.ppc",
+		"updated":   "s.updated",
+	}
+
+	order := "s.price ASC"
+	if orderBy != nil && *orderBy != "" {
+		if col, exists := orderColumn[*orderBy]; exists {
+			if orderDirection != nil && *orderDirection == "desc" {
+				order = fmt.Sprintf("%s DESC", col)
+			} else {
+				order = fmt.Sprintf("%s ASC", col)
+			}
+		}
+	}
+	query += fmt.Sprintf(" ORDER BY %s", order)
+
+	// Add limit
+	if limit != nil && *limit > 0 {
+		query += " LIMIT :limit"
+	}
+
+	// Query parameters
+	params := map[string]interface{}{
 		"exchange": exchange,
-		"minPE":    minPE,
-		"maxPE":    maxPE,
-	})
+		"country":  country,
+		"minPrice": minPrice,
+		"maxPrice": maxPrice,
+		"limit":    limit,
+	}
+
+	// Execute query
+	var stocks []Stock
+	err := db.Select(&stocks, query, params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch stocks: %w", err)
+		return nil, fmt.Errorf("failed to retrieve stocks: %w", err)
 	}
 
 	return stocks, nil
 }
 
-func GetAllETFs(db *sqlx.DB, minAUM, maxExpenseRatio *float64) ([]ETF, error) {
+func GetStock(db *sqlx.DB, input string) (*Stock, error) {
+	// Parse the input into ticker and exchange
+	parts := strings.Split(input, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid input format, expected '<ticker>:<exchange>'")
+	}
+	ticker, exchange := parts[0], parts[1]
+
+	// Query to fetch stock details
 	query := `
-		SELECT s.*, e.*
+		SELECT
+			s.*,
+			st.eps,
+			st.teps AS epsType,
+			st.pe,
+			st.tpe AS peType,
+			d.rate AS "dividend.rate",
+			d.trate AS "dividend.rateType",
+			d.yield AS "dividend.yield",
+			d.tyield AS "dividend.yieldType",
+			d.ap AS "dividend.annualPayout",
+			d.tap AS "dividend.apType",
+			d.pr AS "dividend.payoutRatio",
+			d.lgr AS "dividend.growthRate",
+			d.yog AS "dividend.yearsGrowth",
+			d.lad AS "dividend.lastAnnounced",
+			d.frequency AS "dividend.frequency",
+			d.edd AS "dividend.exDivDate",
+			d.pd AS "dividend.payoutDate"
 		FROM securities s
-		JOIN etfs e ON s.ticker = e.ticker AND s.exchange = e.exchange
-		WHERE (:minAUM IS NULL OR e.aum >= :minAUM)
-		  AND (:maxExpenseRatio IS NULL OR e.er <= :maxExpenseRatio)
+		JOIN stocks st ON s.ticker = st.ticker AND s.exchange = st.exchange
+		LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange
+		WHERE s.ticker = :ticker AND s.exchange = :exchange
 	`
 
-	var etfs []ETF
-	err := db.Select(&etfs, query, map[string]interface{}{
-		"minAUM":          minAUM,
-		"maxExpenseRatio": maxExpenseRatio,
+	// Execute the query
+	var stock Stock
+	err := db.Get(&stock, query, map[string]interface{}{
+		"ticker":   ticker,
+		"exchange": exchange,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch ETFs: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("stock '%s' not found", input)
+		}
+		return nil, fmt.Errorf("failed to retrieve stock '%s': %w", input, err)
+	}
+
+	return &stock, nil
+}
+
+func GetETFs(
+	db *sqlx.DB,
+	exchange, country *string,
+	minPrice, maxPrice *int,
+	orderBy, orderDirection *string,
+	limit *int,
+	dividend bool,
+) ([]ETF, error) {
+	// Base query
+	query := `
+		SELECT
+			s.*,
+			e.holdings,
+			e.aum,
+			e.er AS expenseRatio,
+			COALESCE(
+				STRING_AGG(er.related_ticker || ':' || er.related_exchange, ','), ''
+			) AS relatedSecurities,
+			d.rate AS "dividend.rate",
+			d.trate AS "dividend.rateType",
+			d.yield AS "dividend.yield",
+			d.tyield AS "dividend.yieldType",
+			d.ap AS "dividend.annualPayout",
+			d.tap AS "dividend.apType",
+			d.pr AS "dividend.payoutRatio",
+			d.lgr AS "dividend.growthRate",
+			d.yog AS "dividend.yearsGrowth",
+			d.lad AS "dividend.lastAnnounced",
+			d.frequency AS "dividend.frequency",
+			d.edd AS "dividend.exDivDate",
+			d.pd AS "dividend.payoutDate"
+		FROM securities s
+		JOIN etfs e ON s.ticker = e.ticker AND s.exchange = e.exchange
+		LEFT JOIN etf_related_securities er ON e.ticker = er.etf_ticker AND e.exchange = er.etf_exchange
+	`
+
+	// Adjust JOIN type for dividends based on the `dividend` parameter
+	if dividend {
+		query += " INNER JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
+	} else {
+		query += " LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
+	}
+
+	// WHERE conditions
+	query += `
+		WHERE (:exchange IS NULL OR s.exchange = :exchange)
+		  AND (:country IS NULL OR s.cc = :country)
+		  AND (:minPrice IS NULL OR s.price >= :minPrice)
+		  AND (:maxPrice IS NULL OR s.price <= :maxPrice)
+	`
+
+	// Apply ordering
+	orderColumn := map[string]string{
+		"price":     "s.price",
+		"volume":    "s.volume",
+		"avgvolume": "s.avgvlm",
+		"marketcap": "s.marketcap",
+		"pc":        "s.pc",
+		"ppc":       "s.ppc",
+		"updated":   "s.updated",
+	}
+
+	order := "s.price ASC" // Default ordering
+	if orderBy != nil && *orderBy != "" {
+		if col, exists := orderColumn[*orderBy]; exists {
+			if orderDirection != nil && *orderDirection == "desc" {
+				order = fmt.Sprintf("%s DESC", col)
+			} else {
+				order = fmt.Sprintf("%s ASC", col)
+			}
+		}
+	}
+	query += fmt.Sprintf(" ORDER BY %s", order)
+
+	// Add limit
+	if limit != nil && *limit > 0 {
+		query += " LIMIT :limit"
+	}
+
+	// Query parameters
+	params := map[string]interface{}{
+		"exchange": exchange,
+		"country":  country,
+		"minPrice": minPrice,
+		"maxPrice": maxPrice,
+		"limit":    limit,
+	}
+
+	// Execute the query
+	rows, err := db.Queryx(query, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve ETFs: %w", err)
+	}
+	defer rows.Close()
+
+	// Parse results
+	var etfs []ETF
+	for rows.Next() {
+		var etf ETF
+		if err := etf.Scan(rows); err != nil {
+			return nil, fmt.Errorf("failed to scan ETF row: %w", err)
+		}
+		etfs = append(etfs, etf)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over ETF rows: %w", err)
 	}
 
 	return etfs, nil
 }
 
-func GetAllREITs(db *sqlx.DB, minFFO, maxPFFO *float64) ([]REIT, error) {
-	query := `
-		SELECT s.*, r.*
-		FROM securities s
-		JOIN reits r ON s.ticker = r.ticker AND s.exchange = r.exchange
-		WHERE (:minFFO IS NULL OR r.ffo >= :minFFO)
-		  AND (:maxPFFO IS NULL OR r.pffo <= :maxPFFO)
-	`
-
-	var reits []REIT
-	err := db.Select(&reits, query, map[string]interface{}{
-		"minFFO":  minFFO,
-		"maxPFFO": maxPFFO,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch REITs: %w", err)
+func GetETF(db *sqlx.DB, input string) (*ETF, error) {
+	// Parse the input into ticker and exchange
+	parts := strings.Split(input, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid input format, expected '<ticker>:<exchange>'")
 	}
+	ticker, exchange := parts[0], parts[1]
 
-	return reits, nil
-}
-
-func GetSecurityByTickerAndExchange(db *sqlx.DB, ticker, exchange string) (*Security, error) {
+	// Query to fetch ETF details
 	query := `
-		SELECT *
-		FROM securities
-		WHERE ticker = :ticker
-		  AND exchange = :exchange
+		SELECT
+			s.*,
+			e.holdings,
+			e.aum,
+			e.er AS expenseRatio,
+			COALESCE(
+				STRING_AGG(er.related_ticker || ':' || er.related_exchange, ','), ''
+			) AS relatedSecurities,
+			d.rate AS "dividend.rate",
+			d.trate AS "dividend.rateType",
+			d.yield AS "dividend.yield",
+			d.tyield AS "dividend.yieldType",
+			d.ap AS "dividend.annualPayout",
+			d.tap AS "dividend.apType",
+			d.pr AS "dividend.payoutRatio",
+			d.lgr AS "dividend.growthRate",
+			d.yog AS "dividend.yearsGrowth",
+			d.lad AS "dividend.lastAnnounced",
+			d.frequency AS "dividend.frequency",
+			d.edd AS "dividend.exDivDate",
+			d.pd AS "dividend.payoutDate"
+		FROM securities s
+		JOIN etfs e ON s.ticker = e.ticker AND s.exchange = e.exchange
+		LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange
+		LEFT JOIN etf_related_securities er ON e.ticker = er.etf_ticker AND e.exchange = er.etf_exchange
+		WHERE s.ticker = :ticker AND s.exchange = :exchange
+		GROUP BY s.ticker, s.exchange, e.holdings, e.aum, e.er, d.rate, d.trate, d.yield, d.tyield,
+		         d.ap, d.tap, d.pr, d.lgr, d.yog, d.lad, d.frequency, d.edd, d.pd
 	`
 
-	var security Security
-	err := db.Get(&security, query, map[string]interface{}{
+	// Execute the query
+	var etf ETF
+	err := db.Get(&etf, query, map[string]interface{}{
 		"ticker":   ticker,
 		"exchange": exchange,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch security: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("ETF '%s' not found", input)
+		}
+		return nil, fmt.Errorf("failed to retrieve ETF '%s': %w", input, err)
 	}
 
-	return &security, nil
+	// Parse related securities
+	if etf.RelatedSecurities != nil {
+		etf.RelatedSecurities = strings.Split(etf.RelatedSecurities[0], ",")
+	}
+
+	return &etf, nil
+}
+
+func GetREITs(
+	db *sqlx.DB,
+	exchange, country *string,
+	minPrice, maxPrice *int,
+	orderBy, orderDirection *string,
+	limit *int,
+	dividend bool,
+) ([]REIT, error) {
+	// Base query
+	query := `
+		SELECT
+			s.*,
+			r.ffo,
+			r.tffo AS ffoType,
+			r.pffo,
+			r.tpffo AS pffoType,
+			d.rate AS "dividend.rate",
+			d.trate AS "dividend.rateType",
+			d.yield AS "dividend.yield",
+			d.tyield AS "dividend.yieldType",
+			d.ap AS "dividend.annualPayout",
+			d.tap AS "dividend.apType",
+			d.pr AS "dividend.payoutRatio",
+			d.lgr AS "dividend.growthRate",
+			d.yog AS "dividend.yearsGrowth",
+			d.lad AS "dividend.lastAnnounced",
+			d.frequency AS "dividend.frequency",
+			d.edd AS "dividend.exDivDate",
+			d.pd AS "dividend.payoutDate"
+		FROM securities s
+		JOIN reits r ON s.ticker = r.ticker AND s.exchange = r.exchange
+	`
+
+	// Adjust JOIN type for dividends based on the `dividend` parameter
+	if dividend {
+		query += " INNER JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
+	} else {
+		query += " LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
+	}
+
+	// WHERE conditions
+	query += `
+		WHERE (:exchange IS NULL OR s.exchange = :exchange)
+		  AND (:country IS NULL OR s.cc = :country)
+		  AND (:minPrice IS NULL OR s.price >= :minPrice)
+		  AND (:maxPrice IS NULL OR s.price <= :maxPrice)
+	`
+
+	// Apply ordering
+	orderColumn := map[string]string{
+		"price":     "s.price",
+		"volume":    "s.volume",
+		"avgvolume": "s.avgvlm",
+		"marketcap": "s.marketcap",
+		"pc":        "s.pc",
+		"ppc":       "s.ppc",
+		"updated":   "s.updated",
+	}
+
+	order := "s.price ASC" // Default ordering
+	if orderBy != nil && *orderBy != "" {
+		if col, exists := orderColumn[*orderBy]; exists {
+			if orderDirection != nil && *orderDirection == "desc" {
+				order = fmt.Sprintf("%s DESC", col)
+			} else {
+				order = fmt.Sprintf("%s ASC", col)
+			}
+		}
+	}
+	query += fmt.Sprintf(" ORDER BY %s", order)
+
+	// Add limit
+	if limit != nil && *limit > 0 {
+		query += " LIMIT :limit"
+	}
+
+	// Query parameters
+	params := map[string]interface{}{
+		"exchange": exchange,
+		"country":  country,
+		"minPrice": minPrice,
+		"maxPrice": maxPrice,
+		"limit":    limit,
+	}
+
+	// Execute the query
+	rows, err := db.Queryx(query, params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve REITs: %w", err)
+	}
+	defer rows.Close()
+
+	// Parse results
+	var reits []REIT
+	for rows.Next() {
+		var reit REIT
+		if err := reit.Scan(rows); err != nil {
+			return nil, fmt.Errorf("failed to scan REIT row: %w", err)
+		}
+		reits = append(reits, reit)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over REIT rows: %w", err)
+	}
+
+	return reits, nil
 }
