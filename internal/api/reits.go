@@ -32,7 +32,7 @@ func GetREITs() echo.HandlerFunc {
 
 func GetREIT() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		reit, err := models.GetETF(database.DB, c.Param("id"))
+		reit, err := models.GetREIT(database.DB, c.Param("id"))
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve reit"})
 		}

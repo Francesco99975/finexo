@@ -481,7 +481,7 @@ func CreateReit(db *sqlx.DB, reit *REIT) error {
 	return nil
 }
 
-func GetStock(db *sqlx.DB, input string, dividend bool) (*Security, error) {
+func GetStock(db *sqlx.DB, input string) (*Security, error) {
 	// Parse the input into ticker and exchange
 	parts := strings.Split(input, ":")
 	if len(parts) != 2 {
@@ -489,26 +489,17 @@ func GetStock(db *sqlx.DB, input string, dividend bool) (*Security, error) {
 	}
 	ticker, exchange := parts[0], parts[1]
 
-	// Base query for stock details
+	// Query for retrieving stock details, including dividend (if available)
 	query := `
 		SELECT
-			s.ticker, s.exchange, s.typology, s.fullname, s.sector, s.industry, s.subindustry,
-			s.price, s.pc, s.pcc, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
-			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
+			s.*,
 			d.yield, d.tm AS timing, d.ap AS annualPayout, d.pr AS payoutRatio,
 			d.lgr AS growthRate, d.yog AS yearsGrowth, d.lad AS lastAnnounced,
 			d.frequency, d.edd AS exDivDate, d.pd AS payoutDate
 		FROM securities s
+		LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange
 		WHERE s.ticker = :ticker AND s.exchange = :exchange AND s.typology = 'STOCK'
 	`
-
-	// Adjust JOIN type based on dividend presence
-	if dividend {
-		query += " INNER JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
-	} else {
-		query += " LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
-	}
 
 	// Execute the query
 	var stock Security
@@ -624,7 +615,7 @@ func GetStocks(
 	return stocks, nil
 }
 
-func GetETF(db *sqlx.DB, input string, dividend bool) (*Security, error) {
+func GetETF(db *sqlx.DB, input string) (*Security, error) {
 	// Parse the input into ticker and exchange
 	parts := strings.Split(input, ":")
 	if len(parts) != 2 {
@@ -632,26 +623,17 @@ func GetETF(db *sqlx.DB, input string, dividend bool) (*Security, error) {
 	}
 	ticker, exchange := parts[0], parts[1]
 
-	// Base query for ETF details
+	// Query for retrieving ETF details, including dividend (if available)
 	query := `
 		SELECT
-			s.ticker, s.exchange, s.typology, s.fullname, s.sector, s.industry, s.subindustry,
-			s.price, s.pc, s.pcc, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
-			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
+			s.*,
 			d.yield, d.tm AS timing, d.ap AS annualPayout, d.pr AS payoutRatio,
 			d.lgr AS growthRate, d.yog AS yearsGrowth, d.lad AS lastAnnounced,
 			d.frequency, d.edd AS exDivDate, d.pd AS payoutDate
 		FROM securities s
+		LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange
 		WHERE s.ticker = :ticker AND s.exchange = :exchange AND s.typology = 'ETF'
 	`
-
-	// Adjust JOIN type based on dividend presence
-	if dividend {
-		query += " INNER JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
-	} else {
-		query += " LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
-	}
 
 	// Execute the query
 	var etf Security
@@ -767,7 +749,7 @@ func GetETFs(
 	return etfs, nil
 }
 
-func GetREIT(db *sqlx.DB, input string, dividend bool) (*Security, error) {
+func GetREIT(db *sqlx.DB, input string) (*Security, error) {
 	// Parse the input into ticker and exchange
 	parts := strings.Split(input, ":")
 	if len(parts) != 2 {
@@ -775,26 +757,17 @@ func GetREIT(db *sqlx.DB, input string, dividend bool) (*Security, error) {
 	}
 	ticker, exchange := parts[0], parts[1]
 
-	// Base query for REIT details
+	// Query for retrieving REIT details, including dividend (if available)
 	query := `
 		SELECT
-			s.ticker, s.exchange, s.typology, s.fullname, s.sector, s.industry, s.subindustry,
-			s.price, s.pc, s.pcc, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
-			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
+			s.*,
 			d.yield, d.tm AS timing, d.ap AS annualPayout, d.pr AS payoutRatio,
 			d.lgr AS growthRate, d.yog AS yearsGrowth, d.lad AS lastAnnounced,
 			d.frequency, d.edd AS exDivDate, d.pd AS payoutDate
 		FROM securities s
+		LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange
 		WHERE s.ticker = :ticker AND s.exchange = :exchange AND s.typology = 'REIT'
 	`
-
-	// Adjust JOIN type based on dividend presence
-	if dividend {
-		query += " INNER JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
-	} else {
-		query += " LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange"
-	}
 
 	// Execute the query
 	var reit Security
