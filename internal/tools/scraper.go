@@ -21,7 +21,7 @@ const BASE_MARKETBEAT_URL = "https://www.marketbeat.com/stocks/" // EXCHANGE_PRE
 
 func isAnEmptyString(s string) bool {
 	s = strings.TrimSpace(s)
-	return s == "" || s == "N/A" || s == "-"
+	return s == "" || s == "N/A" || s == "-" || s == "--" || s == "n/a"
 }
 
 func Scrape(ticker string, exchange models.Exchange, country models.Country) error {
@@ -39,14 +39,25 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		page = browser.MustPage(BASE_YAHOO_URL + ticker).MustWaitLoad()
 	}
 
-	scrapedCurrency := page.MustElement("span.exchange.yf-wk4yba span:nth-child(3)").MustText()
+	scrapedCurrencyElem, err := page.Element("span.exchange.yf-wk4yba span:nth-child(3)")
+	if err != nil {
+		return fmt.Errorf("currency not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+
+	scrapedCurrency := scrapedCurrencyElem.MustText()
+
 	scrapedCurrency = strings.TrimSpace(scrapedCurrency)
 
 	if scrapedCurrency != country.Currency {
 		return fmt.Errorf("currency mismatch: %s != %s - target: %s:%s", scrapedCurrency, country.Currency, ticker, exchange.Title)
 	}
 
-	scrapedFullName := page.MustElement(".yf-xxbei9").MustText()
+	scrapedFullNameElem, err := page.Element(".yf-xxbei9")
+	if err != nil {
+		return fmt.Errorf("full name not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+
+	scrapedFullName := scrapedFullNameElem.MustText()
 	scrapedFullName = strings.Split(scrapedFullName, " ")[0]
 
 	if isAnEmptyString(scrapedFullName) {
@@ -64,7 +75,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	security.Typology = scrapedTypology
 
-	priceStr := page.MustElement("span[data-testid='qsp-price']").MustText()
+	priceStrElem, err := page.Element("span[data-testid='qsp-price']")
+	if err != nil {
+		return fmt.Errorf("price not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+
+	priceStr := priceStrElem.MustText()
 	priceStr = helpers.NormalizeFloatStrToIntStr(priceStr)
 
 	if isAnEmptyString(priceStr) {
@@ -82,10 +98,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	security.Price = scrapedPrice
 
-	priceChangeStr := page.MustElement("span[data-testid='qsp-price-change']").MustText()
+	priceChangeStrElem, err := page.Element("span[data-testid='qsp-price-change']")
+	if err != nil {
+		return fmt.Errorf("price change not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+	priceChangeStr := priceChangeStrElem.MustText()
 	priceChangeStr = helpers.NormalizeFloatStrToIntStr(priceChangeStr)
 
-	if priceChangeStr == "" {
+	if isAnEmptyString(priceChangeStr) {
 		return fmt.Errorf("empty price change: %s - target: %s:%s", priceChangeStr, ticker, exchange.Title)
 	}
 
@@ -96,7 +116,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	security.PC = scrapedPriceChange
 
-	priceChangePercentageStr := page.MustElement("span[data-testid='qsp-price-change-percentage']").MustText()
+	priceChangePercentageStrElem, err := page.Element("span[data-testid='qsp-price-change-percentage']")
+	if err != nil {
+		return fmt.Errorf("price change percentage not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+
+	priceChangePercentageStr := priceChangePercentageStrElem.MustText()
 	priceChangePercentageStr = helpers.NormalizeFloatStrToIntStr(priceChangePercentageStr)
 
 	if priceChangePercentageStr == "" {
@@ -110,7 +135,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	security.PCP = scrapedPriceChangePercentage
 
-	yearlyRangeStr := page.MustElement("[data-field='fiftyTwoWeekRange']").MustText()
+	yearlyRangeStrElem, err := page.Element("[data-field='fiftyTwoWeekRange']")
+	if err != nil {
+		return fmt.Errorf("yearly range not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+
+	yearlyRangeStr := yearlyRangeStrElem.MustText()
 
 	yearlyRangeStr = strings.ReplaceAll(yearlyRangeStr, " ", "")
 	yearlyRangeArr := strings.Split(yearlyRangeStr, "-")
@@ -157,7 +187,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	security.YearHigh = scrapedYrh
 
-	daylyRangeStr := page.MustElement("[data-field='regularMarketDayRange']").MustText()
+	daylyRangeStrElem, err := page.Element("[data-field='regularMarketDayRange']")
+	if err != nil {
+		return fmt.Errorf("daily range not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+
+	daylyRangeStr := daylyRangeStrElem.MustText()
 
 	daylyRangeStr = strings.ReplaceAll(daylyRangeStr, " ", "")
 	daylyRangeArr := strings.Split(daylyRangeStr, "-")
@@ -203,7 +238,15 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	security.DayHigh = scrapedDrh
 
-	marketCapStr := page.MustElement("[data-field='marketCap']").MustText()
+	marketCapStrElem, err := page.Element("[data-field='marketCap']")
+	if err != nil {
+		log.Errorf("market cap not found in page - target: %s:%s", ticker, exchange.Title)
+		security.MarketCap = sql.NullInt64{
+			Valid: false,
+		}
+	}
+
+	marketCapStr := marketCapStrElem.MustText()
 
 	if isAnEmptyString(marketCapStr) {
 		log.Errorf("empty market cap: %s - target: %s:%s", marketCapStr, ticker, exchange.Title)
@@ -225,7 +268,15 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		}
 	}
 
-	volumeStr := page.MustElement("[data-field='regularMarketVolume']").MustText()
+	volumeStrElem, err := page.Element("[data-field='regularMarketVolume']")
+	if err != nil {
+		log.Errorf("volume not found in page - target: %s:%s", ticker, exchange.Title)
+		security.Volume = sql.NullInt64{
+			Valid: false,
+		}
+	}
+
+	volumeStr := volumeStrElem.MustText()
 	volumeStr = strings.ReplaceAll(volumeStr, ",", "")
 
 	if isAnEmptyString(volumeStr) {
@@ -248,7 +299,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		}
 	}
 
-	avgVolumeStr := page.MustElement("[data-field='averageVolume']").MustText()
+	avgVolumeStrElem, err := page.Element("[data-field='averageVolume']")
+	if err != nil {
+		log.Errorf("average volume not found in page - target: %s:%s", ticker, exchange.Title)
+		security.AvgVolume = sql.NullInt64{
+			Valid: false,
+		}
+	}
+	avgVolumeStr := avgVolumeStrElem.MustText()
 	avgVolumeStr = strings.ReplaceAll(avgVolumeStr, ",", "")
 
 	if isAnEmptyString(avgVolumeStr) {
@@ -271,7 +329,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		}
 	}
 
-	betaStr := page.MustElement("span[title='Beta (5Y Monthly)'] ~ span").MustText()
+	betaStrElem, err := page.Element("span[title='Beta (5Y Monthly)'] ~ span")
+	if err != nil {
+		log.Errorf("beta not found in page - target: %s:%s", ticker, exchange.Title)
+		security.Beta = sql.NullInt64{
+			Valid: false,
+		}
+	}
+	betaStr := betaStrElem.MustText()
 	betaStr = helpers.NormalizeFloatStrToIntStr(betaStr)
 	if isAnEmptyString(betaStr) {
 		log.Errorf("empty beta: %s - target: %s:%s", betaStr, ticker, exchange.Title)
@@ -293,7 +358,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		}
 	}
 
-	pcloseStr := page.MustElement("[data-field='regularMarketPreviousClose']").MustText()
+	pcloseStrElem, err := page.Element("[data-field='regularMarketPreviousClose']")
+	if err != nil {
+		return fmt.Errorf("previous close not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+
+	pcloseStr := pcloseStrElem.MustText()
 	pcloseStr = helpers.NormalizeFloatStrToIntStr(pcloseStr)
 	if isAnEmptyString(pcloseStr) {
 		return fmt.Errorf("empty previous close: %s - target: %s:%s", pcloseStr, ticker, exchange.Title)
@@ -310,7 +380,11 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	security.PClose = scrapedPclose
 
-	copenStr := page.MustElement("[data-field='regularMarketOpen']").MustText()
+	copenStrElem, err := page.Element("[data-field='regularMarketOpen']")
+	if err != nil {
+		return fmt.Errorf("open not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+	copenStr := copenStrElem.MustText()
 	copenStr = helpers.NormalizeFloatStrToIntStr(copenStr)
 	if isAnEmptyString(copenStr) {
 		return fmt.Errorf("empty open: %s - target: %s:%s", copenStr, ticker, exchange.Title)
@@ -327,7 +401,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	security.COpen = scrapedCopen
 
-	bidPayloadStr := page.MustElement("span[title='Bid'] ~ span").MustText()
+	bidPayloadStrElem, err := page.Element("span[title='Bid'] ~ span")
+	if err != nil {
+		return fmt.Errorf("bid not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+
+	bidPayloadStr := bidPayloadStrElem.MustText()
 	bidPayloadStr = strings.ReplaceAll(bidPayloadStr, " ", "")
 	bidPayloadArr := strings.Split(bidPayloadStr, "x")
 	if len(bidPayloadArr) != 2 {
@@ -373,7 +452,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	}
 
-	askPayloadStr := page.MustElement("span[title='Ask'] ~ span").MustText()
+	askPayloadStrElem, err := page.Element("span[title='Ask'] ~ span")
+	if err != nil {
+		return fmt.Errorf("ask not found in page - target: %s:%s", ticker, exchange.Title)
+	}
+
+	askPayloadStr := askPayloadStrElem.MustText()
 	askPayloadStr = strings.ReplaceAll(askPayloadStr, " ", "")
 	askPayloadArr := strings.Split(askPayloadStr, "x")
 	if len(askPayloadArr) != 2 {
@@ -418,7 +502,10 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		}
 	}
 
-	stockDataElements := page.MustElements("[data-field='trailingPE']")
+	stockDataElements, err := page.Elements("[data-field='trailingPE']")
+	if err != nil {
+		return fmt.Errorf("trailing PE not found in page - target: %s:%s", ticker, exchange.Title)
+	}
 
 	if len(stockDataElements) == 0 {
 		log.Errorf("empty trailing PE: %s - target: %s:%s", stockDataElements, ticker, exchange.Title)
@@ -474,6 +561,8 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		Valid:  true,
 	}
 
+	security.Dividend = scrapeDividend(ticker, exchange.Title, security.Typology, page)
+
 	switch security.Typology {
 	case "STOCK":
 		err = models.CreateStock(database.DB, &security)
@@ -485,7 +574,15 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 		etf.Security = security
 
-		aumStr := page.MustElement("span[title='Net Assets'] ~ span").MustText()
+		aumStrElem, err := page.Element("span[title='Net Assets'] ~ span")
+		if err != nil {
+			log.Errorf("AUM not found in page - target: %s:%s", ticker, exchange.Title)
+			etf.AUM = sql.NullInt64{
+				Valid: false,
+			}
+		}
+
+		aumStr := aumStrElem.MustText()
 		scrapedAum, err := helpers.ParseNumberString(aumStr)
 		if err != nil || scrapedAum <= 0 {
 			log.Errorf("invalid AUM: %s - target: %s:%s", aumStr, ticker, exchange.Title)
@@ -499,7 +596,15 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 			}
 		}
 
-		erStr := page.MustElement("span[title='Expense Ratio (net)'] ~ span").MustText()
+		erStrElem, err := page.Element("span[title='Expense Ratio (net)'] ~ span")
+		if err != nil {
+			log.Errorf("expense ratio not found in page - target: %s:%s", ticker, exchange.Title)
+			etf.ExpenseRatio = sql.NullInt64{
+				Valid: false,
+			}
+		}
+
+		erStr := erStrElem.MustText()
 		erStr = helpers.NormalizeFloatStrToIntStr(erStr)
 		if erStr == "" {
 			log.Errorf("empty expense ratio: %s - target: %s:%s", erStr, ticker, exchange.Title)
@@ -521,9 +626,15 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 			}
 		}
 
-		// Holdings
+		navStrElem, err := page.Element("span[title='NAV'] ~ span")
+		if err != nil {
+			log.Errorf("NAV not found in page - target: %s:%s", ticker, exchange.Title)
+			etf.NAV = sql.NullInt64{
+				Valid: false,
+			}
+		}
 
-		navStr := page.MustElement("span[title='NAV'] ~ span").MustText()
+		navStr := navStrElem.MustText()
 		navStr = helpers.NormalizeFloatStrToIntStr(navStr)
 		if isAnEmptyString(navStr) {
 			log.Errorf("empty NAV: %s - target: %s:%s", navStr, ticker, exchange.Title)
@@ -545,7 +656,15 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 			}
 		}
 
-		inceptionDateStr := page.MustElement("section[data-testid='company-overview-card'] p[title]").MustText()
+		inceptionDateStrElem, err := page.Element("section[data-testid='company-overview-card'] p[title]")
+		if err != nil {
+			log.Errorf("inception date not found in page - target: %s:%s", ticker, exchange.Title)
+			etf.InceptionDate = sql.NullTime{
+				Valid: false,
+			}
+		}
+
+		inceptionDateStr := inceptionDateStrElem.MustText()
 		if isAnEmptyString(inceptionDateStr) {
 			log.Errorf("empty inception date: %s - target: %s:%s", inceptionDateStr, ticker, exchange.Title)
 			etf.InceptionDate = sql.NullTime{
@@ -566,9 +685,15 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 			}
 		}
 
-		relationsElementsTickers := page.MustElements("section[data-testid='top-holdings'] a[data-testid='ticker-container']")
+		relationsElementsTickers, err := page.Elements("section[data-testid='top-holdings'] a[data-testid='ticker-container']")
+		if err != nil {
+			log.Errorf("top holdings not found in page - target: %s:%s", ticker, exchange.Title)
+		}
 
-		relationsElementsAllocations := page.MustElements("section[data-testid='top-holdings'] a[data-testid='ticker-container'] ~ span.data")
+		relationsElementsAllocations, err := page.Elements("section[data-testid='top-holdings'] a[data-testid='ticker-container'] ~ span.data")
+		if err != nil {
+			log.Errorf("top holdings not found in page - target: %s:%s", ticker, exchange.Title)
+		}
 
 		for i := 0; i < len(relationsElementsTickers); i++ {
 			ticker := relationsElementsTickers[i].MustText()
@@ -604,4 +729,49 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 	}
 
 	return nil
+}
+
+func scrapeDividend(ticker string, exchange string, typology string, page *rod.Page) *models.Dividend {
+	//Scrape Dividend Info if any
+	var dividend models.Dividend
+
+	var yieldStr string
+	if typology == "ETF" {
+		yieldStrElem, err := page.Element("span[title='Yield'] ~ span")
+		if err != nil {
+			log.Errorf("yield not found in page - target: %s:%s", ticker, exchange)
+			return nil
+		} else {
+			yieldStr = yieldStrElem.MustText()
+		}
+	} else {
+		yieldStrElem, err := page.Element("span[title='Forward Dividend & Yield'] ~ span")
+		if err != nil {
+			log.Errorf("forward dividend & yield not found in page - target: %s:%s", ticker, exchange)
+			return nil
+		} else {
+			yieldStr = yieldStrElem.MustText()
+		}
+	}
+
+	yieldStr = helpers.NormalizeFloatStrToIntStr(yieldStr)
+	if isAnEmptyString(yieldStr) {
+		log.Errorf("empty yield: %s - target: %s:%s", yieldStr, ticker, exchange)
+		return nil
+	}
+
+	scrapedYield, err := strconv.Atoi(yieldStr)
+	if err != nil {
+		log.Errorf("invalid yield: %s - target: %s:%s", yieldStr, ticker, exchange)
+		return nil
+	}
+
+	if scrapedYield <= 0 {
+		log.Errorf("invalid negative yield: %d - target: %s:%s", scrapedYield, ticker, exchange)
+		return nil
+	}
+
+	dividend.Yield = scrapedYield
+
+	return &dividend
 }
