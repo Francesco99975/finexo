@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS countries (
     iso VARCHAR
 );
 
-CREATE INDEX idx_countries_currency ON countries (currency);
+CREATE INDEX IF NOT EXISTS idx_countries_currency ON countries (currency);
 
 CREATE TABLE IF NOT EXISTS exchanges (
     title VARCHAR(50) PRIMARY KEY,
@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS exchanges (
 );
 
 -- Indexes for exchanges
-CREATE INDEX idx_exchanges_cc ON exchanges (cc);
-CREATE INDEX idx_exchanges_prefix_suffix ON exchanges (cc, prefix, suffix);
+CREATE INDEX IF NOT EXISTS idx_exchanges_cc ON exchanges (cc);
+CREATE INDEX IF NOT EXISTS idx_exchanges_prefix_suffix ON exchanges (cc, prefix, suffix);
 
 
 CREATE TABLE IF NOT EXISTS securities (

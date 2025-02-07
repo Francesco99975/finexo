@@ -55,6 +55,8 @@ func NormalizeFloatStrToIntStr(number string) string {
 	number = strings.ReplaceAll(number, ".", "")
 	number = strings.ReplaceAll(number, "$", "")
 	number = strings.ReplaceAll(number, "%", "")
+	number = strings.ReplaceAll(number, "(", "")
+	number = strings.ReplaceAll(number, ")", "")
 
 	return number
 }
