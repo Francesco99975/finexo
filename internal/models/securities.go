@@ -28,14 +28,6 @@ const (
 	FrequencyYearly    Frequency = "yearly"
 )
 
-type Country struct {
-	Code      string `db:"code" json:"code"`
-	Label     string `db:"label" json:"label"`
-	Currency  string `db:"currency" json:"currency"`
-	Continent string `db:"continent,omitempty" json:"continent,omitempty"`
-	ISO       string `db:"iso,omitempty" json:"iso,omitempty"`
-}
-
 type Exchange struct {
 	Title     string         `db:"title" json:"title"`
 	Prefix    sql.NullString `db:"prefix" json:"prefix,omitempty"`
@@ -45,10 +37,61 @@ type Exchange struct {
 	CloseTime sql.NullTime   `db:"closetime" json:"closeTime,omitempty"`
 }
 
+func CreateExchange(db *sqlx.DB, exchange *Exchange) error {
+	tx, err := db.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+
+	defer database.HandleTransaction(tx, &err)
+
+	// Insert into exchanges table
+	query := `
+		INSERT INTO exchanges (title, prefix, suffix, cc, opentime, closetime) VALUES ($1, $2, $3, $4, $5, $6)
+	`
+
+	_, err = tx.Exec(query, exchange.Title, exchange.Prefix, exchange.Suffix, exchange.CC, exchange.OpenTime, exchange.CloseTime)
+
+	if err != nil {
+		return fmt.Errorf("failed to insert exchange: %w", err)
+	}
+
+	return nil
+}
+
+func GetExchangeBySuffixorPrefix(db *sqlx.DB, suffix, prefix string) (*Exchange, error) {
+	query := `
+		SELECT title, prefix, suffix, cc, opentime, closetime
+		FROM exchanges
+		WHERE (suffix = $1 OR prefix = $2)
+	`
+	var exchange Exchange
+	err := db.Get(&exchange, query, suffix, prefix)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get exchange: %w", err)
+	}
+	return &exchange, nil
+}
+
+func GetExchangeByTitle(db *sqlx.DB, title string) (*Exchange, error) {
+	query := `
+		SELECT title, prefix, suffix, cc, opentime, closetime
+		FROM exchanges
+		WHERE title = $1
+	`
+	var exchange Exchange
+	err := db.Get(&exchange, query, title)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get exchange: %w", err)
+	}
+	return &exchange, nil
+}
+
 type Security struct {
 	Ticker      string         `db:"ticker" json:"ticker"`
 	Exchange    string         `db:"exchange" json:"exchange"`
 	Typology    string         `db:"typology" json:"typology"` // STOCK, ETF, REIT
+	Currency    string         `db:"currency" json:"currency"`
 	FullName    string         `db:"fullname" json:"fullName"`
 	Sector      sql.NullString `db:"sector" json:"sector,omitempty"`
 	Industry    sql.NullString `db:"industry" json:"industry,omitempty"`
@@ -93,6 +136,7 @@ func (s *Security) Scan(src any) error {
 		s.Exchange = data["exchange"].(string)
 		s.Typology = data["typology"].(string)
 		s.FullName = data["fullname"].(string)
+		s.Currency = data["currency"].(string)
 		s.Price = int(data["price"].(int64))
 		s.PC = int(data["pc"].(int64))
 		s.PCP = int(data["ppc"].(int64))
@@ -203,11 +247,11 @@ func (s *Security) Scan(src any) error {
 func InsertSecurity(tx *sqlx.Tx, security *Security) error {
 	query := `
 		INSERT INTO securities (
-			ticker, exchange, typology, fullname, sector, industry, subindustry, price, pc, PCP,
+			ticker, exchange, typology, currency, fullname, sector, industry, subindustry, price, pc, PCP,
 			yrl, yrh, drl, drh, consensus, score, coverage, cap, volume, avgvolume, outstanding,
 			beta, pclose, copen, bid, bidsz, ask, asksz, eps, pe, stm
 		) VALUES (
-			:ticker, :exchange, :typology, :fullname, :sector, :industry, :subindustry, :price, :pc, :PCP,
+			:ticker, :exchange, :typology, :currency, :fullname, :sector, :industry, :subindustry, :price, :pc, :PCP,
 			:yrl, :yrh, :drl, :drh, :consensus, :score, :coverage, :cap, :volume, :avgvolume, :outstanding,
 			:beta, :pclose, :copen, :bid, :bidsz, :ask, :asksz, :eps, :pe, :stm
 		)
@@ -219,6 +263,15 @@ func InsertSecurity(tx *sqlx.Tx, security *Security) error {
 	}
 
 	return nil
+}
+
+func SecurityExists(db *sqlx.DB, ticker string, exchange string) bool {
+	var exists bool
+	err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM securities WHERE ticker = $1 AND exchange = $2)", ticker, exchange)
+	if err != nil {
+		return false
+	}
+	return exists
 }
 
 // Dividend represents a row from the dividends table.
@@ -310,6 +363,7 @@ func (etf *ETF) Scan(rows *sqlx.Rows) error {
 		&etf.Security.Ticker,
 		&etf.Security.Exchange,
 		&etf.Security.Typology,
+		&etf.Security.Currency,
 		&etf.Security.FullName,
 		&etf.Security.Sector,
 		&etf.Security.Industry,
@@ -528,7 +582,7 @@ func GetStocks(
 	// Base query selecting relevant security fields where typology = 'STOCK'
 	query := `
 		SELECT
-			s.ticker, s.exchange, s.typology, s.fullname, s.sector, s.industry, s.subindustry,
+			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 			s.price, s.pc, s.pcc, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
 			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
@@ -662,7 +716,7 @@ func GetETFs(
 	// Base query selecting relevant security fields where typology = 'ETF'
 	query := `
 		SELECT
-			s.ticker, s.exchange, s.typology, s.fullname, s.sector, s.industry, s.subindustry,
+			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 			s.price, s.pc, s.pcc, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
 			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
@@ -796,7 +850,7 @@ func GetREITs(
 	// Base query selecting relevant security fields where typology = 'REIT'
 	query := `
 		SELECT
-			s.ticker, s.exchange, s.typology, s.fullname, s.sector, s.industry, s.subindustry,
+			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 			s.price, s.pc, s.pcc, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
 			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,

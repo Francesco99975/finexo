@@ -39,15 +39,6 @@ BEGIN
     END IF;
 END $$;
 
-CREATE TABLE IF NOT EXISTS countries (
-    code VARCHAR(20) PRIMARY KEY,
-    label VARCHAR(50) NOT NULL,
-    currency VARCHAR(10) NOT NULL,
-    continent VARCHAR(50),
-    iso VARCHAR
-);
-
-CREATE INDEX IF NOT EXISTS idx_countries_currency ON countries (currency);
 
 CREATE TABLE IF NOT EXISTS exchanges (
     title VARCHAR(50) PRIMARY KEY,
@@ -68,6 +59,7 @@ CREATE TABLE IF NOT EXISTS securities (
     ticker VARCHAR(20) NOT NULL,
     exchange VARCHAR(50) NOT NULL,
     typology VARCHAR(10) NOT NULL CHECK (typology IN ('STOCK', 'ETF', 'REIT')),
+    currency VARCHAR(10) NOT NULL,
     fullname VARCHAR(255) NOT NULL,
     sector VARCHAR,
     industry VARCHAR,

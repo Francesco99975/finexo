@@ -1,10 +1,8 @@
 package api
 
 import (
-	"database/sql"
 	"net/http"
 
-	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/Francesco99975/finexo/internal/tools"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -15,11 +13,11 @@ func Test() echo.HandlerFunc {
 
 		log.Info("Test endpoint called")
 
-		err := tools.Scrape("QQQ", models.Exchange{Title: "NASDAQ", Suffix: sql.NullString{Valid: false}, Prefix: sql.NullString{Valid: false}, CC: "US"}, models.Country{Code: "US", Label: "United States", Currency: "USD", Continent: "America", ISO: "US"})
+		err := tools.Scrape("QQQ", nil)
 		if err != nil {
 			log.Errorf("Failed to scrape: %v", err)
 		}
 
-		return c.JSON(http.StatusOK, "")
+		return c.JSON(http.StatusOK, "OK")
 	}
 }

@@ -7,10 +7,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Francesco99975/finexo/internal/database"
 	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+	"github.com/go-rod/rod/lib/proto"
 	"github.com/labstack/gommon/log"
 )
 
@@ -18,39 +20,196 @@ const BASE_SEEKINGALPHA_URL = "https://seekingalpha.com/symbol/" // TICKER:COUNT
 const BASE_YAHOO_URL = "https://finance.yahoo.com/quote/"        // TICKER.EXCHANGE_SUFFIX
 const BASE_MARKETBEAT_URL = "https://www.marketbeat.com/stocks/" // EXCHANGE_PREFIX/TICKER
 
+func tickerExtractor(seed string) (string, string, error) {
+	if len(seed) <= 0 {
+		return "", "", fmt.Errorf("seed is empty")
+	}
+
+	seed = strings.ToUpper(seed)
+	seed = strings.TrimSpace(seed)
+
+	if strings.Contains(seed, ":") {
+		parts := strings.Split(seed, ":")
+		if len(parts) == 2 {
+			return parts[1], parts[0], nil
+		}
+	} else if strings.Contains(seed, ".") {
+		parts := strings.Split(seed, ".")
+		if len(parts) == 2 {
+			return parts[0], parts[1], nil
+		}
+	}
+	return seed, "", nil
+
+}
+
 func isAnEmptyString(s string) bool {
 	s = strings.TrimSpace(s)
 	return s == "" || s == "N/A" || s == "-" || s == "--" || s == "n/a"
 }
 
-func Scrape(ticker string, exchange models.Exchange, country models.Country) error {
+func Scrape(seed string, explicit_exchange *string) error {
 	var security models.Security
+	ticker, exchange_hint, err := tickerExtractor(seed)
+	if err != nil {
+		return fmt.Errorf("failed to extract ticker and exchange: %w", err)
+	}
+
 	security.Ticker = ticker
-	security.Exchange = exchange.Title
+	var exchange *models.Exchange
+	if exchange_hint != "" {
+		exchange, err = models.GetExchangeBySuffixorPrefix(database.DB, exchange_hint, exchange_hint)
+		if err != nil {
+			return fmt.Errorf("failed to get exchange: %w", err)
+		}
+		security.Exchange = exchange.Title
+	} else {
+		if explicit_exchange != nil {
+			exchange, err = models.GetExchangeByTitle(database.DB, *explicit_exchange)
+			if err != nil {
+				return fmt.Errorf("failed to get exchange: %w", err)
+			}
+			security.Exchange = exchange.Title
+		} else {
+			return fmt.Errorf("failed to extract exchange")
+		}
+	}
 
 	// Run Rod in headless mode
 	u := launcher.New().Headless(true).MustLaunch()
 	browser := rod.New().ControlURL(u).MustConnect()
 	defer browser.MustClose()
 
-	log.Debugf("Scraping %s:%s", ticker, exchange.Title)
+	log.Debugf("Scraping %s:%s", security.Ticker, security.Exchange)
 
 	var page *rod.Page
 
-	var currentScrapingUrl string
+	var yahooScrapingUrl string
+
 	if exchange.Suffix.Valid {
-		currentScrapingUrl = BASE_YAHOO_URL + fmt.Sprintf("%s.%s", ticker, exchange.Suffix.String)
+		yahooScrapingUrl = BASE_YAHOO_URL + fmt.Sprintf("%s.%s", security.Ticker, exchange.Suffix.String)
 	} else {
-		currentScrapingUrl = BASE_YAHOO_URL + ticker
+		yahooScrapingUrl = BASE_YAHOO_URL + ticker
 	}
 
-	log.Debugf("Current scraping url: %s", currentScrapingUrl)
+	var marketbeatScrapingUrl string
+	if exchange.Prefix.Valid {
+		marketbeatScrapingUrl = BASE_MARKETBEAT_URL + fmt.Sprintf("%s/%s", exchange.Prefix.String, security.Ticker)
+	} else {
+		marketbeatScrapingUrl = BASE_MARKETBEAT_URL + fmt.Sprintf("%s/%s", exchange.Title, security.Ticker)
+	}
 
-	page = browser.MustPage(currentScrapingUrl).MustWaitLoad()
+	seekingalphaScrapingUrl := BASE_SEEKINGALPHA_URL + fmt.Sprintf("%s:%s", security.Ticker, exchange.CC)
+
+	log.Debugf("Current scraping url: %s", yahooScrapingUrl)
+
+	page, err = browser.Page(proto.TargetCreateTarget{URL: marketbeatScrapingUrl})
+	if err != nil {
+		log.Warnf("failed to open page on MarketBeat: %w. For seed %s", err, seed)
+	}
+
+	err = page.WaitLoad()
+	if err != nil {
+		log.Warnf("failed to wait for page load on MarketBeat: %w. For seed %s", err, seed)
+	}
+
+	//Scrape MarketBeat
+	scrapedMarketBeatDataKeys, uperr := page.Timeout(5 * time.Second).Elements(".price-data-area dt")
+	scrapedMarketBeatDataValues, err := page.Timeout(5 * time.Second).Elements(".price-data-area strong")
+	if err != nil || uperr != nil {
+		log.Warnf("failed to scrape MarketBeat data: %w. For seed %s", err, seed)
+	} else {
+		scrapedMarketBeatDataKeysArray := helpers.MapSlice(scrapedMarketBeatDataKeys, func(e *rod.Element) string {
+			return e.MustText()
+		})
+
+		scrapedMarketBeatDataValuesArray := helpers.MapSlice(scrapedMarketBeatDataValues, func(e *rod.Element) string {
+			return e.MustText()
+		})
+
+		for i := 0; i < len(scrapedMarketBeatDataKeysArray); i++ {
+			key := strings.ToLower(scrapedMarketBeatDataKeysArray[i])
+
+			if strings.Contains(key, "sector") {
+				security.Sector = sql.NullString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
+			}
+
+			if strings.Contains(key, "industry") {
+				security.Industry = sql.NullString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
+			}
+
+			if strings.Contains(key, "sub") {
+				security.SubIndustry = sql.NullString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
+			}
+
+			if strings.Contains(key, "consensus") {
+				security.Consensus = sql.NullString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
+			}
+
+			if strings.Contains(key, "score") {
+				scrapedScoreStr := scrapedMarketBeatDataValuesArray[i]
+				scrapedScoreStr = helpers.NormalizeFloatStrToIntStr(scrapedScoreStr)
+
+				scrapedScore, err := strconv.Atoi(scrapedScoreStr)
+				if err != nil {
+					log.Warnf("failed to parse score: %w. For seed %s", err, seed)
+				} else {
+					security.Score = sql.NullInt64{Int64: int64(scrapedScore), Valid: true}
+				}
+
+			}
+
+			if strings.Contains(key, "coverage") {
+				scrapedCoverageStr := strings.Split(scrapedMarketBeatDataValuesArray[i], " ")[0]
+
+				scrapedCoverage, err := strconv.Atoi(scrapedCoverageStr)
+				if err != nil {
+					log.Warnf("failed to parse coverage: %w. For seed %s", err, seed)
+				} else {
+					security.Coverage = sql.NullInt64{Int64: int64(scrapedCoverage), Valid: true}
+				}
+			}
+
+			if strings.Contains(key, "outstanding") {
+				scrapedOutstandingStr := scrapedMarketBeatDataValuesArray[i]
+				scrapedOutstandingStr = helpers.NormalizeFloatStrToIntStr(scrapedOutstandingStr)
+
+				scrapedOutstanding, err := strconv.ParseInt(scrapedOutstandingStr, 10, 64)
+				if err != nil {
+					log.Warnf("failed to parse outstanding: %w. For seed %s", err, seed)
+				} else {
+					security.Outstanding = sql.NullInt64{Int64: scrapedOutstanding, Valid: true}
+				}
+			}
+
+		}
+	}
+
+	err = page.Navigate(seekingalphaScrapingUrl)
+	if err != nil {
+		log.Warnf("failed to open page on SeekingAlpha: %w. For seed %s", err, seed)
+	}
+
+	err = page.WaitLoad()
+	if err != nil {
+		log.Warnf("failed to wait for page load on SeekingAlpha: %w. For seed %s", err, seed)
+	}
+
+	//Scrape SeekingAlpha
+
+	err = page.Navigate(yahooScrapingUrl)
+	if err != nil {
+		return fmt.Errorf("failed to open page on Yahoo: %w. For seed %s", err, seed)
+	}
+
+	err = page.WaitLoad()
+	if err != nil {
+		return fmt.Errorf("failed to wait for page load on Yahoo: %w. For seed %s", err, seed)
+	}
 
 	scrapedCurrencyElem, err := page.Timeout(5 * time.Second).Element("span.exchange.yf-wk4yba span:nth-child(3)")
 	if err != nil {
-		return fmt.Errorf("currency not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("currency not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	scrapedCurrency := scrapedCurrencyElem.MustText()
@@ -59,20 +218,23 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	scrapedCurrency = strings.TrimSpace(scrapedCurrency)
 
-	if scrapedCurrency != country.Currency {
-		return fmt.Errorf("currency mismatch: %s != %s - target: %s:%s", scrapedCurrency, country.Currency, ticker, exchange.Title)
+	if isAnEmptyString(scrapedCurrency) {
+		return fmt.Errorf("empty currency: %s - target: %s:%s", scrapedCurrency, security.Ticker, security.Exchange)
 	}
+
+	security.Currency = scrapedCurrency
+	log.Debug("Scraped currency")
 
 	scrapedFullNameElem, err := page.Timeout(5 * time.Second).Element(".yf-xxbei9")
 	if err != nil {
-		return fmt.Errorf("full name not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("full name not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	scrapedFullName := scrapedFullNameElem.MustText()
 	scrapedFullName = strings.Split(scrapedFullName, " (")[0]
 
 	if isAnEmptyString(scrapedFullName) {
-		return fmt.Errorf("empty full name: %s - target: %s:%s", scrapedFullName, ticker, exchange.Title)
+		return fmt.Errorf("empty full name: %s - target: %s:%s", scrapedFullName, security.Ticker, security.Exchange)
 	}
 
 	security.FullName = scrapedFullName
@@ -90,7 +252,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	priceStrElem, err := page.Timeout(5 * time.Second).Element("span[data-testid='qsp-price']")
 	if err != nil {
-		return fmt.Errorf("price not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("price not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	priceStr := priceStrElem.MustText()
@@ -98,35 +260,35 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 	priceStr = helpers.NormalizeFloatStrToIntStr(priceStr)
 
 	if isAnEmptyString(priceStr) {
-		return fmt.Errorf("empty price: %s - target: %s:%s", priceStr, ticker, exchange.Title)
+		return fmt.Errorf("empty price: %s - target: %s:%s", priceStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedPrice, err := strconv.Atoi(priceStr)
 	if err != nil {
-		return fmt.Errorf("invalid price: %s - target: %s:%s", priceStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid price: %s - target: %s:%s", priceStr, security.Ticker, security.Exchange)
 	}
 
 	if scrapedPrice <= 0 {
-		return fmt.Errorf("invalid negative price: %d - target: %s:%s", scrapedPrice, ticker, exchange.Title)
+		return fmt.Errorf("invalid negative price: %d - target: %s:%s", scrapedPrice, security.Ticker, security.Exchange)
 	}
 
 	security.Price = scrapedPrice
 
 	priceChangeStrElem, err := page.Timeout(5 * time.Second).Element("span[data-testid='qsp-price-change']")
 	if err != nil {
-		return fmt.Errorf("price change not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("price change not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 	priceChangeStr := priceChangeStrElem.MustText()
 	log.Debugf("Scraped price change: %s", priceChangeStr)
 	priceChangeStr = helpers.NormalizeFloatStrToIntStr(priceChangeStr)
 
 	if isAnEmptyString(priceChangeStr) {
-		return fmt.Errorf("empty price change: %s - target: %s:%s", priceChangeStr, ticker, exchange.Title)
+		return fmt.Errorf("empty price change: %s - target: %s:%s", priceChangeStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedPriceChange, err := strconv.Atoi(priceChangeStr)
 	if err != nil {
-		return fmt.Errorf("invalid price change: %s - target: %s:%s", priceChangeStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid price change: %s - target: %s:%s", priceChangeStr, security.Ticker, security.Exchange)
 	}
 
 	security.PC = scrapedPriceChange
@@ -134,7 +296,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	priceChangePercentageStrElem, err := page.Timeout(5 * time.Second).Element("span[data-testid='qsp-price-change-percent']")
 	if err != nil {
-		return fmt.Errorf("price change percentage not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("price change percentage not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	priceChangePercentageStr := priceChangePercentageStrElem.MustText()
@@ -142,12 +304,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 	priceChangePercentageStr = helpers.NormalizeFloatStrToIntStr(priceChangePercentageStr)
 
 	if isAnEmptyString(priceChangePercentageStr) {
-		return fmt.Errorf("empty price change percentage: %s - target: %s:%s", priceChangePercentageStr, ticker, exchange.Title)
+		return fmt.Errorf("empty price change percentage: %s - target: %s:%s", priceChangePercentageStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedPriceChangePercentage, err := strconv.Atoi(priceChangePercentageStr)
 	if err != nil {
-		return fmt.Errorf("invalid price change percentage: %s - target: %s:%s", priceChangePercentageStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid price change percentage: %s - target: %s:%s", priceChangePercentageStr, security.Ticker, security.Exchange)
 	}
 
 	security.PCP = scrapedPriceChangePercentage
@@ -155,7 +317,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	yearlyRangeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='fiftyTwoWeekRange']")
 	if err != nil {
-		return fmt.Errorf("yearly range not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("yearly range not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	yearlyRangeStr := yearlyRangeStrElem.MustText()
@@ -165,22 +327,22 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 	yearlyRangeArr := strings.Split(yearlyRangeStr, "-")
 
 	if len(yearlyRangeArr) != 2 {
-		return fmt.Errorf("invalid yearly range: %s - target: %s:%s", yearlyRangeStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid yearly range: %s - target: %s:%s", yearlyRangeStr, security.Ticker, security.Exchange)
 	}
 
 	yrlStr := yearlyRangeArr[0]
 	yrlStr = helpers.NormalizeFloatStrToIntStr(yrlStr)
 	if yrlStr == "" {
-		return fmt.Errorf("empty yearly range low: %s - target: %s:%s", yrlStr, ticker, exchange.Title)
+		return fmt.Errorf("empty yearly range low: %s - target: %s:%s", yrlStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedYrl, err := strconv.Atoi(yrlStr)
 	if err != nil {
-		return fmt.Errorf("invalid yearly range low: %s - target: %s:%s", yrlStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid yearly range low: %s - target: %s:%s", yrlStr, security.Ticker, security.Exchange)
 	}
 
 	if scrapedYrl <= 0 {
-		return fmt.Errorf("invalid negative yearly range low: %d - target: %s:%s", scrapedYrl, ticker, exchange.Title)
+		return fmt.Errorf("invalid negative yearly range low: %d - target: %s:%s", scrapedYrl, security.Ticker, security.Exchange)
 	}
 
 	security.YearLow = scrapedYrl
@@ -189,20 +351,20 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 	yrhStr := yearlyRangeArr[1]
 	yrhStr = helpers.NormalizeFloatStrToIntStr(yrhStr)
 	if yrhStr == "" {
-		return fmt.Errorf("empty yearly range high: %s - target: %s:%s", yrhStr, ticker, exchange.Title)
+		return fmt.Errorf("empty yearly range high: %s - target: %s:%s", yrhStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedYrh, err := strconv.Atoi(yrhStr)
 	if err != nil {
-		return fmt.Errorf("invalid yearly range high: %s - target: %s:%s", yrhStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid yearly range high: %s - target: %s:%s", yrhStr, security.Ticker, security.Exchange)
 	}
 
 	if scrapedYrh <= 0 {
-		return fmt.Errorf("invalid negative yearly range high: %d - target: %s:%s", scrapedYrh, ticker, exchange.Title)
+		return fmt.Errorf("invalid negative yearly range high: %d - target: %s:%s", scrapedYrh, security.Ticker, security.Exchange)
 	}
 
 	if scrapedYrh < scrapedYrl {
-		return fmt.Errorf("invalid yearly range high < low: %d < %d - target: %s:%s", scrapedYrh, scrapedYrl, ticker, exchange.Title)
+		return fmt.Errorf("invalid yearly range high < low: %d < %d - target: %s:%s", scrapedYrh, scrapedYrl, security.Ticker, security.Exchange)
 	}
 
 	security.YearHigh = scrapedYrh
@@ -210,7 +372,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	daylyRangeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='regularMarketDayRange']")
 	if err != nil {
-		return fmt.Errorf("daily range not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("daily range not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	daylyRangeStr := daylyRangeStrElem.MustText()
@@ -219,22 +381,22 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 	daylyRangeStr = strings.ReplaceAll(daylyRangeStr, " ", "")
 	daylyRangeArr := strings.Split(daylyRangeStr, "-")
 	if len(daylyRangeArr) != 2 {
-		return fmt.Errorf("invalid daily range: %s - target: %s:%s", daylyRangeStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid daily range: %s - target: %s:%s", daylyRangeStr, security.Ticker, security.Exchange)
 	}
 
 	drlStr := daylyRangeArr[0]
 	drlStr = helpers.NormalizeFloatStrToIntStr(drlStr)
 	if drlStr == "" {
-		return fmt.Errorf("empty daily range low: %s - target: %s:%s", drlStr, ticker, exchange.Title)
+		return fmt.Errorf("empty daily range low: %s - target: %s:%s", drlStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedDrl, err := strconv.Atoi(drlStr)
 	if err != nil {
-		return fmt.Errorf("invalid daily range low: %s - target: %s:%s", drlStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid daily range low: %s - target: %s:%s", drlStr, security.Ticker, security.Exchange)
 	}
 
 	if scrapedDrl <= 0 {
-		return fmt.Errorf("invalid negative daily range low: %d - target: %s:%s", scrapedDrl, ticker, exchange.Title)
+		return fmt.Errorf("invalid negative daily range low: %d - target: %s:%s", scrapedDrl, security.Ticker, security.Exchange)
 	}
 
 	security.DayLow = scrapedDrl
@@ -243,20 +405,20 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 	drhStr := daylyRangeArr[1]
 	drhStr = helpers.NormalizeFloatStrToIntStr(drhStr)
 	if drhStr == "" {
-		return fmt.Errorf("empty daily range high: %s - target: %s:%s", drhStr, ticker, exchange.Title)
+		return fmt.Errorf("empty daily range high: %s - target: %s:%s", drhStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedDrh, err := strconv.Atoi(drhStr)
 	if err != nil {
-		return fmt.Errorf("invalid daily range high: %s - target: %s:%s", drhStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid daily range high: %s - target: %s:%s", drhStr, security.Ticker, security.Exchange)
 	}
 
 	if scrapedDrh <= 0 {
-		return fmt.Errorf("invalid negative daily range high: %d - target: %s:%s", scrapedDrh, ticker, exchange.Title)
+		return fmt.Errorf("invalid negative daily range high: %d - target: %s:%s", scrapedDrh, security.Ticker, security.Exchange)
 	}
 
 	if scrapedDrh < scrapedDrl {
-		return fmt.Errorf("invalid daily range high < low: %d < %d - target: %s:%s", scrapedDrh, scrapedDrl, ticker, exchange.Title)
+		return fmt.Errorf("invalid daily range high < low: %d < %d - target: %s:%s", scrapedDrh, scrapedDrl, security.Ticker, security.Exchange)
 	}
 
 	security.DayHigh = scrapedDrh
@@ -264,7 +426,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	marketCapStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='marketCap']")
 	if err != nil {
-		log.Warnf("market cap not found in page - target: %s:%s", ticker, exchange.Title)
+		log.Warnf("market cap not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		security.MarketCap = sql.NullInt64{
 			Valid: false,
 		}
@@ -273,14 +435,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		log.Debugf("Scraped market cap: %s", marketCapStr)
 
 		if isAnEmptyString(marketCapStr) {
-			log.Warnf("empty market cap: %s - target: %s:%s", marketCapStr, ticker, exchange.Title)
+			log.Warnf("empty market cap: %s - target: %s:%s", marketCapStr, security.Ticker, security.Exchange)
 			security.MarketCap = sql.NullInt64{
 				Valid: false,
 			}
 		} else {
 			scrapedMarketCap, err := helpers.ParseNumberString(marketCapStr)
 			if err != nil || scrapedMarketCap <= 0 {
-				log.Warnf("invalid market cap: %s - target: %s:%s", marketCapStr, ticker, exchange.Title)
+				log.Warnf("invalid market cap: %s - target: %s:%s", marketCapStr, security.Ticker, security.Exchange)
 				security.MarketCap = sql.NullInt64{
 					Valid: false,
 				}
@@ -295,7 +457,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	volumeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='regularMarketVolume']")
 	if err != nil {
-		log.Warnf("volume not found in page - target: %s:%s", ticker, exchange.Title)
+		log.Warnf("volume not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		security.Volume = sql.NullInt64{
 			Valid: false,
 		}
@@ -305,14 +467,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		volumeStr = strings.ReplaceAll(volumeStr, ",", "")
 
 		if isAnEmptyString(volumeStr) {
-			log.Warnf("empty volume: %s - target: %s:%s", volumeStr, ticker, exchange.Title)
+			log.Warnf("empty volume: %s - target: %s:%s", volumeStr, security.Ticker, security.Exchange)
 			security.Volume = sql.NullInt64{
 				Valid: false,
 			}
 		} else {
 			scrapedVolume, err := strconv.ParseInt(volumeStr, 10, 64)
 			if err != nil || scrapedVolume <= 0 {
-				log.Warnf("invalid volume: %s - target: %s:%s", volumeStr, ticker, exchange.Title)
+				log.Warnf("invalid volume: %s - target: %s:%s", volumeStr, security.Ticker, security.Exchange)
 				security.Volume = sql.NullInt64{
 					Valid: false,
 				}
@@ -329,7 +491,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	avgVolumeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='averageVolume']")
 	if err != nil {
-		log.Warnf("average volume not found in page - target: %s:%s", ticker, exchange.Title)
+		log.Warnf("average volume not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		security.AvgVolume = sql.NullInt64{
 			Valid: false,
 		}
@@ -339,14 +501,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		avgVolumeStr = strings.ReplaceAll(avgVolumeStr, ",", "")
 
 		if isAnEmptyString(avgVolumeStr) {
-			log.Warnf("empty average volume: %s - target: %s:%s", avgVolumeStr, ticker, exchange.Title)
+			log.Warnf("empty average volume: %s - target: %s:%s", avgVolumeStr, security.Ticker, security.Exchange)
 			security.AvgVolume = sql.NullInt64{
 				Valid: false,
 			}
 		} else {
 			scrapedAvgVolume, err := strconv.ParseInt(avgVolumeStr, 10, 64)
 			if err != nil || scrapedAvgVolume <= 0 {
-				log.Warnf("invalid average volume: %s - target: %s:%s", avgVolumeStr, ticker, exchange.Title)
+				log.Warnf("invalid average volume: %s - target: %s:%s", avgVolumeStr, security.Ticker, security.Exchange)
 				security.AvgVolume = sql.NullInt64{
 					Valid: false,
 				}
@@ -364,7 +526,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	betaStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Beta (5Y Monthly)'] ~ span")
 	if err != nil {
-		log.Warnf("beta not found in page - target: %s:%s", ticker, exchange.Title)
+		log.Warnf("beta not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		security.Beta = sql.NullInt64{
 			Valid: false,
 		}
@@ -373,14 +535,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		log.Debugf("Scraped beta: %s", betaStr)
 		betaStr = helpers.NormalizeFloatStrToIntStr(betaStr)
 		if isAnEmptyString(betaStr) {
-			log.Warnf("empty beta: %s - target: %s:%s", betaStr, ticker, exchange.Title)
+			log.Warnf("empty beta: %s - target: %s:%s", betaStr, security.Ticker, security.Exchange)
 			security.Beta = sql.NullInt64{
 				Valid: false,
 			}
 		} else {
 			scrapedBeta, err := strconv.Atoi(betaStr)
 			if err != nil || scrapedBeta <= 0 {
-				log.Warnf("invalid beta: %s - target: %s:%s", betaStr, ticker, exchange.Title)
+				log.Warnf("invalid beta: %s - target: %s:%s", betaStr, security.Ticker, security.Exchange)
 				security.Beta = sql.NullInt64{
 					Valid: false,
 				}
@@ -397,23 +559,23 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	pcloseStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='regularMarketPreviousClose']")
 	if err != nil {
-		return fmt.Errorf("previous close not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("previous close not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	pcloseStr := pcloseStrElem.MustText()
 	log.Debugf("Scraped previous close: %s", pcloseStr)
 	pcloseStr = helpers.NormalizeFloatStrToIntStr(pcloseStr)
 	if isAnEmptyString(pcloseStr) {
-		return fmt.Errorf("empty previous close: %s - target: %s:%s", pcloseStr, ticker, exchange.Title)
+		return fmt.Errorf("empty previous close: %s - target: %s:%s", pcloseStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedPclose, err := strconv.Atoi(pcloseStr)
 	if err != nil {
-		return fmt.Errorf("invalid previous close: %s - target: %s:%s", pcloseStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid previous close: %s - target: %s:%s", pcloseStr, security.Ticker, security.Exchange)
 	}
 
 	if scrapedPclose <= 0 {
-		return fmt.Errorf("invalid negative previous close: %d - target: %s:%s", scrapedPclose, ticker, exchange.Title)
+		return fmt.Errorf("invalid negative previous close: %d - target: %s:%s", scrapedPclose, security.Ticker, security.Exchange)
 	}
 
 	security.PClose = scrapedPclose
@@ -421,22 +583,22 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	copenStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='regularMarketOpen']")
 	if err != nil {
-		return fmt.Errorf("open not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("open not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 	copenStr := copenStrElem.MustText()
 	log.Debugf("Scraped open: %s", copenStr)
 	copenStr = helpers.NormalizeFloatStrToIntStr(copenStr)
 	if isAnEmptyString(copenStr) {
-		return fmt.Errorf("empty open: %s - target: %s:%s", copenStr, ticker, exchange.Title)
+		return fmt.Errorf("empty open: %s - target: %s:%s", copenStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedCopen, err := strconv.Atoi(copenStr)
 	if err != nil {
-		return fmt.Errorf("invalid open: %s - target: %s:%s", copenStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid open: %s - target: %s:%s", copenStr, security.Ticker, security.Exchange)
 	}
 
 	if scrapedCopen <= 0 {
-		return fmt.Errorf("invalid negative open: %d - target: %s:%s", scrapedCopen, ticker, exchange.Title)
+		return fmt.Errorf("invalid negative open: %d - target: %s:%s", scrapedCopen, security.Ticker, security.Exchange)
 	}
 
 	security.COpen = scrapedCopen
@@ -444,7 +606,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	bidPayloadStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Bid'] ~ span")
 	if err != nil {
-		return fmt.Errorf("bid not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("bid not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	bidPayloadStr := bidPayloadStrElem.MustText()
@@ -452,22 +614,22 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 	bidPayloadStr = strings.ReplaceAll(bidPayloadStr, " ", "")
 	bidPayloadArr := strings.Split(bidPayloadStr, "x")
 	if len(bidPayloadArr) != 2 {
-		return fmt.Errorf("invalid bid payload: %s - target: %s:%s", bidPayloadStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid bid payload: %s - target: %s:%s", bidPayloadStr, security.Ticker, security.Exchange)
 	}
 
 	bidStr := bidPayloadArr[0]
 	bidStr = helpers.NormalizeFloatStrToIntStr(bidStr)
 	if bidStr == "" {
-		return fmt.Errorf("empty bid: %s - target: %s:%s", bidStr, ticker, exchange.Title)
+		return fmt.Errorf("empty bid: %s - target: %s:%s", bidStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedBid, err := strconv.Atoi(bidStr)
 	if err != nil {
-		return fmt.Errorf("invalid bid: %s - target: %s:%s", bidStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid bid: %s - target: %s:%s", bidStr, security.Ticker, security.Exchange)
 	}
 
 	if scrapedBid <= 0 {
-		return fmt.Errorf("invalid negative bid: %d - target: %s:%s", scrapedBid, ticker, exchange.Title)
+		return fmt.Errorf("invalid negative bid: %d - target: %s:%s", scrapedBid, security.Ticker, security.Exchange)
 	}
 
 	security.Bid = scrapedBid
@@ -475,14 +637,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	bidSizeStr := bidPayloadArr[1]
 	if isAnEmptyString(bidSizeStr) {
-		log.Warnf("empty bid size: %s - target: %s:%s", bidSizeStr, ticker, exchange.Title)
+		log.Warnf("empty bid size: %s - target: %s:%s", bidSizeStr, security.Ticker, security.Exchange)
 		security.BidSize = sql.NullInt64{
 			Valid: false,
 		}
 	} else {
 		scrapedBidSize, err := strconv.Atoi(bidSizeStr)
 		if err != nil || scrapedBidSize < 0 {
-			log.Warnf("invalid bid size: %s - target: %s:%s", bidSizeStr, ticker, exchange.Title)
+			log.Warnf("invalid bid size: %s - target: %s:%s", bidSizeStr, security.Ticker, security.Exchange)
 			security.BidSize = sql.NullInt64{
 				Valid: false,
 			}
@@ -498,7 +660,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	askPayloadStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Ask'] ~ span")
 	if err != nil {
-		return fmt.Errorf("ask not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("ask not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	askPayloadStr := askPayloadStrElem.MustText()
@@ -506,22 +668,22 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 	askPayloadStr = strings.ReplaceAll(askPayloadStr, " ", "")
 	askPayloadArr := strings.Split(askPayloadStr, "x")
 	if len(askPayloadArr) != 2 {
-		return fmt.Errorf("invalid ask payload: %s - target: %s:%s", askPayloadStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid ask payload: %s - target: %s:%s", askPayloadStr, security.Ticker, security.Exchange)
 	}
 
 	askStr := askPayloadArr[0]
 	askStr = helpers.NormalizeFloatStrToIntStr(askStr)
 	if isAnEmptyString(askStr) {
-		return fmt.Errorf("empty ask: %s - target: %s:%s", askStr, ticker, exchange.Title)
+		return fmt.Errorf("empty ask: %s - target: %s:%s", askStr, security.Ticker, security.Exchange)
 	}
 
 	scrapedAsk, err := strconv.Atoi(askStr)
 	if err != nil {
-		return fmt.Errorf("invalid ask: %s - target: %s:%s", askStr, ticker, exchange.Title)
+		return fmt.Errorf("invalid ask: %s - target: %s:%s", askStr, security.Ticker, security.Exchange)
 	}
 
 	if scrapedAsk <= 0 {
-		return fmt.Errorf("invalid negative ask: %d - target: %s:%s", scrapedAsk, ticker, exchange.Title)
+		return fmt.Errorf("invalid negative ask: %d - target: %s:%s", scrapedAsk, security.Ticker, security.Exchange)
 	}
 
 	security.Ask = scrapedAsk
@@ -529,14 +691,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	askSizeStr := askPayloadArr[1]
 	if isAnEmptyString(askSizeStr) {
-		log.Warnf("empty ask size: %s - target: %s:%s", askSizeStr, ticker, exchange.Title)
+		log.Warnf("empty ask size: %s - target: %s:%s", askSizeStr, security.Ticker, security.Exchange)
 		security.AskSize = sql.NullInt64{
 			Valid: false,
 		}
 	} else {
 		scrapedAskSize, err := strconv.Atoi(askSizeStr)
 		if err != nil || scrapedAskSize <= 0 {
-			log.Warnf("invalid ask size: %s - target: %s:%s", askSizeStr, ticker, exchange.Title)
+			log.Warnf("invalid ask size: %s - target: %s:%s", askSizeStr, security.Ticker, security.Exchange)
 			security.AskSize = sql.NullInt64{
 				Valid: false,
 			}
@@ -552,11 +714,11 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 	stockDataElements, err := page.Timeout(5 * time.Second).Elements("[data-field='trailingPE']")
 	if err != nil {
-		return fmt.Errorf("trailing PE not found in page - target: %s:%s", ticker, exchange.Title)
+		return fmt.Errorf("trailing PE not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	if len(stockDataElements) == 0 {
-		log.Warnf("empty trailing PE: %s - target: %s:%s", stockDataElements, ticker, exchange.Title)
+		log.Warnf("empty trailing PE: %s - target: %s:%s", stockDataElements, security.Ticker, security.Exchange)
 		security.PE = sql.NullInt64{
 			Valid: false,
 		}
@@ -567,12 +729,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		log.Debugf("Scraped trailing PE: %s", peStr)
 		peStr = helpers.NormalizeFloatStrToIntStr(peStr)
 		if peStr == "" {
-			return fmt.Errorf("empty trailing PE: %s - target: %s:%s", peStr, ticker, exchange.Title)
+			return fmt.Errorf("empty trailing PE: %s - target: %s:%s", peStr, security.Ticker, security.Exchange)
 		}
 
 		scrapedPe, err := strconv.Atoi(peStr)
 		if err != nil || scrapedPe <= 0 {
-			log.Warnf("invalid trailing PE: %s - target: %s:%s", peStr, ticker, exchange.Title)
+			log.Warnf("invalid trailing PE: %s - target: %s:%s", peStr, security.Ticker, security.Exchange)
 			security.PE = sql.NullInt64{
 				Valid: false,
 			}
@@ -590,12 +752,12 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		log.Debugf("Scraped EPS: %s", epsStr)
 		epsStr = helpers.NormalizeFloatStrToIntStr(epsStr)
 		if epsStr == "" {
-			return fmt.Errorf("empty EPS: %s - target: %s:%s", epsStr, ticker, exchange.Title)
+			return fmt.Errorf("empty EPS: %s - target: %s:%s", epsStr, security.Ticker, security.Exchange)
 		}
 
 		scrapedEps, err := strconv.Atoi(epsStr)
 		if err != nil || scrapedEps <= 0 {
-			log.Warnf("invalid EPS: %s - target: %s:%s", epsStr, ticker, exchange.Title)
+			log.Warnf("invalid EPS: %s - target: %s:%s", epsStr, security.Ticker, security.Exchange)
 			security.EPS = sql.NullInt64{
 				Valid: false,
 			}
@@ -614,7 +776,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 		Valid:  true,
 	}
 
-	security.Dividend = scrapeDividend(ticker, exchange.Title, security.Typology, page)
+	security.Dividend = scrapeDividend(ticker, security.Exchange, security.Typology, page)
 	log.Debug("Scraped dividend")
 
 	switch security.Typology {
@@ -631,7 +793,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 		aumStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Net Assets'] ~ span")
 		if err != nil {
-			log.Warnf("AUM not found in page - target: %s:%s", ticker, exchange.Title)
+			log.Warnf("AUM not found in page - target: %s:%s", security.Ticker, security.Exchange)
 			etf.AUM = sql.NullInt64{
 				Valid: false,
 			}
@@ -640,7 +802,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 			log.Debugf("Scraped AUM: %s", aumStr)
 			scrapedAum, err := helpers.ParseNumberString(aumStr)
 			if err != nil || scrapedAum <= 0 {
-				log.Warnf("invalid AUM: %s - target: %s:%s", aumStr, ticker, exchange.Title)
+				log.Warnf("invalid AUM: %s - target: %s:%s", aumStr, security.Ticker, security.Exchange)
 				etf.AUM = sql.NullInt64{
 					Valid: false,
 				}
@@ -656,7 +818,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 		erStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Expense Ratio (net)'] ~ span")
 		if err != nil {
-			log.Warnf("expense ratio not found in page - target: %s:%s", ticker, exchange.Title)
+			log.Warnf("expense ratio not found in page - target: %s:%s", security.Ticker, security.Exchange)
 			etf.ExpenseRatio = sql.NullInt64{
 				Valid: false,
 			}
@@ -665,14 +827,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 			log.Debugf("Scraped expense ratio: %s", erStr)
 			erStr = helpers.NormalizeFloatStrToIntStr(erStr)
 			if erStr == "" {
-				log.Warnf("empty expense ratio: %s - target: %s:%s", erStr, ticker, exchange.Title)
+				log.Warnf("empty expense ratio: %s - target: %s:%s", erStr, security.Ticker, security.Exchange)
 				etf.ExpenseRatio = sql.NullInt64{
 					Valid: false,
 				}
 			} else {
 				scrapedEr, err := strconv.Atoi(erStr)
 				if err != nil || scrapedEr <= 0 {
-					log.Warnf("invalid expense ratio: %s - target: %s:%s", erStr, ticker, exchange.Title)
+					log.Warnf("invalid expense ratio: %s - target: %s:%s", erStr, security.Ticker, security.Exchange)
 					etf.ExpenseRatio = sql.NullInt64{
 						Valid: false,
 					}
@@ -689,7 +851,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 		navStrElem, err := page.Timeout(5 * time.Second).Element("span[title='NAV'] ~ span")
 		if err != nil {
-			log.Warnf("NAV not found in page - target: %s:%s", ticker, exchange.Title)
+			log.Warnf("NAV not found in page - target: %s:%s", security.Ticker, security.Exchange)
 			etf.NAV = sql.NullInt64{
 				Valid: false,
 			}
@@ -698,14 +860,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 			log.Debugf("Scraped NAV: %s", navStr)
 			navStr = helpers.NormalizeFloatStrToIntStr(navStr)
 			if isAnEmptyString(navStr) {
-				log.Warnf("empty NAV: %s - target: %s:%s", navStr, ticker, exchange.Title)
+				log.Warnf("empty NAV: %s - target: %s:%s", navStr, security.Ticker, security.Exchange)
 				etf.NAV = sql.NullInt64{
 					Valid: false,
 				}
 			} else {
 				scrapedNav, err := strconv.Atoi(navStr)
 				if err != nil || scrapedNav <= 0 {
-					log.Warnf("invalid NAV: %s - target: %s:%s", navStr, ticker, exchange.Title)
+					log.Warnf("invalid NAV: %s - target: %s:%s", navStr, security.Ticker, security.Exchange)
 					etf.NAV = sql.NullInt64{
 						Valid: false,
 					}
@@ -722,7 +884,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 		inceptionDateStrElem, err := page.Timeout(5 * time.Second).Elements("section[data-testid='company-overview-card'] p[title]")
 		if err != nil {
-			log.Warnf("inception date not found in page - target: %s:%s", ticker, exchange.Title)
+			log.Warnf("inception date not found in page - target: %s:%s", security.Ticker, security.Exchange)
 			etf.InceptionDate = sql.NullTime{
 				Valid: false,
 			}
@@ -730,14 +892,14 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 			inceptionDateStr := inceptionDateStrElem[3].MustText()
 			log.Debugf("Scraped inception date: %s", inceptionDateStr)
 			if isAnEmptyString(inceptionDateStr) {
-				log.Warnf("empty inception date: %s - target: %s:%s", inceptionDateStr, ticker, exchange.Title)
+				log.Warnf("empty inception date: %s - target: %s:%s", inceptionDateStr, security.Ticker, security.Exchange)
 				etf.InceptionDate = sql.NullTime{
 					Valid: false,
 				}
 			} else {
 				scrapedInceptionDate, err := time.Parse("2006-01-02", inceptionDateStr)
 				if err != nil {
-					log.Warnf("invalid inception date: %s - target: %s:%s", inceptionDateStr, ticker, exchange.Title)
+					log.Warnf("invalid inception date: %s - target: %s:%s", inceptionDateStr, security.Ticker, security.Exchange)
 					etf.InceptionDate = sql.NullTime{
 						Valid: false,
 					}
@@ -754,33 +916,69 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 
 		relationsElementsTickers, err := page.Timeout(5 * time.Second).Elements("section[data-testid='top-holdings'] a[data-testid='ticker-container']")
 		if err != nil {
-			log.Warnf("top holdings not found in page - target: %s:%s", ticker, exchange.Title)
+			log.Warnf("top holdings not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		}
 
 		relationsElementsAllocations, err := page.Timeout(5 * time.Second).Elements("section[data-testid='top-holdings'] a[data-testid='ticker-container'] ~ span.data")
 		if err != nil {
-			log.Warnf("top holdings not found in page - target: %s:%s", ticker, exchange.Title)
+			log.Warnf("top holdings not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		}
 
 		for i := range len(relationsElementsTickers) {
-			ticker := relationsElementsTickers[i].MustText()
-			log.Debugf("Scraped top holding: %s", ticker)
-			ticker = strings.TrimSpace(ticker)
+			seed := relationsElementsTickers[i].MustText()
+			log.Debugf("Scraped top holding: %s", security.Ticker)
+			seed = strings.TrimSpace(seed)
+			if isAnEmptyString(seed) {
+				log.Warnf("empty top holding: %s - target: %s:%s", seed, security.Ticker, security.Exchange)
+				continue
+			}
+
+			relatedTicker, relatedExchange, err := tickerExtractor(seed)
+			if err != nil {
+				log.Warnf("invalid top holding: %s - target: %s:%s", relatedTicker, security.Ticker, security.Exchange)
+				continue
+			}
+			if isAnEmptyString(relatedTicker) {
+				log.Warnf("empty top holding: %s - target: %s:%s", relatedTicker, security.Ticker, security.Exchange)
+				continue
+			}
 			allocationStr := relationsElementsAllocations[i].MustText()
 			log.Debugf("Scraped top holding allocation: %s", allocationStr)
 			allocationStr = helpers.NormalizeFloatStrToIntStr(allocationStr)
 			if isAnEmptyString(allocationStr) {
-				log.Warnf("empty allocation: %s - target: %s:%s", allocationStr, ticker, exchange.Title)
+				log.Warnf("empty allocation: %s - target: %s:%s", allocationStr, security.Ticker, security.Exchange)
 				continue
 			}
 
 			scrapedAllocation, err := strconv.Atoi(allocationStr)
 			if err != nil || scrapedAllocation <= 0 {
-				log.Warnf("invalid allocation: %s - target: %s:%s", allocationStr, ticker, exchange.Title)
+				log.Warnf("invalid allocation: %s - target: %s:%s", allocationStr, security.Ticker, security.Exchange)
 				continue
 			}
 
-			etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%d", ticker, scrapedAllocation))
+			//Steps to find related exchange
+			if relatedExchange == "" {
+				relatedExchange, err = findExchangeInPage(ticker)
+				if err != nil {
+					log.Warnf("invalid exchange or could not find: %s - target: %s:%s", seed, security.Ticker, security.Exchange)
+					continue
+				}
+			}
+			relatedExchangeInfo, err := models.GetExchangeBySuffixorPrefix(database.DB, relatedExchange, relatedExchange)
+			if err != nil {
+				log.Warnf("invalid exchange: %s - target: %s:%s", relatedExchange, security.Ticker, security.Exchange)
+				continue
+			}
+
+			if !models.SecurityExists(database.DB, relatedTicker, relatedExchangeInfo.Title) {
+				err := Scrape(relatedTicker, &relatedExchangeInfo.Title)
+				if err != nil {
+					log.Errorf("error scraping related security: %s", err)
+					continue
+				}
+			}
+
+			etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchange, scrapedAllocation))
 		}
 
 		//Display In a good format all the scraped data
@@ -797,7 +995,7 @@ func Scrape(ticker string, exchange models.Exchange, country models.Country) err
 			Valid:  true,
 		}
 	default:
-		return fmt.Errorf("invalid typology: %s - target: %s:%s", security.Typology, ticker, exchange.Title)
+		return fmt.Errorf("invalid typology: %s - target: %s:%s", security.Typology, security.Ticker, security.Exchange)
 	}
 
 	page.MustClose()
@@ -850,4 +1048,43 @@ func scrapeDividend(ticker string, exchange string, typology string, page *rod.P
 	dividend.Yield = scrapedYield
 
 	return &dividend
+}
+
+func findExchangeInPage(ticker string) (string, error) {
+	// Run Rod in headless mode
+	u := launcher.New().Headless(true).MustLaunch()
+	browser := rod.New().ControlURL(u).MustConnect()
+
+	log.Debugf("Scraping %s looking for exchange", ticker)
+
+	var page *rod.Page
+	exchangeElem, err := page.Timeout(5 * time.Second).Element("span.exchange span")
+	if err != nil {
+		return "", fmt.Errorf("exchange not found in page - target: %s", ticker)
+	}
+	exchange := exchangeElem.MustText()
+
+	page.MustClose()
+	browser.MustClose()
+
+	if exchange == "" {
+		return "", fmt.Errorf("empty exchange - target: %s", ticker)
+	}
+	log.Debugf("Scraped exchange for related security to etf: %s", exchange)
+
+	exchange = strings.ToUpper(exchange)
+
+	if !strings.Contains(exchange, "NYSE") && !strings.Contains(exchange, "NASDAQ") {
+		return "", fmt.Errorf("invalid exchange: %s - target: %s", exchange, ticker)
+	}
+
+	if strings.Contains(exchange, "NYSE") {
+		exchange = "NYSE"
+	}
+
+	if strings.Contains(exchange, "NASDAQ") {
+		exchange = "NASDAQ"
+	}
+
+	return exchange, nil
 }
