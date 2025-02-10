@@ -100,6 +100,7 @@ SELECT apply_update_trigger('securities');
 CREATE TABLE IF NOT EXISTS etfs (
     ticker VARCHAR(20) NOT NULL,
     exchange VARCHAR(50) NOT NULL,
+    family VARCHAR NOT NULL,
     holdings INT NOT NULL,
     aum VARCHAR(50),
     er VARCHAR(10),

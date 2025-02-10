@@ -335,6 +335,7 @@ func CreateStock(db *sqlx.DB, stock *Security) (err error) {
 type ETF struct {
 	Security          `json:"security"` // Embedded security properties
 	Holdings          int               `db:"holdings" json:"holdings"`
+	Family            string            `db:"family" json:"family"`
 	AUM               sql.NullInt64     `db:"aum" json:"aum,omitempty"`
 	ExpenseRatio      sql.NullInt64     `db:"er" json:"expenseRatio,omitempty"`
 	NAV               sql.NullInt64     `db:"nav" json:"nav,omitempty"`
@@ -346,6 +347,7 @@ func (etf *ETF) flatten() map[string]interface{} {
 	return map[string]interface{}{
 		"ticker":       etf.Security.Ticker,
 		"exchange":     etf.Security.Exchange,
+		"family":       etf.Family,
 		"holdings":     etf.Holdings,
 		"aum":          etf.AUM,
 		"expenseRatio": etf.ExpenseRatio,
@@ -392,6 +394,7 @@ func (etf *ETF) Scan(rows *sqlx.Rows) error {
 		&etf.Security.Created,
 		&etf.Security.Updated,
 		&etf.Holdings,
+		&etf.Family,
 		&etf.AUM,
 		&etf.ExpenseRatio,
 		&relatedSecurities, // Comma-separated related securities
@@ -436,8 +439,8 @@ func CreateETF(db *sqlx.DB, etf *ETF) error {
 
 	// Step 2: Insert into the etfs table
 	etfsQuery := `
-		INSERT INTO etfs (ticker, exchange, holdings, aum, er, nav, inception)
-		VALUES (:ticker, :exchange, :holdings, :aum, :expenseRatio, :nav, :inception)
+		INSERT INTO etfs (ticker, exchange, family, holdings, aum, er, nav, inception)
+		VALUES (:ticker, :exchange, :holdings, :family, :aum, :expenseRatio, :nav, :inception)
 	`
 	_, err = tx.NamedExec(etfsQuery, etf.flatten())
 	if err != nil {

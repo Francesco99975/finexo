@@ -1098,14 +1098,18 @@ func Scrape(seed string, explicit_exchange *string) error {
 
 		log.Debug("Scraped NAV")
 
-		inceptionDateStrElem, err := page.Timeout(5 * time.Second).Elements("section[data-testid='company-overview-card'] p[title]")
+		EtfDataElems, err := page.Timeout(5 * time.Second).Elements("section[data-testid='company-overview-card'] p[title]")
 		if err != nil {
 			log.Warnf("inception date not found in page - target: %s:%s", security.Ticker, security.Exchange)
 			etf.InceptionDate = sql.NullTime{
 				Valid: false,
 			}
 		} else {
-			inceptionDateStr := inceptionDateStrElem[3].MustText()
+			family := EtfDataElems[0].MustText()
+			log.Debugf("Scraped family: %s", family)
+			etf.Family = family
+
+			inceptionDateStr := EtfDataElems[3].MustText()
 			log.Debugf("Scraped inception date: %s", inceptionDateStr)
 			if isAnEmptyString(inceptionDateStr) {
 				log.Warnf("empty inception date: %s - target: %s:%s", inceptionDateStr, security.Ticker, security.Exchange)
