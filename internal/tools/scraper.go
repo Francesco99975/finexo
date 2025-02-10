@@ -71,7 +71,15 @@ func Scrape(seed string, explicit_exchange *string) error {
 			}
 			security.Exchange = exchange.Title
 		} else {
-			return fmt.Errorf("failed to extract exchange")
+			ex, err := findExchangeInPage(ticker, BASE_YAHOO_URL+ticker)
+			if err != nil {
+				return fmt.Errorf("failed to find exchange in page: %w", err)
+			}
+			exchange, err = models.GetExchangeByTitle(database.DB, ex)
+			if err != nil {
+				return fmt.Errorf("failed to get exchange: %w", err)
+			}
+			security.Exchange = ex
 		}
 	}
 
@@ -81,8 +89,6 @@ func Scrape(seed string, explicit_exchange *string) error {
 	defer browser.MustClose()
 
 	log.Debugf("Scraping %s:%s", security.Ticker, security.Exchange)
-
-	var page *rod.Page
 
 	var yahooScrapingUrl string
 
@@ -103,7 +109,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 
 	log.Debugf("Current scraping url: %s", yahooScrapingUrl)
 
-	page, err = browser.Page(proto.TargetCreateTarget{URL: marketbeatScrapingUrl})
+	page, err := browser.Page(proto.TargetCreateTarget{URL: marketbeatScrapingUrl})
 	if err != nil {
 		log.Warnf("failed to open page on MarketBeat: %w. For seed %s", err, seed)
 	}
@@ -112,6 +118,8 @@ func Scrape(seed string, explicit_exchange *string) error {
 	if err != nil {
 		log.Warnf("failed to wait for page load on MarketBeat: %w. For seed %s", err, seed)
 	}
+
+	log.Debugf("Scraping MarketBeat for %s at exchange %s", security.Ticker, security.Exchange)
 
 	//Scrape MarketBeat
 	scrapedMarketBeatDataKeys, uperr := page.Timeout(5 * time.Second).Elements(".price-data-area dt")
@@ -127,8 +135,10 @@ func Scrape(seed string, explicit_exchange *string) error {
 			return e.MustText()
 		})
 
-		for i := 0; i < len(scrapedMarketBeatDataKeysArray); i++ {
+		for i := range len(scrapedMarketBeatDataKeysArray) {
 			key := strings.ToLower(scrapedMarketBeatDataKeysArray[i])
+
+			log.Debugf("Scraped MarketBeat data: %s = %s", key, scrapedMarketBeatDataValuesArray[i])
 
 			if strings.Contains(key, "sector") {
 				security.Sector = sql.NullString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
@@ -180,6 +190,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 				} else {
 					security.Outstanding = sql.NullInt64{Int64: scrapedOutstanding, Valid: true}
 				}
+
 			}
 
 		}
@@ -194,6 +205,8 @@ func Scrape(seed string, explicit_exchange *string) error {
 	if err != nil {
 		log.Warnf("failed to wait for page load on SeekingAlpha: %w. For seed %s", err, seed)
 	}
+
+	log.Debugf("Scraping SeekingAlpha for %s at exchange %s", security.Ticker, security.Exchange)
 
 	//Scrape SeekingAlpha
 	var scrapedSeekingAlphaData models.SeekingAlphaScrap
@@ -211,6 +224,8 @@ func Scrape(seed string, explicit_exchange *string) error {
 		})
 
 		for i, key := range scrapedHoldingsKeyArray {
+			log.Debugf("Scraped SeekingAlpha data: %s = %s", key, scrapedHoldingsValueArray[i])
+
 			if key == "holdings" {
 				scrapedHoldingsStr := scrapedHoldingsValueArray[i]
 
@@ -219,6 +234,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 					log.Warnf("failed to parse holdings: %w. For seed %s", err, seed)
 				} else {
 					scrapedSeekingAlphaData.Holdings = &scrapedHoldings
+					log.Debugf("Scraped SeekingAlpha data: holdings = %d", scrapedHoldings)
 					break
 				}
 
@@ -239,6 +255,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 		})
 
 		for i, key := range scrapedReitDataKeyArray {
+			log.Debugf("Scraped SeekingAlpha data for reit: %s = %s", key, scrapedReitDataValueArray[i])
 			if strings.Contains(key, "ffo") {
 				scrapedFfoStrData := strings.Split(scrapedReitDataValueArray[i], " ")
 				scrapedFfoStr := helpers.NormalizeFloatStrToIntStr(scrapedFfoStrData[0])
@@ -283,6 +300,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 		})
 
 		for i, key := range scrapedDividendDataArray {
+			log.Debugf("Scraped SeekingAlpha data for dividend: %s = %s", key, scrapedDividendValueArray[i])
 			key = strings.ToLower(key)
 			if key == "payout ratio" {
 				scrapedPayoutRatioStr := scrapedDividendValueArray[i]
@@ -1144,9 +1162,16 @@ func Scrape(seed string, explicit_exchange *string) error {
 			log.Warnf("top holdings not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		}
 
-		for i := range len(relationsElementsTickers) {
-			seed := relationsElementsTickers[i].MustText()
-			log.Debugf("Scraped top holding: %s", security.Ticker)
+		relationsElementsTickersArr := helpers.MapSlice(relationsElementsTickers, func(elem *rod.Element) string {
+			return elem.MustText()
+		})
+		relationsElementsAllocationsArr := helpers.MapSlice(relationsElementsAllocations, func(elem *rod.Element) string {
+			return elem.MustText()
+		})
+
+		for i := range len(relationsElementsTickersArr) {
+			seed := relationsElementsTickersArr[i]
+			log.Debugf("Scraped top holding: %s", seed)
 			seed = strings.TrimSpace(seed)
 			if isAnEmptyString(seed) {
 				log.Warnf("empty top holding: %s - target: %s:%s", seed, security.Ticker, security.Exchange)
@@ -1162,7 +1187,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 				log.Warnf("empty top holding: %s - target: %s:%s", relatedTicker, security.Ticker, security.Exchange)
 				continue
 			}
-			allocationStr := relationsElementsAllocations[i].MustText()
+			allocationStr := relationsElementsAllocationsArr[i]
 			log.Debugf("Scraped top holding allocation: %s", allocationStr)
 			allocationStr = helpers.NormalizeFloatStrToIntStr(allocationStr)
 			if isAnEmptyString(allocationStr) {
@@ -1177,17 +1202,24 @@ func Scrape(seed string, explicit_exchange *string) error {
 			}
 
 			//Steps to find related exchange
+			var relatedExchangeInfo *models.Exchange
 			if relatedExchange == "" {
-				relatedExchange, err = findExchangeInPage(ticker)
+				relatedExchange, err = findExchangeInPage(ticker, yahooScrapingUrl)
 				if err != nil {
 					log.Warnf("invalid exchange or could not find: %s - target: %s:%s", seed, security.Ticker, security.Exchange)
 					continue
 				}
-			}
-			relatedExchangeInfo, err := models.GetExchangeBySuffixorPrefix(database.DB, relatedExchange, relatedExchange)
-			if err != nil {
-				log.Warnf("invalid exchange: %s - target: %s:%s", relatedExchange, security.Ticker, security.Exchange)
-				continue
+				relatedExchangeInfo, err = models.GetExchangeByTitle(database.DB, relatedExchange)
+				if err != nil {
+					log.Warnf("invalid exchange by title: %s for seed: %s - target: %s:%s", relatedExchange, seed, security.Ticker, security.Exchange)
+					continue
+				}
+			} else {
+				relatedExchangeInfo, err = models.GetExchangeBySuffixorPrefix(database.DB, relatedExchange, relatedExchange)
+				if err != nil {
+					log.Warnf("invalid exchange: %s for seed: %s - target: %s:%s", relatedExchange, seed, security.Ticker, security.Exchange)
+					continue
+				}
 			}
 
 			if !models.SecurityExists(database.DB, relatedTicker, relatedExchangeInfo.Title) {
@@ -1201,7 +1233,9 @@ func Scrape(seed string, explicit_exchange *string) error {
 			etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchange, scrapedAllocation))
 		}
 
-		etf.Holdings = *scrapedSeekingAlphaData.Holdings
+		if scrapedSeekingAlphaData.Holdings != nil {
+			etf.Holdings = *scrapedSeekingAlphaData.Holdings
+		}
 
 		//Display In a good format all the scraped data
 		log.Infof("Scraped data: %v", etf)
@@ -1291,41 +1325,45 @@ func scrapeDividend(ticker string, exchange string, typology string, page *rod.P
 	return &dividend
 }
 
-func findExchangeInPage(ticker string) (string, error) {
+func findExchangeInPage(ticker string, scrapingUrl string) (string, error) {
 	// Run Rod in headless mode
 	u := launcher.New().Headless(true).MustLaunch()
 	browser := rod.New().ControlURL(u).MustConnect()
+	defer browser.MustClose()
 
-	log.Debugf("Scraping %s looking for exchange", ticker)
+	log.Debugf("Scraping %s looking for exchange on url: %s", ticker, scrapingUrl)
 
-	var page *rod.Page
+	page, err := browser.Page(proto.TargetCreateTarget{URL: scrapingUrl})
+	if err != nil {
+		return "", fmt.Errorf("error creating page: %s", err)
+	}
+
+	defer page.MustClose()
+
 	exchangeElem, err := page.Timeout(5 * time.Second).Element("span.exchange span")
 	if err != nil {
 		return "", fmt.Errorf("exchange not found in page - target: %s", ticker)
+	} else {
+		exchange := exchangeElem.MustText()
+		if exchange == "" {
+			return "", fmt.Errorf("empty exchange - target: %s", ticker)
+		}
+		log.Debugf("Scraped exchange for related security to etf: %s", exchange)
+
+		exchange = strings.ToUpper(exchange)
+
+		if !strings.Contains(exchange, "NYSE") && !strings.Contains(exchange, "NASDAQ") {
+			return "", fmt.Errorf("invalid exchange: %s - target: %s", exchange, ticker)
+		}
+
+		if strings.Contains(exchange, "NYSE") {
+			exchange = "NYSE"
+		}
+
+		if strings.Contains(exchange, "NASDAQ") {
+			exchange = "NASDAQ"
+		}
+
+		return exchange, nil
 	}
-	exchange := exchangeElem.MustText()
-
-	page.MustClose()
-	browser.MustClose()
-
-	if exchange == "" {
-		return "", fmt.Errorf("empty exchange - target: %s", ticker)
-	}
-	log.Debugf("Scraped exchange for related security to etf: %s", exchange)
-
-	exchange = strings.ToUpper(exchange)
-
-	if !strings.Contains(exchange, "NYSE") && !strings.Contains(exchange, "NASDAQ") {
-		return "", fmt.Errorf("invalid exchange: %s - target: %s", exchange, ticker)
-	}
-
-	if strings.Contains(exchange, "NYSE") {
-		exchange = "NYSE"
-	}
-
-	if strings.Contains(exchange, "NASDAQ") {
-		exchange = "NASDAQ"
-	}
-
-	return exchange, nil
 }

@@ -46,8 +46,7 @@ CREATE TABLE IF NOT EXISTS exchanges (
     suffix VARCHAR(20),
     cc VARCHAR(20) NOT NULL,
     opentime TIME,
-    closetime TIME,
-    FOREIGN KEY (cc) REFERENCES countries(code)
+    closetime TIME
 );
 
 -- Indexes for exchanges

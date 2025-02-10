@@ -37,6 +37,100 @@ type Exchange struct {
 	CloseTime sql.NullTime   `db:"closetime" json:"closeTime,omitempty"`
 }
 
+func InitExchanges(db *sqlx.DB) error {
+	var count int
+	rows, err := db.Query("SELECT COUNT(*) FROM exchanges;")
+
+	if err != nil {
+		return fmt.Errorf("failed to query exchanges: %w", err)
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&count)
+		if err != nil {
+			return fmt.Errorf("failed to scan exchanges: %w", err)
+		}
+	}
+
+	if count == 0 {
+		exchanges := []Exchange{
+			{
+				Title: "NYSE",
+				CC:    "US",
+				OpenTime: sql.NullTime{
+					Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+					Valid: true,
+				},
+				CloseTime: sql.NullTime{
+					Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+					Valid: true,
+				},
+			},
+			{
+				Title: "NASDAQ",
+				CC:    "US",
+				OpenTime: sql.NullTime{
+					Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+					Valid: true,
+				},
+				CloseTime: sql.NullTime{
+					Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+					Valid: true,
+				},
+			},
+			{
+				Title: "TSX",
+				Prefix: sql.NullString{
+					String: "TSE",
+					Valid:  true,
+				},
+				Suffix: sql.NullString{
+					String: "TO",
+					Valid:  true,
+				},
+				CC: "CA",
+				OpenTime: sql.NullTime{
+					Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+					Valid: true,
+				},
+				CloseTime: sql.NullTime{
+					Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+					Valid: true,
+				},
+			},
+			{
+				Title: "TSXV",
+				Prefix: sql.NullString{
+					String: "CVE",
+					Valid:  true,
+				},
+				Suffix: sql.NullString{
+					String: "V",
+					Valid:  true,
+				},
+				CC: "CA",
+				OpenTime: sql.NullTime{
+					Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+					Valid: true,
+				},
+				CloseTime: sql.NullTime{
+					Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+					Valid: true,
+				},
+			},
+		}
+
+		for _, exchange := range exchanges {
+			_, err = db.NamedExec("INSERT INTO exchanges (title, prefix, suffix, cc, opentime, closetime) VALUES (:title, :prefix, :suffix, :cc, :opentime, :closetime);", exchange)
+			if err != nil {
+				return fmt.Errorf("failed to insert exchange: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
 func CreateExchange(db *sqlx.DB, exchange *Exchange) error {
 	tx, err := db.Beginx()
 	if err != nil {

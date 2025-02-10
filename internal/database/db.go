@@ -28,4 +28,5 @@ func Setup(dsn string) {
 	}
 
 	DB.MustExec(string(schema))
+
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/Francesco99975/finexo/cmd/boot"
 	"github.com/Francesco99975/finexo/internal/database"
+	"github.com/Francesco99975/finexo/internal/models"
 )
 
 func main() {
@@ -29,6 +30,11 @@ func main() {
 	port := boot.Environment.Port
 
 	database.Setup(boot.Environment.DSN)
+
+	err = models.InitExchanges(database.DB)
+	if err != nil {
+		panic(err)
+	}
 
 	e := createRouter(ctx)
 
