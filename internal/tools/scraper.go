@@ -196,6 +196,165 @@ func Scrape(seed string, explicit_exchange *string) error {
 	}
 
 	//Scrape SeekingAlpha
+	var scrapedSeekingAlphaData models.SeekingAlphaScrap
+
+	scrapedHoldingsKeyElems, uperr := page.Timeout(5 * time.Second).Elements("section[data-test-id='card-container-top-ten-holdings'] div[data-test-id='key-title']")
+	scrapedHoldingsValueElems, err := page.Timeout(5 * time.Second).Elements("section[data-test-id='card-container-top-ten-holdings'] div[data-test-id='value-title']")
+	if err != nil || uperr != nil {
+		log.Warnf("failed to scrape SeekingAlpha holdings data: %w. For seed %s", err, seed)
+	} else {
+		scrapedHoldingsKeyArray := helpers.MapSlice(scrapedHoldingsKeyElems, func(e *rod.Element) string {
+			return strings.ToLower(e.MustText())
+		})
+		scrapedHoldingsValueArray := helpers.MapSlice(scrapedHoldingsValueElems, func(e *rod.Element) string {
+			return e.MustText()
+		})
+
+		for i, key := range scrapedHoldingsKeyArray {
+			if key == "holdings" {
+				scrapedHoldingsStr := scrapedHoldingsValueArray[i]
+
+				scrapedHoldings, err := strconv.Atoi(scrapedHoldingsStr)
+				if err != nil {
+					log.Warnf("failed to parse holdings: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.Holdings = &scrapedHoldings
+					break
+				}
+
+			}
+		}
+	}
+
+	scrapedReitDataKeyElems, uperr := page.Timeout(5 * time.Second).Elements("div.KG0Vu div.IXxEB")
+	scrapedReitDataValueElems, err := page.Timeout(5 * time.Second).Elements("div.KG0Vu div + div div[data-test-id='value-title']")
+	if err != nil || uperr != nil {
+		log.Warnf("failed to scrape SeekingAlpha reit data: %w. For seed %s", err, seed)
+	} else {
+		scrapedReitDataKeyArray := helpers.MapSlice(scrapedReitDataKeyElems, func(e *rod.Element) string {
+			return strings.ToLower(e.MustText())
+		})
+		scrapedReitDataValueArray := helpers.MapSlice(scrapedReitDataValueElems, func(e *rod.Element) string {
+			return e.MustText()
+		})
+
+		for i, key := range scrapedReitDataKeyArray {
+			if strings.Contains(key, "ffo") {
+				scrapedFfoStrData := strings.Split(scrapedReitDataValueArray[i], " ")
+				scrapedFfoStr := helpers.NormalizeFloatStrToIntStr(scrapedFfoStrData[0])
+				scrapedFfo, err := strconv.Atoi(scrapedFfoStr)
+				if err != nil {
+					log.Warnf("failed to parse ffo: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.FFO = &scrapedFfo
+					fwd := string(models.TimingFWD)
+					ttm := string(models.TimingTTM)
+					if scrapedFfoStrData[1] == "(FWD)" {
+						scrapedSeekingAlphaData.REITiming = &fwd
+					} else {
+						scrapedSeekingAlphaData.REITiming = &ttm
+					}
+				}
+			}
+
+			if strings.Contains(key, "p/ffo") {
+				scrapedPFFOData := strings.Split(scrapedReitDataValueArray[i], " ")
+				scrapedPFFOStr := helpers.NormalizeFloatStrToIntStr(scrapedPFFOData[0])
+				scrapedPFFO, err := strconv.Atoi(scrapedPFFOStr)
+				if err != nil {
+					log.Warnf("failed to parse pffo: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.PFFO = &scrapedPFFO
+				}
+			}
+		}
+	}
+
+	scrapedDividendDataElems, uperr := page.Timeout(5 * time.Second).Elements("section[data-test-id='card-container-dividends'] div[data-test-id='key-title']")
+	scrapedDividendValueElems, err := page.Timeout(5 * time.Second).Elements("section[data-test-id='card-container-dividends'] div[data-test-id='value-title']")
+	if err != nil || uperr != nil {
+		log.Warnf("failed to scrape SeekingAlpha dividend data: %w. For seed %s", err, seed)
+	} else {
+		scrapedDividendDataArray := helpers.MapSlice(scrapedDividendDataElems, func(e *rod.Element) string {
+			return strings.ToLower(e.MustText())
+		})
+		scrapedDividendValueArray := helpers.MapSlice(scrapedDividendValueElems, func(e *rod.Element) string {
+			return e.MustText()
+		})
+
+		for i, key := range scrapedDividendDataArray {
+			key = strings.ToLower(key)
+			if key == "payout ratio" {
+				scrapedPayoutRatioStr := scrapedDividendValueArray[i]
+				scrapedPayoutRatioStr = helpers.NormalizeFloatStrToIntStr(scrapedPayoutRatioStr)
+				scrapedPayoutRatio, err := strconv.Atoi(scrapedPayoutRatioStr)
+				if err != nil {
+					log.Warnf("failed to parse payout ratio: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.Pr = &scrapedPayoutRatio
+				}
+			}
+			if strings.Contains(key, "5") {
+				scrapedFiveYearDividendGrowthStr := scrapedDividendValueArray[i]
+				scrapedFiveYearDividendGrowthStr = helpers.NormalizeFloatStrToIntStr(scrapedFiveYearDividendGrowthStr)
+				scrapedFiveYearDividendGrowth, err := strconv.Atoi(scrapedFiveYearDividendGrowthStr)
+				if err != nil {
+					log.Warnf("failed to parse 5 year dividend growth: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.Lgr = &scrapedFiveYearDividendGrowth
+				}
+			}
+			if strings.Contains(key, "years") {
+				scrapedFiveYearDividendGrowthStr := strings.Split(scrapedDividendValueArray[i], " ")[0]
+				scrapedFiveYearDividendGrowthStr = helpers.NormalizeFloatStrToIntStr(scrapedFiveYearDividendGrowthStr)
+				scrapedFiveYearDividendGrowth, err := strconv.Atoi(scrapedFiveYearDividendGrowthStr)
+				if err != nil {
+					log.Warnf("failed to parse 5 year dividend growth: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.Yog = &scrapedFiveYearDividendGrowth
+				}
+			}
+			if strings.Contains(key, "latest") {
+				scrapedLatestDividendStr := scrapedDividendValueArray[i]
+				scrapedLatestDividendStr = helpers.NormalizeFloatStrToIntStr(scrapedLatestDividendStr)
+				scrapedLatestDividend, err := strconv.Atoi(scrapedLatestDividendStr)
+				if err != nil {
+					log.Warnf("failed to parse latest dividend: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.Lad = &scrapedLatestDividend
+				}
+			}
+			if strings.Contains(key, "ex-") {
+				scrapedExDividendDateStr := scrapedDividendValueArray[i]
+				//Parse date as MM/DD/YYYY
+				scrapedExDividendDate, err := time.Parse("1/2/2006", scrapedExDividendDateStr)
+				if err != nil {
+					log.Warnf("failed to parse ex dividend date: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.ExDivDate = &scrapedExDividendDate
+				}
+
+			}
+			if key == "payout date" {
+				scrapedPayoutDateStr := scrapedDividendValueArray[i]
+				//Parse date as MM/DD/YYYY
+				scrapedPayoutDate, err := time.Parse("1/2/2006", scrapedPayoutDateStr)
+				if err != nil {
+					log.Warnf("failed to parse payout date: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.PayoutDate = &scrapedPayoutDate
+				}
+			}
+			if key == "frequency" {
+				scrapedDividendFrequencyStr := scrapedDividendValueArray[i]
+				if len(scrapedDividendFrequencyStr) <= 0 {
+					log.Warnf("failed to parse dividend frequency: %w. For seed %s", err, seed)
+				} else {
+					scrapedSeekingAlphaData.Frequency = &scrapedDividendFrequencyStr
+				}
+			}
+		}
+	}
 
 	err = page.Navigate(yahooScrapingUrl)
 	if err != nil {
@@ -779,6 +938,63 @@ func Scrape(seed string, explicit_exchange *string) error {
 	security.Dividend = scrapeDividend(ticker, security.Exchange, security.Typology, page)
 	log.Debug("Scraped dividend")
 
+	if security.Dividend != nil {
+		security.Dividend.AnnualPayout = sql.NullInt64{
+			Int64: int64(security.Price * security.Dividend.Yield / security.Price),
+			Valid: true,
+		}
+
+		if scrapedSeekingAlphaData.Pr != nil {
+			security.Dividend.PayoutRatio = sql.NullInt64{
+				Int64: int64(*scrapedSeekingAlphaData.Pr),
+				Valid: true,
+			}
+		}
+
+		if scrapedSeekingAlphaData.Lgr != nil {
+			security.Dividend.GrowthRate = sql.NullInt64{
+				Int64: int64(*scrapedSeekingAlphaData.Lgr),
+				Valid: true,
+			}
+		}
+
+		if scrapedSeekingAlphaData.Yog != nil {
+			security.Dividend.YearsGrowth = sql.NullInt64{
+				Int64: int64(*scrapedSeekingAlphaData.Yog),
+				Valid: true,
+			}
+		}
+
+		if scrapedSeekingAlphaData.Lad != nil {
+			security.Dividend.LastAnnounced = sql.NullInt64{
+				Int64: int64(*scrapedSeekingAlphaData.Lad),
+				Valid: true,
+			}
+		}
+
+		if scrapedSeekingAlphaData.Frequency != nil {
+			security.Dividend.Frequency = sql.NullString{
+				String: string(models.Frequency(*scrapedSeekingAlphaData.Frequency)),
+				Valid:  true,
+			}
+		}
+
+		if scrapedSeekingAlphaData.ExDivDate != nil {
+			security.Dividend.ExDivDate = sql.NullTime{
+				Time:  time.Time(*scrapedSeekingAlphaData.ExDivDate),
+				Valid: true,
+			}
+		}
+
+		if scrapedSeekingAlphaData.PayoutDate != nil {
+			security.Dividend.PayoutDate = sql.NullTime{
+				Time:  time.Time(*scrapedSeekingAlphaData.PayoutDate),
+				Valid: true,
+			}
+		}
+
+	}
+
 	switch security.Typology {
 	case "STOCK":
 		// err = models.CreateStock(database.DB, &security)
@@ -981,6 +1197,8 @@ func Scrape(seed string, explicit_exchange *string) error {
 			etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchange, scrapedAllocation))
 		}
 
+		etf.Holdings = *scrapedSeekingAlphaData.Holdings
+
 		//Display In a good format all the scraped data
 		log.Infof("Scraped data: %v", etf)
 
@@ -990,10 +1208,29 @@ func Scrape(seed string, explicit_exchange *string) error {
 		// }
 
 	case "REIT":
-		security.STM = sql.NullString{
-			String: string(models.TimingTTM),
-			Valid:  true,
+		var reit models.REIT
+		if scrapedSeekingAlphaData.FFO != nil {
+			reit.FFO = sql.NullInt64{
+				Int64: int64(*scrapedSeekingAlphaData.FFO),
+				Valid: true,
+			}
 		}
+
+		if scrapedSeekingAlphaData.PFFO != nil {
+			reit.PFFO = sql.NullInt64{
+				Int64: int64(*scrapedSeekingAlphaData.PFFO),
+				Valid: true,
+			}
+		}
+
+		if scrapedSeekingAlphaData.REITiming != nil {
+			reit.Timing = sql.NullString{
+				String: *scrapedSeekingAlphaData.REITiming,
+				Valid:  true,
+			}
+		}
+
+		log.Infof("Scraped data: %v", reit)
 	default:
 		return fmt.Errorf("invalid typology: %s - target: %s:%s", security.Typology, security.Ticker, security.Exchange)
 	}
