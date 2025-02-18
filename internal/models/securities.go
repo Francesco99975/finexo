@@ -338,6 +338,62 @@ func (s *Security) Scan(src any) error {
 	return nil
 }
 
+func (s *Security) CreatePrettyPrintString() string {
+	var sb strings.Builder
+	sb.WriteString("Ticker: " + s.Ticker + "\n")
+	sb.WriteString("Exchange: " + s.Exchange + "\n")
+	sb.WriteString("Typology: " + s.Typology + "\n")
+	sb.WriteString("Currency: " + s.Currency + "\n")
+	sb.WriteString("Full Name: " + s.FullName + "\n")
+	sb.WriteString("Sector: " + s.Sector.String + "\n")
+	sb.WriteString("Industry: " + s.Industry.String + "\n")
+	sb.WriteString("SubIndustry: " + s.SubIndustry.String + "\n")
+	sb.WriteString("Consensus: " + s.Consensus.String + "\n")
+	if s.Score.Valid {
+		sb.WriteString("Score: " + strconv.Itoa(int(s.Score.Int64)) + "\n")
+	}
+	if s.Coverage.Valid {
+		sb.WriteString("Coverage: " + strconv.Itoa(int(s.Coverage.Int64)) + "\n")
+	}
+	if s.MarketCap.Valid {
+		sb.WriteString("Market Cap: " + strconv.Itoa(int(s.MarketCap.Int64)) + "\n")
+	}
+	if s.Volume.Valid {
+		sb.WriteString("Volume: " + strconv.Itoa(int(s.Volume.Int64)) + "\n")
+	}
+	if s.AvgVolume.Valid {
+		sb.WriteString("Avg Volume: " + strconv.Itoa(int(s.AvgVolume.Int64)) + "\n")
+	}
+	if s.Outstanding.Valid {
+		sb.WriteString("Outstanding: " + strconv.Itoa(int(s.Outstanding.Int64)) + "\n")
+	}
+	if s.Beta.Valid {
+		sb.WriteString("Beta: " + strconv.Itoa(int(s.Beta.Int64)) + "\n")
+	}
+	if s.EPS.Valid {
+		sb.WriteString("EPS: " + strconv.Itoa(int(s.EPS.Int64)) + "\n")
+	}
+	if s.PE.Valid {
+		sb.WriteString("PE: " + strconv.Itoa(int(s.PE.Int64)) + "\n")
+	}
+	if s.STM.Valid {
+		sb.WriteString("STM: " + s.STM.String + "\n")
+	}
+	if s.BidSize.Valid {
+		sb.WriteString("Bid Size: " + strconv.Itoa(int(s.BidSize.Int64)) + "\n")
+	}
+	if s.AskSize.Valid {
+		sb.WriteString("Ask Size: " + strconv.Itoa(int(s.AskSize.Int64)) + "\n")
+	}
+
+	if s.Dividend != nil {
+		sb.WriteString("Dividend:\n")
+		sb.WriteString(s.Dividend.PrettyPrintString())
+	}
+
+	return sb.String()
+}
+
 func InsertSecurity(tx *sqlx.Tx, security *Security) error {
 	query := `
 		INSERT INTO securities (
@@ -382,6 +438,41 @@ type Dividend struct {
 	Frequency     sql.NullString `db:"frequency" json:"frequency,omitempty"` // Enum: Frequency
 	ExDivDate     sql.NullTime   `db:"edd" json:"exDivDate,omitempty"`
 	PayoutDate    sql.NullTime   `db:"pd" json:"payoutDate,omitempty"`
+}
+
+func (d *Dividend) PrettyPrintString() string {
+	var sb strings.Builder
+	sb.WriteString("Ticker: " + d.Ticker + "\n")
+	sb.WriteString("Exchange: " + d.Exchange + "\n")
+	sb.WriteString("Yield: " + strconv.Itoa(d.Yield) + "\n")
+	if d.AnnualPayout.Valid {
+		sb.WriteString("Annual Payout: " + strconv.Itoa(int(d.AnnualPayout.Int64)) + "\n")
+	}
+	if d.Timing.Valid {
+		sb.WriteString("Timing: " + d.Timing.String + "\n")
+	}
+	if d.PayoutRatio.Valid {
+		sb.WriteString("Payout Ratio: " + strconv.Itoa(int(d.PayoutRatio.Int64)) + "\n")
+	}
+	if d.GrowthRate.Valid {
+		sb.WriteString("Growth Rate: " + strconv.Itoa(int(d.GrowthRate.Int64)) + "\n")
+	}
+	if d.YearsGrowth.Valid {
+		sb.WriteString("Years Growth: " + strconv.Itoa(int(d.YearsGrowth.Int64)) + "\n")
+	}
+	if d.LastAnnounced.Valid {
+		sb.WriteString("Last Announced: " + strconv.Itoa(int(d.LastAnnounced.Int64)) + "\n")
+	}
+	if d.Frequency.Valid {
+		sb.WriteString("Frequency: " + d.Frequency.String + "\n")
+	}
+	if d.ExDivDate.Valid {
+		sb.WriteString("Ex-Div Date: " + d.ExDivDate.Time.Format("2006-01-02") + "\n")
+	}
+	if d.PayoutDate.Valid {
+		sb.WriteString("Payout Date: " + d.PayoutDate.Time.Format("2006-01-02") + "\n")
+	}
+	return sb.String()
 }
 
 func InsertDividend(tx *sqlx.Tx, dividend *Dividend) error {
@@ -435,6 +526,31 @@ type ETF struct {
 	NAV               sql.NullInt64     `db:"nav" json:"nav,omitempty"`
 	InceptionDate     sql.NullTime      `db:"inception" json:"inception,omitempty"`
 	RelatedSecurities []string          `json:"relatedSecurities"` // Related securities as "TICKER:EXCHANGE:ALLOCATION"
+}
+
+func (etf *ETF) PrettyPrintString() string {
+	var sb strings.Builder
+
+	sb.WriteString(etf.Security.CreatePrettyPrintString())
+
+	sb.WriteString("Holdings: " + strconv.Itoa(etf.Holdings) + "\n")
+	sb.WriteString("Family: " + etf.Family + "\n")
+	if etf.AUM.Valid {
+		sb.WriteString("AUM: " + strconv.Itoa(int(etf.AUM.Int64)) + "\n")
+	}
+	if etf.ExpenseRatio.Valid {
+		sb.WriteString("Expense Ratio: " + strconv.Itoa(int(etf.ExpenseRatio.Int64)) + "\n")
+	}
+	if etf.NAV.Valid {
+		sb.WriteString("NAV: " + strconv.Itoa(int(etf.NAV.Int64)) + "\n")
+	}
+	if etf.InceptionDate.Valid {
+		sb.WriteString("Inception Date: " + etf.InceptionDate.Time.Format("2006-01-02") + "\n")
+	}
+	if len(etf.RelatedSecurities) > 0 {
+		sb.WriteString("Related Securities: " + strings.Join(etf.RelatedSecurities, ", ") + "\n")
+	}
+	return sb.String()
 }
 
 func (etf *ETF) flatten() map[string]interface{} {

@@ -15,3 +15,11 @@ type SeekingAlphaScrap struct {
 	ExDivDate  *time.Time `json:"exDivDate"`
 	PayoutDate *time.Time `json:"payoutDate"`
 }
+
+type DividendHistoryScrap struct {
+	Pr         *int       `json:"pr"`
+	Lad        *int       `json:"lad"`
+	Frequency  *string    `json:"frequency"`
+	ExDivDate  *time.Time `json:"exDivDate"`
+	PayoutDate *time.Time `json:"payoutDate"`
+}
