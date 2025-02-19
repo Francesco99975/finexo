@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS securities (
     subindustry VARCHAR,
     price INT NOT NULL,
     pc INT NOT NULL,
-    pcc INT NOT NULL,
+    pcp INT NOT NULL,
     yrl INT NOT NULL,
     yrh INT NOT NULL,
     drl INT NOT NULL,
@@ -87,8 +87,8 @@ CREATE TABLE IF NOT EXISTS securities (
     eps INT,
     pe INT,
     stm timing,
-    created TIMESTAMP NOT NULL,
-    updated TIMESTAMP NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (ticker, exchange),
     FOREIGN KEY (exchange) REFERENCES exchanges(title)
 );

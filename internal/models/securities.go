@@ -197,7 +197,7 @@ type Security struct {
 	SubIndustry sql.NullString `db:"subindustry" json:"subIndustry,omitempty"`
 	Price       int            `db:"price" json:"price"`
 	PC          int            `db:"pc" json:"pc"`
-	PCP         int            `db:"PCP" json:"PCP"`
+	PCP         int            `db:"pcp" json:"pcp"`
 	YearLow     int            `db:"yrl" json:"yearLow"`
 	YearHigh    int            `db:"yrh" json:"yearHigh"`
 	DayLow      int            `db:"drl" json:"dayLow"`
@@ -402,11 +402,11 @@ func (s *Security) CreatePrettyPrintString() string {
 func InsertSecurity(tx *sqlx.Tx, security *Security) error {
 	query := `
 		INSERT INTO securities (
-			ticker, exchange, typology, currency, fullname, sector, industry, subindustry, price, pc, PCP,
+			ticker, exchange, typology, currency, fullname, sector, industry, subindustry, price, pc, pcp,
 			yrl, yrh, drl, drh, consensus, score, coverage, cap, volume, avgvolume, outstanding,
 			beta, pclose, copen, bid, bidsz, ask, asksz, eps, pe, stm
 		) VALUES (
-			:ticker, :exchange, :typology, :currency, :fullname, :sector, :industry, :subindustry, :price, :pc, :PCP,
+			:ticker, :exchange, :typology, :currency, :fullname, :sector, :industry, :subindustry, :price, :pc, :pcp,
 			:yrl, :yrh, :drl, :drh, :consensus, :score, :coverage, :cap, :volume, :avgvolume, :outstanding,
 			:beta, :pclose, :copen, :bid, :bidsz, :ask, :asksz, :eps, :pe, :stm
 		)
@@ -487,8 +487,8 @@ func InsertDividend(tx *sqlx.Tx, dividend *Dividend) error {
 		INSERT INTO dividends (
 			ticker, exchange, yield, ap, tm, pr, lgr, yog, lad, frequency, edd, pd
 		) VALUES (
-			:ticker, :exchange, :yield, :annualPayout, :timing, :payoutRatio,
-			:growthRate, :yearsGrowth, :lastAnnounced, :frequency, :exDivDate, :payoutDate
+			:ticker, :exchange, :yield, :ap, :tm, :pr,
+			:lgr, :yog, :lad, :frequency, :edd, :pd
 		)
 	`
 
@@ -799,7 +799,7 @@ func GetStocks(
 	query := `
 		SELECT
 			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
-			s.price, s.pc, s.pcc, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
+			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
 			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
 			d.yield, d.tm AS timing, d.ap AS annualPayout, d.pr AS payoutRatio,
@@ -831,7 +831,7 @@ func GetStocks(
 		"avgvolume": "s.avgvolume",
 		"marketcap": "s.cap",
 		"pc":        "s.pc",
-		"pcc":       "s.pcc",
+		"pcp":       "s.pcp",
 		"updated":   "s.updated",
 	}
 
@@ -933,7 +933,7 @@ func GetETFs(
 	query := `
 		SELECT
 			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
-			s.price, s.pc, s.pcc, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
+			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
 			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
 			d.yield, d.tm AS timing, d.ap AS annualPayout, d.pr AS payoutRatio,
@@ -965,7 +965,7 @@ func GetETFs(
 		"avgvolume": "s.avgvolume",
 		"marketcap": "s.cap",
 		"pc":        "s.pc",
-		"pcc":       "s.pcc",
+		"pcp":       "s.pcp",
 		"updated":   "s.updated",
 	}
 
@@ -1067,7 +1067,7 @@ func GetREITs(
 	query := `
 		SELECT
 			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
-			s.price, s.pc, s.pcc, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
+			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
 			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
 			d.yield, d.tm AS timing, d.ap AS annualPayout, d.pr AS payoutRatio,
@@ -1099,7 +1099,7 @@ func GetREITs(
 		"avgvolume": "s.avgvolume",
 		"marketcap": "s.cap",
 		"pc":        "s.pc",
-		"pcc":       "s.pcc",
+		"pcp":       "s.pcp",
 		"updated":   "s.updated",
 	}
 

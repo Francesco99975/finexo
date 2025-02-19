@@ -25,3 +25,19 @@ func Test() echo.HandlerFunc {
 		return c.JSON(http.StatusOK, "OK")
 	}
 }
+
+func TestSeeds() echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		log.Info("Test endpoint called seeds")
+
+		seeds, err := tools.ReadAllSeeds()
+		if err != nil {
+			log.Errorf("Failed to read seeds: %v", err)
+		}
+
+		log.Info("Seeds LEN: ", len(seeds))
+
+		return c.JSON(http.StatusOK, seeds)
+	}
+}
