@@ -1549,6 +1549,8 @@ func Scrape(seed string, explicit_exchange *string) error {
 func scrapeDividend(ticker string, exchange string, typology string, page *rod.Page) *models.Dividend {
 	//Scrape Dividend Info if any
 	var dividend models.Dividend
+	dividend.Ticker = ticker
+	dividend.Exchange = exchange
 
 	var yieldStr string
 	if typology == "ETF" {

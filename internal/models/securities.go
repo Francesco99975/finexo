@@ -392,7 +392,7 @@ func (s *Security) CreatePrettyPrintString() string {
 	}
 
 	if s.Dividend != nil {
-		sb.WriteString("Dividend:\n")
+		sb.WriteString("Dividend --> ")
 		sb.WriteString(s.Dividend.PrettyPrintString())
 	}
 
