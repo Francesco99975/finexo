@@ -136,7 +136,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 	if exchange_hint != "" {
 		exchange, err = models.GetExchangeBySuffixorPrefix(database.DB, exchange_hint, exchange_hint)
 		if err != nil {
-			return fmt.Errorf("failed to get exchange: %w", err)
+			return fmt.Errorf("failed to get exchange through SUFFIX or PREFIX: %w", err)
 		}
 		security.Exchange = exchange.Title
 	} else {
@@ -193,7 +193,12 @@ func Scrape(seed string, explicit_exchange *string) error {
 		if exchange.CC == "UK" {
 			dividendHostoryScrapingUrl = BASE_DIVIDENDHISTORY_URL + fmt.Sprintf("%s/%s", strings.ToLower(exchange.CC), security.Ticker)
 		} else {
-			dividendHostoryScrapingUrl = BASE_DIVIDENDHISTORY_URL + fmt.Sprintf("%s/%s", strings.ToLower(exchange.Title), security.Ticker)
+			if exchange.Suffix.String == "NE" {
+				dividendHostoryScrapingUrl = BASE_DIVIDENDHISTORY_URL + fmt.Sprintf("%s/%s", "tsx", security.Ticker)
+			} else {
+				dividendHostoryScrapingUrl = BASE_DIVIDENDHISTORY_URL + fmt.Sprintf("%s/%s", strings.ToLower(exchange.Title), security.Ticker)
+			}
+
 		}
 	} else {
 		dividendHostoryScrapingUrl = BASE_DIVIDENDHISTORY_URL + security.Ticker
@@ -377,10 +382,12 @@ func Scrape(seed string, explicit_exchange *string) error {
 		for index, payoutDate := range payoutDates {
 			date, err := time.Parse("2006-01-02", payoutDate.MustText())
 			if err != nil {
+				log.Warnf("failed to parse payout date: %w. For seed %s", err, seed)
 				continue
 			} else {
 				if date.After(time.Now()) {
 					tableIndex = index + 1
+				} else {
 					break
 				}
 			}
@@ -390,7 +397,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 	rows, err := page.Elements("table#dividend_table tr")
 	if err != nil {
 		log.Warnf("failed to scrape Dividend History: %w. For seed %s", err, seed)
-	} else {
+	} else if tableIndex != -1 {
 		relevantRowStr := rows[tableIndex].MustText()
 		log.Debugf("Scraped Dividend History data relevantRowStr: %s", relevantRowStr)
 		relevantRowArr := strings.Split(relevantRowStr, "\t")
@@ -665,7 +672,6 @@ func Scrape(seed string, explicit_exchange *string) error {
 	}
 
 	scrapedFullName := scrapedFullNameElem.MustText()
-	scrapedFullName = strings.Split(scrapedFullName, " (")[0]
 
 	if isAnEmptyString(scrapedFullName) {
 		return fmt.Errorf("empty full name: %s - target: %s:%s", scrapedFullName, security.Ticker, security.Exchange)
@@ -1461,7 +1467,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 			//Steps to find related exchange
 			var relatedExchangeInfo *models.Exchange
 			if relatedExchange == "" {
-				relatedExchange, err = findExchangeInPage(ticker, yahooScrapingUrl)
+				relatedExchange, err = findExchangeInPage(ticker, BASE_YAHOO_URL+relatedTicker)
 				if err != nil {
 					log.Warnf("invalid exchange or could not find: %s - target: %s:%s", seed, security.Ticker, security.Exchange)
 					continue

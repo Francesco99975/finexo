@@ -38,93 +38,98 @@ type Exchange struct {
 }
 
 func InitExchanges(db *sqlx.DB) error {
-	var count int
-	rows, err := db.Query("SELECT COUNT(*) FROM exchanges;")
 
-	if err != nil {
-		return fmt.Errorf("failed to query exchanges: %w", err)
+	exchanges := []Exchange{
+		{
+			Title: "NYSE",
+			CC:    "US",
+			OpenTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		{
+			Title: "NASDAQ",
+			CC:    "US",
+			OpenTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		{
+			Title: "TSX",
+			Prefix: sql.NullString{
+				String: "TSE",
+				Valid:  true,
+			},
+			Suffix: sql.NullString{
+				String: "TO",
+				Valid:  true,
+			},
+			CC: "CA",
+			OpenTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		{
+			Title: "TSXV",
+			Prefix: sql.NullString{
+				String: "CVE",
+				Valid:  true,
+			},
+			Suffix: sql.NullString{
+				String: "V",
+				Valid:  true,
+			},
+			CC: "CA",
+			OpenTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		{
+			Title: "CBOE",
+			Prefix: sql.NullString{
+				String: "NEOA",
+				Valid:  true,
+			},
+			Suffix: sql.NullString{
+				String: "NE",
+				Valid:  true,
+			},
+			CC: "CA",
+			OpenTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: sql.NullTime{
+				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
 	}
 
-	for rows.Next() {
-		err = rows.Scan(&count)
+	for _, exchange := range exchanges {
+		err := CreateExchange(db, &exchange)
 		if err != nil {
-			return fmt.Errorf("failed to scan exchanges: %w", err)
-		}
-	}
-
-	if count == 0 {
-		exchanges := []Exchange{
-			{
-				Title: "NYSE",
-				CC:    "US",
-				OpenTime: sql.NullTime{
-					Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
-					Valid: true,
-				},
-				CloseTime: sql.NullTime{
-					Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
-					Valid: true,
-				},
-			},
-			{
-				Title: "NASDAQ",
-				CC:    "US",
-				OpenTime: sql.NullTime{
-					Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
-					Valid: true,
-				},
-				CloseTime: sql.NullTime{
-					Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
-					Valid: true,
-				},
-			},
-			{
-				Title: "TSX",
-				Prefix: sql.NullString{
-					String: "TSE",
-					Valid:  true,
-				},
-				Suffix: sql.NullString{
-					String: "TO",
-					Valid:  true,
-				},
-				CC: "CA",
-				OpenTime: sql.NullTime{
-					Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
-					Valid: true,
-				},
-				CloseTime: sql.NullTime{
-					Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
-					Valid: true,
-				},
-			},
-			{
-				Title: "TSXV",
-				Prefix: sql.NullString{
-					String: "CVE",
-					Valid:  true,
-				},
-				Suffix: sql.NullString{
-					String: "V",
-					Valid:  true,
-				},
-				CC: "CA",
-				OpenTime: sql.NullTime{
-					Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
-					Valid: true,
-				},
-				CloseTime: sql.NullTime{
-					Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
-					Valid: true,
-				},
-			},
-		}
-
-		for _, exchange := range exchanges {
-			_, err = db.NamedExec("INSERT INTO exchanges (title, prefix, suffix, cc, opentime, closetime) VALUES (:title, :prefix, :suffix, :cc, :opentime, :closetime);", exchange)
-			if err != nil {
-				return fmt.Errorf("failed to insert exchange: %w", err)
-			}
+			return fmt.Errorf("failed to create exchange: %w", err)
 		}
 	}
 
@@ -141,7 +146,7 @@ func CreateExchange(db *sqlx.DB, exchange *Exchange) error {
 
 	// Insert into exchanges table
 	query := `
-		INSERT INTO exchanges (title, prefix, suffix, cc, opentime, closetime) VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO exchanges (title, prefix, suffix, cc, opentime, closetime) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (title) DO NOTHING
 	`
 
 	_, err = tx.Exec(query, exchange.Title, exchange.Prefix, exchange.Suffix, exchange.CC, exchange.OpenTime, exchange.CloseTime)
@@ -340,50 +345,50 @@ func (s *Security) Scan(src any) error {
 
 func (s *Security) CreatePrettyPrintString() string {
 	var sb strings.Builder
-	sb.WriteString("Ticker: " + s.Ticker + "\n")
-	sb.WriteString("Exchange: " + s.Exchange + "\n")
-	sb.WriteString("Typology: " + s.Typology + "\n")
-	sb.WriteString("Currency: " + s.Currency + "\n")
-	sb.WriteString("Full Name: " + s.FullName + "\n")
-	sb.WriteString("Sector: " + s.Sector.String + "\n")
-	sb.WriteString("Industry: " + s.Industry.String + "\n")
-	sb.WriteString("SubIndustry: " + s.SubIndustry.String + "\n")
-	sb.WriteString("Consensus: " + s.Consensus.String + "\n")
+	sb.WriteString("Ticker: " + s.Ticker + " -- ")
+	sb.WriteString("Exchange: " + s.Exchange + " -- ")
+	sb.WriteString("Typology: " + s.Typology + " -- ")
+	sb.WriteString("Currency: " + s.Currency + " -- ")
+	sb.WriteString("Full Name: " + s.FullName + " -- ")
+	sb.WriteString("Sector: " + s.Sector.String + " -- ")
+	sb.WriteString("Industry: " + s.Industry.String + " -- ")
+	sb.WriteString("SubIndustry: " + s.SubIndustry.String + " -- ")
+	sb.WriteString("Consensus: " + s.Consensus.String + " -- ")
 	if s.Score.Valid {
-		sb.WriteString("Score: " + strconv.Itoa(int(s.Score.Int64)) + "\n")
+		sb.WriteString("Score: " + strconv.Itoa(int(s.Score.Int64)) + " -- ")
 	}
 	if s.Coverage.Valid {
-		sb.WriteString("Coverage: " + strconv.Itoa(int(s.Coverage.Int64)) + "\n")
+		sb.WriteString("Coverage: " + strconv.Itoa(int(s.Coverage.Int64)) + " -- ")
 	}
 	if s.MarketCap.Valid {
-		sb.WriteString("Market Cap: " + strconv.Itoa(int(s.MarketCap.Int64)) + "\n")
+		sb.WriteString("Market Cap: " + strconv.Itoa(int(s.MarketCap.Int64)) + " -- ")
 	}
 	if s.Volume.Valid {
-		sb.WriteString("Volume: " + strconv.Itoa(int(s.Volume.Int64)) + "\n")
+		sb.WriteString("Volume: " + strconv.Itoa(int(s.Volume.Int64)) + " -- ")
 	}
 	if s.AvgVolume.Valid {
-		sb.WriteString("Avg Volume: " + strconv.Itoa(int(s.AvgVolume.Int64)) + "\n")
+		sb.WriteString("Avg Volume: " + strconv.Itoa(int(s.AvgVolume.Int64)) + " -- ")
 	}
 	if s.Outstanding.Valid {
-		sb.WriteString("Outstanding: " + strconv.Itoa(int(s.Outstanding.Int64)) + "\n")
+		sb.WriteString("Outstanding: " + strconv.Itoa(int(s.Outstanding.Int64)) + " -- ")
 	}
 	if s.Beta.Valid {
-		sb.WriteString("Beta: " + strconv.Itoa(int(s.Beta.Int64)) + "\n")
+		sb.WriteString("Beta: " + strconv.Itoa(int(s.Beta.Int64)) + " -- ")
 	}
 	if s.EPS.Valid {
-		sb.WriteString("EPS: " + strconv.Itoa(int(s.EPS.Int64)) + "\n")
+		sb.WriteString("EPS: " + strconv.Itoa(int(s.EPS.Int64)) + " -- ")
 	}
 	if s.PE.Valid {
-		sb.WriteString("PE: " + strconv.Itoa(int(s.PE.Int64)) + "\n")
+		sb.WriteString("PE: " + strconv.Itoa(int(s.PE.Int64)) + " -- ")
 	}
 	if s.STM.Valid {
-		sb.WriteString("STM: " + s.STM.String + "\n")
+		sb.WriteString("STM: " + s.STM.String + " -- ")
 	}
 	if s.BidSize.Valid {
-		sb.WriteString("Bid Size: " + strconv.Itoa(int(s.BidSize.Int64)) + "\n")
+		sb.WriteString("Bid Size: " + strconv.Itoa(int(s.BidSize.Int64)) + " -- ")
 	}
 	if s.AskSize.Valid {
-		sb.WriteString("Ask Size: " + strconv.Itoa(int(s.AskSize.Int64)) + "\n")
+		sb.WriteString("Ask Size: " + strconv.Itoa(int(s.AskSize.Int64)) + " -- ")
 	}
 
 	if s.Dividend != nil {
@@ -442,35 +447,33 @@ type Dividend struct {
 
 func (d *Dividend) PrettyPrintString() string {
 	var sb strings.Builder
-	sb.WriteString("Ticker: " + d.Ticker + "\n")
-	sb.WriteString("Exchange: " + d.Exchange + "\n")
-	sb.WriteString("Yield: " + strconv.Itoa(d.Yield) + "\n")
+	sb.WriteString("Yield: " + strconv.Itoa(d.Yield) + " -- ")
 	if d.AnnualPayout.Valid {
-		sb.WriteString("Annual Payout: " + strconv.Itoa(int(d.AnnualPayout.Int64)) + "\n")
+		sb.WriteString("Annual Payout: " + strconv.Itoa(int(d.AnnualPayout.Int64)) + " -- ")
 	}
 	if d.Timing.Valid {
-		sb.WriteString("Timing: " + d.Timing.String + "\n")
+		sb.WriteString("Timing: " + d.Timing.String + " -- ")
 	}
 	if d.PayoutRatio.Valid {
-		sb.WriteString("Payout Ratio: " + strconv.Itoa(int(d.PayoutRatio.Int64)) + "\n")
+		sb.WriteString("Payout Ratio: " + strconv.Itoa(int(d.PayoutRatio.Int64)) + " -- ")
 	}
 	if d.GrowthRate.Valid {
-		sb.WriteString("Growth Rate: " + strconv.Itoa(int(d.GrowthRate.Int64)) + "\n")
+		sb.WriteString("Growth Rate: " + strconv.Itoa(int(d.GrowthRate.Int64)) + " -- ")
 	}
 	if d.YearsGrowth.Valid {
-		sb.WriteString("Years Growth: " + strconv.Itoa(int(d.YearsGrowth.Int64)) + "\n")
+		sb.WriteString("Years Growth: " + strconv.Itoa(int(d.YearsGrowth.Int64)) + " -- ")
 	}
 	if d.LastAnnounced.Valid {
-		sb.WriteString("Last Announced: " + strconv.Itoa(int(d.LastAnnounced.Int64)) + "\n")
+		sb.WriteString("Last Announced: " + strconv.Itoa(int(d.LastAnnounced.Int64)) + " -- ")
 	}
 	if d.Frequency.Valid {
-		sb.WriteString("Frequency: " + d.Frequency.String + "\n")
+		sb.WriteString("Frequency: " + d.Frequency.String + " -- ")
 	}
 	if d.ExDivDate.Valid {
-		sb.WriteString("Ex-Div Date: " + d.ExDivDate.Time.Format("2006-01-02") + "\n")
+		sb.WriteString("Ex-Div Date: " + d.ExDivDate.Time.Format("2006-01-02") + " -- ")
 	}
 	if d.PayoutDate.Valid {
-		sb.WriteString("Payout Date: " + d.PayoutDate.Time.Format("2006-01-02") + "\n")
+		sb.WriteString("Payout Date: " + d.PayoutDate.Time.Format("2006-01-02") + " -- ")
 	}
 	return sb.String()
 }
@@ -533,22 +536,22 @@ func (etf *ETF) PrettyPrintString() string {
 
 	sb.WriteString(etf.Security.CreatePrettyPrintString())
 
-	sb.WriteString("Holdings: " + strconv.Itoa(etf.Holdings) + "\n")
-	sb.WriteString("Family: " + etf.Family + "\n")
+	sb.WriteString("Holdings: " + strconv.Itoa(etf.Holdings) + " -- ")
+	sb.WriteString("Family: " + etf.Family + " -- ")
 	if etf.AUM.Valid {
-		sb.WriteString("AUM: " + strconv.Itoa(int(etf.AUM.Int64)) + "\n")
+		sb.WriteString("AUM: " + strconv.Itoa(int(etf.AUM.Int64)) + " -- ")
 	}
 	if etf.ExpenseRatio.Valid {
-		sb.WriteString("Expense Ratio: " + strconv.Itoa(int(etf.ExpenseRatio.Int64)) + "\n")
+		sb.WriteString("Expense Ratio: " + strconv.Itoa(int(etf.ExpenseRatio.Int64)) + " -- ")
 	}
 	if etf.NAV.Valid {
-		sb.WriteString("NAV: " + strconv.Itoa(int(etf.NAV.Int64)) + "\n")
+		sb.WriteString("NAV: " + strconv.Itoa(int(etf.NAV.Int64)) + " -- ")
 	}
 	if etf.InceptionDate.Valid {
-		sb.WriteString("Inception Date: " + etf.InceptionDate.Time.Format("2006-01-02") + "\n")
+		sb.WriteString("Inception Date: " + etf.InceptionDate.Time.Format("2006-01-02") + " -- ")
 	}
 	if len(etf.RelatedSecurities) > 0 {
-		sb.WriteString("Related Securities: " + strings.Join(etf.RelatedSecurities, ", ") + "\n")
+		sb.WriteString("Related Securities: " + strings.Join(etf.RelatedSecurities, ", ") + " -- ")
 	}
 	return sb.String()
 }
