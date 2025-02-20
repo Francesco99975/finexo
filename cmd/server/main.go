@@ -43,6 +43,13 @@ func main() {
 		e.Logger.Fatal(e.Start(":" + port))
 	}()
 
+	go func() {
+		err = boot.SeedDatabase()
+		if err != nil {
+			e.Logger.Fatal(err)
+		}
+	}()
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit

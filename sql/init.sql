@@ -35,7 +35,7 @@ BEGIN
         CREATE TYPE timing AS ENUM ('fwd', 'ttm');
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'frequence') THEN
-        CREATE TYPE frequence AS ENUM ('unknown', 'weekly', 'biweekly', 'monthly', 'quarterly', 'semi', 'yearly');
+        CREATE TYPE frequence AS ENUM ('unknown', 'weekly', 'biweekly', 'monthly', 'quarterly', 'semi-annual', 'annual');
     END IF;
 END $$;
 
@@ -74,9 +74,9 @@ CREATE TABLE IF NOT EXISTS securities (
     score INT,
     coverage INT,
     cap BIGINT,
-    volume INT,
-    avgvolume INT,
-    outstanding INT,
+    volume BIGINT,
+    avgvolume BIGINT,
+    outstanding BIGINT,
     beta INT,
     pclose INT NOT NULL,
     copen INT NOT NULL,

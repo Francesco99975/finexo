@@ -24,8 +24,8 @@ const (
 	FrequencyBiweekly  Frequency = "biweekly"
 	FrequencyMonthly   Frequency = "monthly"
 	FrequencyQuarterly Frequency = "quarterly"
-	FrequencySemi      Frequency = "semi"
-	FrequencyYearly    Frequency = "yearly"
+	FrequencySemi      Frequency = "semi-annual"
+	FrequencyYearly    Frequency = "annual"
 )
 
 type Exchange struct {
@@ -397,6 +397,16 @@ func (s *Security) CreatePrettyPrintString() string {
 	}
 
 	return sb.String()
+}
+
+func IsSecuritiesTableEmpty(db *sqlx.DB) (bool, error) {
+	var count int
+	err := db.Get(&count, "SELECT COUNT(*) FROM securities")
+	if err != nil {
+		return false, fmt.Errorf("failed to check securities table: %w", err)
+	}
+
+	return count == 0, nil
 }
 
 func InsertSecurity(tx *sqlx.Tx, security *Security) error {

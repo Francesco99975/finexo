@@ -2,10 +2,14 @@ package api
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/Francesco99975/finexo/internal/tools"
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
+	"golang.org/x/sync/semaphore"
 )
 
 func Test() echo.HandlerFunc {
@@ -17,7 +21,14 @@ func Test() echo.HandlerFunc {
 		}
 		log.Info("Test endpoint called")
 
-		err := tools.Scrape(seed, nil)
+		// Run Rod in headless mode
+		u := launcher.New().Headless(true).MustLaunch()
+		browser := rod.New().ControlURL(u).MustConnect()
+		defer browser.MustClose()
+
+		var wg sync.WaitGroup
+		sem := semaphore.NewWeighted(10) // Control concurrency
+		err := tools.Scrape(seed, nil, browser, sem, &wg)
 		if err != nil {
 			log.Errorf("Failed to scrape: %v", err)
 		}

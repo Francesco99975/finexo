@@ -15,10 +15,10 @@ import (
 	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/go-rod/rod"
-	"github.com/go-rod/rod/lib/launcher"
 	"github.com/go-rod/rod/lib/proto"
 	"github.com/go-rod/stealth"
 	"github.com/labstack/gommon/log"
+	"golang.org/x/sync/semaphore"
 )
 
 const BASE_SEEKINGALPHA_URL = "https://seekingalpha.com/symbol/"       // TICKER:COUNTRY
@@ -142,11 +142,19 @@ func disableWebRTC(page *rod.Page) {
     }
 })();`, nil)
 	if err != nil {
-		log.Warnf("failed to disable WebRTC: %v", err)
+		log.Debugf("failed to disable WebRTC: %v", err)
 	}
 }
 
-func Scrape(seed string, explicit_exchange *string) error {
+func Scrape(seed string, explicit_exchange *string, browser *rod.Browser, sem *semaphore.Weighted, mwg *sync.WaitGroup) error {
+
+	defer mwg.Done()
+	err := sem.Acquire(context.TODO(), 1) // Limit concurrency
+	if err != nil {
+		return fmt.Errorf("failed to acquire semaphore: %v", err)
+	}
+	defer sem.Release(1)
+
 	var security models.Security
 	ticker, exchange_hint, err := tickerExtractor(seed)
 	if err != nil {
@@ -169,7 +177,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 			}
 			security.Exchange = exchange.Title
 		} else {
-			ex, err := findExchangeInPage(ticker, BASE_YAHOO_URL+ticker)
+			ex, err := findExchangeInPage(ticker, BASE_YAHOO_URL+ticker, browser)
 			if err != nil {
 				return fmt.Errorf("failed to find exchange in page: %v", err)
 			}
@@ -180,11 +188,6 @@ func Scrape(seed string, explicit_exchange *string) error {
 			security.Exchange = ex
 		}
 	}
-
-	// Run Rod in headless mode
-	u := launcher.New().Headless(true).MustLaunch()
-	browser := rod.New().ControlURL(u).MustConnect()
-	defer browser.MustClose()
 
 	log.Debugf("Scraping %s:%s", security.Ticker, security.Exchange)
 
@@ -230,7 +233,10 @@ func Scrape(seed string, explicit_exchange *string) error {
 	// Adjusting For REITS
 	dividendHostoryScrapingUrl = strings.ReplaceAll(dividendHostoryScrapingUrl, "-UN", ".UN")
 
-	page := stealth.MustPage(browser)
+	page, err := stealth.Page(browser)
+	if err != nil {
+		return fmt.Errorf("failed to create page: %v", err)
+	}
 
 	// Set a random User-Agent
 	userAgent := getRandomUserAgent()
@@ -278,7 +284,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 	//Scrape MarketBeat
 	scrapedMarketBeatDataKeys, uperr := page.Timeout(5 * time.Second).Elements(".price-data-area dt")
 	scrapedMarketBeatDataValues, err := page.Timeout(5 * time.Second).Elements(".price-data-area strong")
-	if err != nil || uperr != nil {
+	if err != nil || uperr != nil || len(scrapedMarketBeatDataKeys) == 0 || len(scrapedMarketBeatDataValues) == 0 {
 		log.Warnf("failed to scrape MarketBeat data: %v. For seed %s", err, seed)
 	} else {
 		scrapedMarketBeatDataKeysArray := helpers.MapSlice(scrapedMarketBeatDataKeys, func(e *rod.Element) string {
@@ -366,7 +372,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 	log.Debugf("Scraping Dividend History for %s at exchange %s", security.Ticker, security.Exchange)
 
 	paragraphs, err := page.Elements("p")
-	if err != nil {
+	if err != nil || len(paragraphs) == 0 {
 		log.Warnf("failed to scrape Dividend History: %v. For seed %s", err, seed)
 	} else {
 		for _, paragraph := range paragraphs {
@@ -375,7 +381,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 			paragraphText := strings.ReplaceAll(strings.ToLower(pt), " ", "")
 			paragraphText = strings.ReplaceAll(paragraphText, "\n", "")
 
-			if strings.Contains(paragraphText, "payoutratio") {
+			if strings.Contains(paragraphText, "payoutratio") && strings.Contains(paragraphText, ":") {
 				log.Debugf("Scraped Dividend History data: %s", paragraphText)
 				scrapedPrStr := strings.Split(paragraphText, ":")[1]
 				scrapedPrStr = helpers.NormalizeFloatStrToIntStr(scrapedPrStr)
@@ -388,9 +394,12 @@ func Scrape(seed string, explicit_exchange *string) error {
 
 			}
 
-			if strings.Contains(paragraphText, "frequency") {
+			if strings.Contains(paragraphText, "frequency") && strings.Contains(paragraphText, ":") {
 				log.Debugf("Scraped Dividend History data: %s", paragraphText)
 				dividendScrap.Frequency = &strings.Split(paragraphText, ":")[1]
+			} else {
+				freqStr := string(models.FrequencyUnknown)
+				dividendScrap.Frequency = &freqStr
 			}
 		}
 	}
@@ -419,7 +428,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 	rows, err := page.Elements("table#dividend_table tr")
 	if err != nil {
 		log.Warnf("failed to scrape Dividend History: %v. For seed %s", err, seed)
-	} else if tableIndex != -1 {
+	} else if tableIndex != -1 && len(rows) > tableIndex && len(rows) >= 3 {
 		relevantRowStr := rows[tableIndex].MustText()
 		log.Debugf("Scraped Dividend History data relevantRowStr: %s", relevantRowStr)
 		relevantRowArr := strings.Split(relevantRowStr, "\t")
@@ -440,6 +449,9 @@ func Scrape(seed string, explicit_exchange *string) error {
 
 		scrapedLadStr := relevantRowArr[2]
 		scrapedLadStr = helpers.NormalizeFloatStrToIntStr(scrapedLadStr)
+		if len(scrapedLadStr) >= 3 {
+			scrapedLadStr = scrapedLadStr[:3]
+		}
 		scrapedLad, err := strconv.Atoi(scrapedLadStr)
 		if err != nil {
 			log.Warnf("failed to parse lad: %v. For seed %s", err, seed)
@@ -1501,7 +1513,7 @@ func Scrape(seed string, explicit_exchange *string) error {
 			//Steps to find related exchange
 			var relatedExchangeInfo *models.Exchange
 			if relatedExchange == "" {
-				relatedExchange, err = findExchangeInPage(ticker, BASE_YAHOO_URL+relatedTicker)
+				relatedExchange, err = findExchangeInPage(ticker, BASE_YAHOO_URL+relatedTicker, browser)
 				if err != nil {
 					log.Warnf("invalid exchange or could not find: %s - target: %s:%s", seed, security.Ticker, security.Exchange)
 					continue
@@ -1520,9 +1532,10 @@ func Scrape(seed string, explicit_exchange *string) error {
 			}
 
 			if !models.SecurityExists(database.DB, relatedTicker, relatedExchangeInfo.Title) {
-
+				var twg sync.WaitGroup
+				tmpsem := semaphore.NewWeighted(1) // Control concurrency
 				go func() {
-					err := Scrape(relatedTicker, &relatedExchangeInfo.Title)
+					err := Scrape(relatedTicker, &relatedExchangeInfo.Title, browser, tmpsem, &twg)
 					if err != nil {
 						log.Errorf("error scraping security(%s) related to %s: %v", relatedTicker+":"+relatedExchange, security.Ticker+":"+security.Exchange, err)
 					}
@@ -1662,12 +1675,7 @@ func scrapeDividend(ticker string, exchange string, typology string, page *rod.P
 	return &dividend
 }
 
-func findExchangeInPage(ticker string, scrapingUrl string) (string, error) {
-	// Run Rod in headless mode
-	u := launcher.New().Headless(true).MustLaunch()
-	browser := rod.New().ControlURL(u).MustConnect()
-	defer browser.MustClose()
-
+func findExchangeInPage(ticker string, scrapingUrl string, browser *rod.Browser) (string, error) {
 	log.Debugf("Scraping %s looking for exchange on url: %s", ticker, scrapingUrl)
 
 	page, err := browser.Page(proto.TargetCreateTarget{URL: scrapingUrl})
@@ -1713,9 +1721,9 @@ func operandByFrequency(freq *string) int {
 		return 12
 	case "quarterly":
 		return 4
-	case "semi":
+	case "semi-annual":
 		return 2
-	case "yearly":
+	case "annual":
 		return 1
 	default:
 		return 0
