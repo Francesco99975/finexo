@@ -420,6 +420,165 @@ func InsertSecurity(tx *sqlx.Tx, security *Security) error {
 	return nil
 }
 
+func UpdateSecurity(tx *sqlx.Tx, security *Security) error {
+	if security.Ticker == "" {
+		return fmt.Errorf("ticker is required for update")
+	}
+
+	query := "UPDATE securities SET "
+	args := make(map[string]interface{})
+	updates := []string{}
+
+	// String fields
+	if security.Exchange != "" {
+		updates = append(updates, "exchange = :exchange")
+		args["exchange"] = security.Exchange
+	}
+	if security.Typology != "" {
+		updates = append(updates, "typology = :typology")
+		args["typology"] = security.Typology
+	}
+	if security.Currency != "" {
+		updates = append(updates, "currency = :currency")
+		args["currency"] = security.Currency
+	}
+	if security.FullName != "" {
+		updates = append(updates, "fullname = :fullname")
+		args["fullname"] = security.FullName
+	}
+
+	// Nullable String Fields
+	if security.Sector.Valid {
+		updates = append(updates, "sector = :sector")
+		args["sector"] = security.Sector.String
+	}
+	if security.Industry.Valid {
+		updates = append(updates, "industry = :industry")
+		args["industry"] = security.Industry.String
+	}
+	if security.SubIndustry.Valid {
+		updates = append(updates, "subindustry = :subindustry")
+		args["subindustry"] = security.SubIndustry.String
+	}
+	if security.Consensus.Valid {
+		updates = append(updates, "consensus = :consensus")
+		args["consensus"] = security.Consensus.String
+	}
+	if security.STM.Valid {
+		updates = append(updates, "stm = :stm")
+		args["stm"] = security.STM.String
+	}
+
+	// Integer Fields (only update if non-zero)
+	if security.Price != 0 {
+		updates = append(updates, "price = :price")
+		args["price"] = security.Price
+	}
+	if security.PC != 0 {
+		updates = append(updates, "pc = :pc")
+		args["pc"] = security.PC
+	}
+	if security.PCP != 0 {
+		updates = append(updates, "pcp = :pcp")
+		args["pcp"] = security.PCP
+	}
+	if security.YearLow != 0 {
+		updates = append(updates, "yrl = :yrl")
+		args["yrl"] = security.YearLow
+	}
+	if security.YearHigh != 0 {
+		updates = append(updates, "yrh = :yrh")
+		args["yrh"] = security.YearHigh
+	}
+	if security.DayLow != 0 {
+		updates = append(updates, "drl = :drl")
+		args["drl"] = security.DayLow
+	}
+	if security.DayHigh != 0 {
+		updates = append(updates, "drh = :drh")
+		args["drh"] = security.DayHigh
+	}
+	if security.PClose != 0 {
+		updates = append(updates, "pclose = :pclose")
+		args["pclose"] = security.PClose
+	}
+	if security.COpen != 0 {
+		updates = append(updates, "copen = :copen")
+		args["copen"] = security.COpen
+	}
+	if security.Bid != 0 {
+		updates = append(updates, "bid = :bid")
+		args["bid"] = security.Bid
+	}
+	if security.Ask != 0 {
+		updates = append(updates, "ask = :ask")
+		args["ask"] = security.Ask
+	}
+
+	// Nullable Int Fields
+	if security.Score.Valid {
+		updates = append(updates, "score = :score")
+		args["score"] = security.Score.Int64
+	}
+	if security.Coverage.Valid {
+		updates = append(updates, "coverage = :coverage")
+		args["coverage"] = security.Coverage.Int64
+	}
+	if security.MarketCap.Valid {
+		updates = append(updates, "cap = :cap")
+		args["cap"] = security.MarketCap.Int64
+	}
+	if security.Volume.Valid {
+		updates = append(updates, "volume = :volume")
+		args["volume"] = security.Volume.Int64
+	}
+	if security.AvgVolume.Valid {
+		updates = append(updates, "avgvolume = :avgvolume")
+		args["avgvolume"] = security.AvgVolume.Int64
+	}
+	if security.Outstanding.Valid {
+		updates = append(updates, "outstanding = :outstanding")
+		args["outstanding"] = security.Outstanding.Int64
+	}
+	if security.Beta.Valid {
+		updates = append(updates, "beta = :beta")
+		args["beta"] = security.Beta.Int64
+	}
+	if security.BidSize.Valid {
+		updates = append(updates, "bidsz = :bidsz")
+		args["bidsz"] = security.BidSize.Int64
+	}
+	if security.AskSize.Valid {
+		updates = append(updates, "asksz = :asksz")
+		args["asksz"] = security.AskSize.Int64
+	}
+	if security.EPS.Valid {
+		updates = append(updates, "eps = :eps")
+		args["eps"] = security.EPS.Int64
+	}
+	if security.PE.Valid {
+		updates = append(updates, "pe = :pe")
+		args["pe"] = security.PE.Int64
+	}
+
+	// Ensure at least one field is being updated
+	if len(updates) == 0 {
+		return fmt.Errorf("no valid fields to update for ticker: %s", security.Ticker)
+	}
+
+	// Final query construction
+	query += strings.Join(updates, ", ") + " WHERE ticker = :ticker"
+	args["ticker"] = security.Ticker
+
+	// Execute update query
+	_, err := tx.NamedExec(query, args)
+	if err != nil {
+		return fmt.Errorf("failed to update security (%s): %w", security.Ticker, err)
+	}
+
+	return nil
+}
+
 func SecurityExists(db *sqlx.DB, ticker string, exchange string) bool {
 	var exists bool
 	err := db.Get(&exists, "SELECT EXISTS(SELECT 1 FROM securities WHERE ticker = $1 AND exchange = $2)", ticker, exchange)
@@ -500,6 +659,86 @@ func InsertDividend(tx *sqlx.Tx, dividend *Dividend) error {
 	return nil
 }
 
+func UpdateDividend(tx *sqlx.Tx, dividend *Dividend) error {
+	if dividend == nil {
+		return nil // No dividend to update
+	}
+
+	if dividend.Ticker == "" || dividend.Exchange == "" {
+		return fmt.Errorf("ticker and exchange are required for updating a dividend")
+	}
+
+	query := "UPDATE dividends SET "
+	args := make(map[string]interface{})
+	updates := []string{}
+
+	// Integer Fields
+	if dividend.Yield != 0 {
+		updates = append(updates, "yield = :yield")
+		args["yield"] = dividend.Yield
+	}
+
+	// Nullable Integer Fields
+	if dividend.AnnualPayout.Valid {
+		updates = append(updates, "ap = :ap")
+		args["ap"] = dividend.AnnualPayout.Int64
+	}
+	if dividend.PayoutRatio.Valid {
+		updates = append(updates, "pr = :pr")
+		args["pr"] = dividend.PayoutRatio.Int64
+	}
+	if dividend.GrowthRate.Valid {
+		updates = append(updates, "lgr = :lgr")
+		args["lgr"] = dividend.GrowthRate.Int64
+	}
+	if dividend.YearsGrowth.Valid {
+		updates = append(updates, "yog = :yog")
+		args["yog"] = dividend.YearsGrowth.Int64
+	}
+	if dividend.LastAnnounced.Valid {
+		updates = append(updates, "lad = :lad")
+		args["lad"] = dividend.LastAnnounced.Int64
+	}
+
+	// Nullable String Fields
+	if dividend.Timing.Valid {
+		updates = append(updates, "tm = :tm")
+		args["tm"] = dividend.Timing.String
+	}
+	if dividend.Frequency.Valid {
+		updates = append(updates, "frequency = :frequency")
+		args["frequency"] = dividend.Frequency.String
+	}
+
+	// Nullable Time Fields
+	if dividend.ExDivDate.Valid {
+		updates = append(updates, "edd = :edd")
+		args["edd"] = dividend.ExDivDate.Time
+	}
+	if dividend.PayoutDate.Valid {
+		updates = append(updates, "pd = :pd")
+		args["pd"] = dividend.PayoutDate.Time
+	}
+
+	// Ensure at least one field is being updated
+	if len(updates) == 0 {
+		return fmt.Errorf("no valid fields to update for dividend with ticker: %s", dividend.Ticker)
+	}
+
+	// Final query construction
+	query += strings.Join(updates, ", ") + " WHERE ticker = :ticker AND exchange = :exchange"
+	args["ticker"] = dividend.Ticker
+	args["exchange"] = dividend.Exchange
+
+	// Execute update query
+	_, err := tx.NamedExec(query, args)
+	if err != nil {
+		return fmt.Errorf("failed to update dividend (%s): %w", dividend.Ticker, err)
+	}
+
+	return nil
+}
+
 func CreateStock(db *sqlx.DB, stock *Security) (err error) {
 	tx, err := db.Beginx()
 	if err != nil {
@@ -514,6 +753,53 @@ func CreateStock(db *sqlx.DB, stock *Security) (err error) {
 
 	if err := InsertDividend(tx, stock.Dividend); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func UpdateStock(db *sqlx.DB, stock *Security) (err error) {
+	tx, err := db.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer database.HandleTransaction(tx, &err)
+
+	// Check if stock exists
+	var exists bool
+	err = tx.Get(&exists, "SELECT EXISTS(SELECT 1 FROM securities WHERE ticker = $1)", stock.Ticker)
+	if err != nil {
+		return fmt.Errorf("failed to check stock existence: %w", err)
+	}
+
+	// If stock exists, update it; otherwise, insert it
+	if exists {
+		if err := UpdateSecurity(tx, stock); err != nil {
+			return err
+		}
+	} else {
+		if err := InsertSecurity(tx, stock); err != nil {
+			return err
+		}
+	}
+
+	// Handle Dividend update/insert
+	if stock.Dividend != nil {
+		var divExists bool
+		err = tx.Get(&divExists, "SELECT EXISTS(SELECT 1 FROM dividends WHERE ticker = $1 AND exchange = $2)", stock.Dividend.Ticker, stock.Dividend.Exchange)
+		if err != nil {
+			return fmt.Errorf("failed to check dividend existence: %w", err)
+		}
+
+		if divExists {
+			if err := UpdateDividend(tx, stock.Dividend); err != nil {
+				return err
+			}
+		} else {
+			if err := InsertDividend(tx, stock.Dividend); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
@@ -699,6 +985,120 @@ func CreateETF(db *sqlx.DB, etf *ETF) error {
 	return nil
 }
 
+func UpdateETF(db *sqlx.DB, etf *ETF) error {
+	tx, err := db.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer database.HandleTransaction(tx, &err)
+
+	// Step 1: Update Security
+	if err := UpdateSecurity(tx, &etf.Security); err != nil {
+		return err
+	}
+
+	// Step 2: Update the ETFs table
+	query := "UPDATE etfs SET "
+	args := make(map[string]interface{})
+	updates := []string{}
+
+	if etf.Family != "" {
+		updates = append(updates, "family = :family")
+		args["family"] = etf.Family
+	}
+	if etf.Holdings != 0 {
+		updates = append(updates, "holdings = :holdings")
+		args["holdings"] = etf.Holdings
+	}
+	if etf.AUM.Valid {
+		updates = append(updates, "aum = :aum")
+		args["aum"] = etf.AUM.Int64
+	}
+	if etf.ExpenseRatio.Valid {
+		updates = append(updates, "er = :expenseRatio")
+		args["expenseRatio"] = etf.ExpenseRatio.Int64
+	}
+	if etf.NAV.Valid {
+		updates = append(updates, "nav = :nav")
+		args["nav"] = etf.NAV.Int64
+	}
+	if etf.InceptionDate.Valid {
+		updates = append(updates, "inception = :inception")
+		args["inception"] = etf.InceptionDate.Time
+	}
+
+	// Ensure at least one field is being updated
+	if len(updates) > 0 {
+		query += strings.Join(updates, ", ") + " WHERE ticker = :ticker AND exchange = :exchange"
+		args["ticker"] = etf.Ticker
+		args["exchange"] = etf.Exchange
+
+		_, err = tx.NamedExec(query, args)
+		if err != nil {
+			return fmt.Errorf("failed to update ETF (%s): %w", etf.Ticker, err)
+		}
+	}
+
+	// Step 3: Update ETF Related Securities
+	if len(etf.RelatedSecurities) > 0 {
+		// First, delete existing related securities
+		_, err = tx.Exec("DELETE FROM etf_related_securities WHERE etf_ticker = $1 AND etf_exchange = $2", etf.Ticker, etf.Exchange)
+		if err != nil {
+			return fmt.Errorf("failed to delete existing related securities for %s: %w", etf.Ticker, err)
+		}
+
+		// Reinsert new related securities
+		relatedQuery := `
+			INSERT INTO etf_related_securities (etf_ticker, etf_exchange, related_ticker, related_exchange, allocation)
+			VALUES (:etf_ticker, :etf_exchange, :related_ticker, :related_exchange, :allocation)
+		`
+
+		for _, related := range etf.RelatedSecurities {
+			parts := strings.Split(related, ":")
+			if len(parts) != 3 {
+				return fmt.Errorf("invalid related security format (expected TICKER:EXCHANGE:ALLOCATION): %s", related)
+			}
+
+			allocation, err := strconv.Atoi(parts[2]) // Convert allocation to int
+			if err != nil {
+				return fmt.Errorf("invalid allocation value: %s", parts[2])
+			}
+
+			_, err = tx.NamedExec(relatedQuery, map[string]interface{}{
+				"etf_ticker":       etf.Ticker,
+				"etf_exchange":     etf.Exchange,
+				"related_ticker":   parts[0],   // Ticker
+				"related_exchange": parts[1],   // Exchange
+				"allocation":       allocation, // Allocation as int
+			})
+			if err != nil {
+				return fmt.Errorf("failed to insert related security '%s': %w", related, err)
+			}
+		}
+	}
+
+	// Step 4: Update Dividend
+	if etf.Security.Dividend != nil {
+		var divExists bool
+		err = tx.Get(&divExists, "SELECT EXISTS(SELECT 1 FROM dividends WHERE ticker = $1 AND exchange = $2)", etf.Ticker, etf.Exchange)
+		if err != nil {
+			return fmt.Errorf("failed to check dividend existence: %w", err)
+		}
+
+		if divExists {
+			if err := UpdateDividend(tx, etf.Security.Dividend); err != nil {
+				return err
+			}
+		} else {
+			if err := InsertDividend(tx, etf.Security.Dividend); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 // REIT represents a row from the reits table.
 type REIT struct {
 	Security   `json:"security"` // Embedded security properties
@@ -746,6 +1146,81 @@ func CreateReit(db *sqlx.DB, reit *REIT) error {
 	// Insert into dividends table if provided
 	if err := InsertDividend(tx, reit.Security.Dividend); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func UpdateREIT(db *sqlx.DB, reit *REIT) error {
+	tx, err := db.Beginx()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+	defer database.HandleTransaction(tx, &err)
+
+	// Step 1: Update Security
+	if err := UpdateSecurity(tx, &reit.Security); err != nil {
+		return err
+	}
+
+	// Step 2: Update the REITs table
+	query := "UPDATE reits SET "
+	args := make(map[string]interface{})
+	updates := []string{}
+
+	// Nullable Integer Fields
+	if reit.Occupation.Valid {
+		updates = append(updates, "occupation = :occupation")
+		args["occupation"] = reit.Occupation.Int64
+	}
+	if reit.FFO.Valid {
+		updates = append(updates, "ffo = :ffo")
+		args["ffo"] = reit.FFO.Int64
+	}
+	if reit.PFFO.Valid {
+		updates = append(updates, "pffo = :pffo")
+		args["pffo"] = reit.PFFO.Int64
+	}
+
+	// Nullable String Fields
+	if reit.Focus.Valid {
+		updates = append(updates, "focus = :focus")
+		args["focus"] = reit.Focus.String
+	}
+	if reit.Timing.Valid {
+		updates = append(updates, "tm = :timing")
+		args["timing"] = reit.Timing.String
+	}
+
+	// Ensure at least one field is being updated
+	if len(updates) > 0 {
+		query += strings.Join(updates, ", ") + " WHERE ticker = :ticker AND exchange = :exchange"
+		args["ticker"] = reit.Ticker
+		args["exchange"] = reit.Exchange
+
+		_, err = tx.NamedExec(query, args)
+		if err != nil {
+			return fmt.Errorf("failed to update REIT (%s): %w", reit.Ticker, err)
+		}
+	}
+
+	// Step 3: Update Dividend
+	if reit.Security.Dividend != nil {
+		var divExists bool
+		err = tx.Get(&divExists, "SELECT EXISTS(SELECT 1 FROM dividends WHERE ticker = $1 AND exchange = $2)", reit.Ticker, reit.Exchange)
+		if err != nil {
+			return fmt.Errorf("failed to check dividend existence: %w", err)
+		}
+
+		if divExists {
+			if err := UpdateDividend(tx, reit.Security.Dividend); err != nil {
+				return err
+			}
+		} else {
+			if err := InsertDividend(tx, reit.Security.Dividend); err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil

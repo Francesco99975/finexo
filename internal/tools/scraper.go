@@ -202,6 +202,8 @@ func Scrape(seed string, explicit_exchange *string) error {
 	} else {
 		marketbeatScrapingUrl = BASE_MARKETBEAT_URL + fmt.Sprintf("%s/%s", exchange.Title, security.Ticker)
 	}
+	//Adjusting For REITS
+	marketbeatScrapingUrl = strings.ReplaceAll(marketbeatScrapingUrl, "-UN", "")
 
 	// var seekingalphaScrapingUrl string
 	// if exchange.CC != "US" {
@@ -225,6 +227,8 @@ func Scrape(seed string, explicit_exchange *string) error {
 	} else {
 		dividendHostoryScrapingUrl = BASE_DIVIDENDHISTORY_URL + security.Ticker
 	}
+	// Adjusting For REITS
+	dividendHostoryScrapingUrl = strings.ReplaceAll(dividendHostoryScrapingUrl, "-UN", ".UN")
 
 	page := stealth.MustPage(browser)
 
@@ -1300,9 +1304,18 @@ func Scrape(seed string, explicit_exchange *string) error {
 	case "STOCK":
 		log.Infof("Scraped data: %v", security.CreatePrettyPrintString())
 
-		err = models.CreateStock(database.DB, &security)
-		if err != nil {
-			return fmt.Errorf("error creating stock: %v", err)
+		// Check if security already exists in DB
+		exists := models.SecurityExists(database.DB, security.Ticker, security.Exchange)
+		if !exists {
+			err = models.CreateStock(database.DB, &security)
+			if err != nil {
+				return fmt.Errorf("error creating stock: %v", err)
+			}
+		} else {
+			err = models.UpdateStock(database.DB, &security)
+			if err != nil {
+				return fmt.Errorf("error updating stock: %v", err)
+			}
 		}
 	case "ETF":
 		var etf models.ETF
@@ -1527,9 +1540,18 @@ func Scrape(seed string, explicit_exchange *string) error {
 		//Display In a good format all the scraped data
 		log.Infof("Scraped data: %v", etf.PrettyPrintString())
 
-		err = models.CreateETF(database.DB, &etf)
-		if err != nil {
-			return fmt.Errorf("error creating ETF: %v", err)
+		// Check if security already exists
+		exists := models.SecurityExists(database.DB, security.Ticker, security.Exchange)
+		if !exists {
+			err = models.CreateETF(database.DB, &etf)
+			if err != nil {
+				return fmt.Errorf("error creating ETF: %v", err)
+			}
+		} else {
+			err = models.UpdateETF(database.DB, &etf)
+			if err != nil {
+				return fmt.Errorf("error updating ETF: %v", err)
+			}
 		}
 
 	case "REIT":
@@ -1556,6 +1578,20 @@ func Scrape(seed string, explicit_exchange *string) error {
 		// }
 
 		log.Infof("Scraped data: %v", reit)
+
+		// Check if security already exists
+		exists := models.SecurityExists(database.DB, security.Ticker, security.Exchange)
+		if !exists {
+			err = models.CreateReit(database.DB, &reit)
+			if err != nil {
+				return fmt.Errorf("error creating REIT: %v", err)
+			}
+		} else {
+			err = models.UpdateREIT(database.DB, &reit)
+			if err != nil {
+				return fmt.Errorf("error updating REIT: %v", err)
+			}
+		}
 	default:
 		return fmt.Errorf("invalid typology: %s - target: %s:%s", security.Typology, security.Ticker, security.Exchange)
 	}
