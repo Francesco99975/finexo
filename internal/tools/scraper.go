@@ -54,6 +54,11 @@ func getRandomUserAgent() string {
 
 // Simulates human-like mouse movements
 func moveMouseLikeHuman(page *rod.Page) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Errorf("Panic occurred while moving mouse: %v", r)
+		}
+	}()
 	mouse := page.Mouse
 	width, height := 800, 600 // Adjust viewport size
 
@@ -76,7 +81,7 @@ func randomUserBehavior(ctx context.Context, page *rod.Page, wg *sync.WaitGroup)
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("Stopping random behavior.")
+			log.Debugf("Stopping random behavior.")
 			return // Stop the Goroutine
 		default:
 			if page != nil {
@@ -146,19 +151,22 @@ func disableWebRTC(page *rod.Page) {
 	}
 }
 
-func Scrape(seed string, explicit_exchange *string, browser *rod.Browser, sem *semaphore.Weighted, mwg *sync.WaitGroup) error {
+func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManager, sem *semaphore.Weighted, mwg *sync.WaitGroup) error {
 
 	defer mwg.Done()
-	err := sem.Acquire(context.TODO(), 1) // Limit concurrency
+	err := sem.Acquire(context.Background(), 1) // Limit concurrency
 	if err != nil {
-		return fmt.Errorf("failed to acquire semaphore: %v", err)
+		return fmt.Errorf("failed to acquire semaphore while sscraping seed (%s): %v", seed, err)
 	}
 	defer sem.Release(1)
+
+	browser := manager.GetBrowser()
+	defer manager.ReleaseBrowser()
 
 	var security models.Security
 	ticker, exchange_hint, err := tickerExtractor(seed)
 	if err != nil {
-		return fmt.Errorf("failed to extract ticker and exchange: %v", err)
+		return fmt.Errorf("failed to extract ticker and exchange from seed (%s): %v", seed, err)
 	}
 
 	security.Ticker = ticker
@@ -166,24 +174,24 @@ func Scrape(seed string, explicit_exchange *string, browser *rod.Browser, sem *s
 	if exchange_hint != "" {
 		exchange, err = models.GetExchangeBySuffixorPrefix(database.DB, exchange_hint, exchange_hint)
 		if err != nil {
-			return fmt.Errorf("failed to get exchange through SUFFIX or PREFIX: %v", err)
+			return fmt.Errorf("failed to get exchange through SUFFIX or PREFIX for seed (%s): %v", seed, err)
 		}
 		security.Exchange = exchange.Title
 	} else {
 		if explicit_exchange != nil {
 			exchange, err = models.GetExchangeByTitle(database.DB, *explicit_exchange)
 			if err != nil {
-				return fmt.Errorf("failed to get exchange: %v", err)
+				return fmt.Errorf("failed to get exchange for seed (%s): %v", seed, err)
 			}
 			security.Exchange = exchange.Title
 		} else {
 			ex, err := findExchangeInPage(ticker, BASE_YAHOO_URL+ticker, browser)
 			if err != nil {
-				return fmt.Errorf("failed to find exchange in page: %v", err)
+				return fmt.Errorf("failed to find exchange in page for seed (%s): %v", seed, err)
 			}
 			exchange, err = models.GetExchangeByTitle(database.DB, ex)
 			if err != nil {
-				return fmt.Errorf("failed to get exchange: %v", err)
+				return fmt.Errorf("failed to get exchange for seed (%s): %v", seed, err)
 			}
 			security.Exchange = ex
 		}
@@ -235,7 +243,7 @@ func Scrape(seed string, explicit_exchange *string, browser *rod.Browser, sem *s
 
 	page, err := stealth.Page(browser)
 	if err != nil {
-		return fmt.Errorf("failed to create page: %v", err)
+		return fmt.Errorf("failed to create initial page while working on seed (%s): %v", seed, err)
 	}
 
 	// Set a random User-Agent
@@ -717,9 +725,9 @@ func Scrape(seed string, explicit_exchange *string, browser *rod.Browser, sem *s
 	log.Debug("Scraped full name")
 
 	scrapedTypology := "STOCK"
-	if strings.Contains(strings.ToLower(scrapedFullName), "etf") || strings.Contains(strings.ToLower(scrapedFullName), "trust") {
+	if strings.Contains(strings.ToLower(scrapedFullName), " etf ") || strings.Contains(strings.ToLower(scrapedFullName), "trust") {
 		scrapedTypology = "ETF"
-	} else if strings.Contains(strings.ToLower(scrapedFullName), "reit") {
+	} else if strings.Contains(strings.ToLower(scrapedFullName), " reit ") {
 		scrapedTypology = "REIT"
 	}
 
@@ -1535,7 +1543,7 @@ func Scrape(seed string, explicit_exchange *string, browser *rod.Browser, sem *s
 				var twg sync.WaitGroup
 				tmpsem := semaphore.NewWeighted(1) // Control concurrency
 				go func() {
-					err := Scrape(relatedTicker, &relatedExchangeInfo.Title, browser, tmpsem, &twg)
+					err := Scrape(relatedTicker, &relatedExchangeInfo.Title, manager, tmpsem, &twg)
 					if err != nil {
 						log.Errorf("error scraping security(%s) related to %s: %v", relatedTicker+":"+relatedExchange, security.Ticker+":"+security.Exchange, err)
 					}
@@ -1558,12 +1566,12 @@ func Scrape(seed string, explicit_exchange *string, browser *rod.Browser, sem *s
 		if !exists {
 			err = models.CreateETF(database.DB, &etf)
 			if err != nil {
-				return fmt.Errorf("error creating ETF: %v", err)
+				return fmt.Errorf("error creating ETF for seed (%s): %v", seed, err)
 			}
 		} else {
 			err = models.UpdateETF(database.DB, &etf)
 			if err != nil {
-				return fmt.Errorf("error updating ETF: %v", err)
+				return fmt.Errorf("error updating ETF for seed (%s): %v", seed, err)
 			}
 		}
 
@@ -1597,12 +1605,12 @@ func Scrape(seed string, explicit_exchange *string, browser *rod.Browser, sem *s
 		if !exists {
 			err = models.CreateReit(database.DB, &reit)
 			if err != nil {
-				return fmt.Errorf("error creating REIT: %v", err)
+				return fmt.Errorf("error creating REIT for seed (%s): %v", seed, err)
 			}
 		} else {
 			err = models.UpdateREIT(database.DB, &reit)
 			if err != nil {
-				return fmt.Errorf("error updating REIT: %v", err)
+				return fmt.Errorf("error updating REIT for seed (%s): %v", seed, err)
 			}
 		}
 	default:
@@ -1678,7 +1686,7 @@ func scrapeDividend(ticker string, exchange string, typology string, page *rod.P
 func findExchangeInPage(ticker string, scrapingUrl string, browser *rod.Browser) (string, error) {
 	log.Debugf("Scraping %s looking for exchange on url: %s", ticker, scrapingUrl)
 
-	page, err := browser.Page(proto.TargetCreateTarget{URL: scrapingUrl})
+	page, err := browser.Timeout(10 * time.Second).Page(proto.TargetCreateTarget{URL: scrapingUrl})
 	if err != nil {
 		return "", fmt.Errorf("error creating page: %s", err)
 	}
