@@ -11,14 +11,14 @@ import (
 )
 
 type BrowserManager struct {
-	mu             sync.Mutex
-	activeBrowser  *rod.Browser
-	oldBrowser     *rod.Browser
-	backupBrowser  *rod.Browser
-	activeScrapers int
-	requests       int
-	maxRequests    int
-	restarting     bool
+	mu                 sync.Mutex
+	activeBrowser      *rod.Browser
+	oldBrowser         *rod.Browser
+	backupBrowser      *rod.Browser
+	activeScrapers     int
+	oldBrowserScrapers int // New: Track scrapers using the old browser
+	maxRequests        int
+	requests           int
 }
 
 func NewBrowserManager(maxRequests int) *BrowserManager {
@@ -26,11 +26,10 @@ func NewBrowserManager(maxRequests int) *BrowserManager {
 		maxRequests: maxRequests,
 	}
 	manager.activeBrowser = manager.launchNewBrowser()
-	manager.backupBrowser = manager.launchNewBrowser() // Pre-launch a backup browser
 	return manager
 }
 
-// 🚀 Launches a new browser
+// 🚀 Launches a new browser with your settings
 func (bm *BrowserManager) launchNewBrowser() *rod.Browser {
 	fmt.Println("Starting new Chrome instance...")
 
@@ -42,22 +41,15 @@ func (bm *BrowserManager) launchNewBrowser() *rod.Browser {
 	return browser
 }
 
-// 📌 Get the latest browser dynamically (waits if restarting)
+// 📌 Get a browser instance for scraping
 func (bm *BrowserManager) GetBrowser() *rod.Browser {
 	bm.mu.Lock()
 	defer bm.mu.Unlock()
 
-	// 🚀 If a restart is in progress, wait for the new browser
-	for bm.restarting {
-		bm.mu.Unlock() // Unlock while waiting (to prevent blocking everything)
-		// fmt.Println("🛑 Waiting for Chrome restart...")
-		bm.mu.Lock() // Relock to check condition again
-	}
-
 	bm.requests++
 	bm.activeScrapers++
 
-	// 🚀 If request limit is reached, trigger a safe browser restart
+	// 🚀 If request limit is reached, start a new browser (with backup)
 	if bm.requests >= bm.maxRequests {
 		bm.requests = 0
 		go bm.RestartBrowserSafely()
@@ -66,7 +58,7 @@ func (bm *BrowserManager) GetBrowser() *rod.Browser {
 	return bm.activeBrowser
 }
 
-// 📌 Mark scrapers as done and close old Chrome when safe
+// 📌 Called when a scraper finishes using the browser
 func (bm *BrowserManager) ReleaseBrowser() {
 	bm.mu.Lock()
 	defer bm.mu.Unlock()
@@ -74,9 +66,15 @@ func (bm *BrowserManager) ReleaseBrowser() {
 	bm.activeScrapers--
 	fmt.Printf("Active scrapers remaining: %d\n", bm.activeScrapers)
 
-	// If the old browser is still around and no scrapers are using it, close it
-	if bm.oldBrowser != nil && bm.activeScrapers == 0 {
-		fmt.Println("All scrapers done. Closing old Chrome...")
+	// ✅ If the scraper was using the old browser, decrease the counter
+	if bm.oldBrowser != nil {
+		bm.oldBrowserScrapers--
+		fmt.Println("Old browser scrapers remaining:", bm.oldBrowserScrapers)
+	}
+
+	// ✅ Now correctly close the old browser only when it's no longer needed
+	if bm.oldBrowser != nil && bm.oldBrowserScrapers == 0 {
+		fmt.Println("All old browser scrapers are done. Closing old Chrome...")
 		bm.oldBrowser.MustClose()
 		bm.oldBrowser = nil
 		fmt.Println("Old Chrome successfully closed.")
@@ -87,33 +85,30 @@ func (bm *BrowserManager) ReleaseBrowser() {
 func (bm *BrowserManager) RestartBrowserSafely() {
 	bm.mu.Lock()
 
-	// 🛑 If restart is already in progress, don't start another
-	if bm.restarting {
+	// 🛑 If a restart is already in progress, don't start another one
+	if bm.oldBrowser != nil {
 		bm.mu.Unlock()
 		return
 	}
-	bm.restarting = true // Mark that we're restarting
+
+	fmt.Println("🚀 Creating backup browser before restart...")
+
+	// 1️⃣ Start a backup browser first (as a fallback in case the new one fails)
+	bm.backupBrowser = bm.launchNewBrowser()
+
+	// 2️⃣ Move the current active browser to "oldBrowser" (so scrapers finish safely)
+	bm.oldBrowser = bm.activeBrowser
+	bm.oldBrowserScrapers = bm.activeScrapers
+
+	// 3️⃣ Make the backup browser the new active browser
+	bm.activeBrowser = bm.backupBrowser
+	bm.backupBrowser = nil // Reset backup
+
 	bm.mu.Unlock()
 
-	fmt.Println("🚀 Switching to backup browser before restart...")
+	fmt.Println("✅ New Chrome is now active. Waiting for old scrapers to finish...")
 
-	// 1️⃣ Immediately switch to backup browser to avoid blocking scrapers
-	bm.mu.Lock()
-	bm.oldBrowser = bm.activeBrowser    // Store old browser for safe shutdown
-	bm.activeBrowser = bm.backupBrowser // Use backup browser immediately
-	bm.mu.Unlock()
-
-	// 2️⃣ Now, safely start a new Chrome instance
-	newBrowser := bm.launchNewBrowser()
-
-	// 3️⃣ Assign the new browser as the backup (so it's ready for the next restart)
-	bm.mu.Lock()
-	bm.backupBrowser = newBrowser
-	bm.restarting = false // Mark restart as done
-	bm.mu.Unlock()
-
-	fmt.Println("✅ New Chrome is ready, using backup browser meanwhile.")
-	// Old browser will be closed when scrapers finish (in ReleaseBrowser)
+	// 4️⃣ Old Chrome closes once scrapers are done (handled in ReleaseBrowser)
 }
 
 // 🚀 Restart Chrome if memory usage exceeds 70%
@@ -122,7 +117,7 @@ func (bm *BrowserManager) MonitorMemory() {
 		time.Sleep(30 * time.Second) // Check memory every 30s
 
 		vm, _ := mem.VirtualMemory()
-		if vm.UsedPercent > 95 {
+		if vm.UsedPercent > 70 {
 			fmt.Println("🚨 High memory usage detected! Restarting Chrome...")
 			go bm.RestartBrowserSafely()
 		}
