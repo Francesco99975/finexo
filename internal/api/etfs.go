@@ -10,18 +10,18 @@ import (
 
 func GetETFs() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		var payload models.SecParams
+		var payload models.SecParamsPointers
 		err := c.Bind(&payload)
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, models.JSONErrorResponse{Code: http.StatusBadRequest, Message: "Invalid etfs request payload"})
 		}
 
-		err = payload.Validate()
+		params, err := payload.Validate()
 		if err != nil {
 			return c.JSON(http.StatusBadRequest, models.JSONErrorResponse{Code: http.StatusBadRequest, Message: err.Error()})
 		}
 
-		etfs, err := models.GetETFs(database.DB, payload.Exchange, payload.Country, payload.MinPrice, payload.MaxPrice, payload.Order, payload.Asc, payload.Limit, payload.Dividend != nil && *payload.Dividend)
+		etfs, err := models.GetETFs(database.DB, params.Exchange, params.Country, params.MinPrice, params.MaxPrice, params.Order, params.Asc, params.Limit, params.Dividend)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve etfs"})
 		}

@@ -226,118 +226,52 @@ type Security struct {
 }
 
 // Scan implements the sql.Scanner interface for Security.
-func (s *Security) Scan(src any) error {
-	// Convert the source into the appropriate structure.
-	switch data := src.(type) {
-	case map[string]any:
-		// Manually map fields to the Security struct
-		s.Ticker = data["ticker"].(string)
-		s.Exchange = data["exchange"].(string)
-		s.Typology = data["typology"].(string)
-		s.FullName = data["fullname"].(string)
-		s.Currency = data["currency"].(string)
-		s.Price = int(data["price"].(int64))
-		s.PC = int(data["pc"].(int64))
-		s.PCP = int(data["ppc"].(int64))
-		s.YearLow = int(data["yrl"].(int64))
-		s.YearHigh = int(data["yrh"].(int64))
-		s.DayLow = int(data["drl"].(int64))
-		s.DayHigh = int(data["drh"].(int64))
-		s.PClose = int(data["pclose"].(int64))
-		s.COpen = int(data["copen"].(int64))
-		s.Bid = int(data["bid"].(int64))
-		s.Ask = int(data["ask"].(int64))
+func (s *Security) Scan(rows *sqlx.Rows) error {
+	// Define variables to scan values
+	var (
+		dividendYield         sql.NullInt64
+		dividendTiming        sql.NullString
+		dividendAnnualPayout  sql.NullInt64
+		dividendPayoutRatio   sql.NullInt64
+		dividendGrowthRate    sql.NullInt64
+		dividendYearsGrowth   sql.NullInt64
+		dividendLastAnnounced sql.NullInt64
+		dividendFrequency     sql.NullString
+		dividendExDivDate     sql.NullTime
+		dividendPayoutDate    sql.NullTime
+	)
 
-		// Handle nullable fields
-		if sector, ok := data["sector"].(string); ok {
-			s.Sector = sql.NullString{String: sector, Valid: true}
-		}
-		if industry, ok := data["industry"].(string); ok {
-			s.Industry = sql.NullString{String: industry, Valid: true}
-		}
-		if subIndustry, ok := data["subindustry"].(string); ok {
-			s.SubIndustry = sql.NullString{String: subIndustry, Valid: true}
-		}
-		if consensus, ok := data["consensus"].(string); ok {
-			s.Consensus = sql.NullString{String: consensus, Valid: true}
-		}
-		if score, ok := data["score"].(int64); ok {
-			s.Score = sql.NullInt64{Int64: score, Valid: true}
-		}
-		if coverage, ok := data["coverage"].(int64); ok {
-			s.Coverage = sql.NullInt64{Int64: coverage, Valid: true}
-		}
-		if marketcap, ok := data["marketcap"].(int64); ok {
-			s.MarketCap = sql.NullInt64{Int64: int64(marketcap), Valid: true}
-		}
-		if volume, ok := data["volume"].(int64); ok {
-			s.Volume = sql.NullInt64{Int64: volume, Valid: true}
-		}
-		if avgVolume, ok := data["avgvolume"].(int64); ok {
-			s.AvgVolume = sql.NullInt64{Int64: avgVolume, Valid: true}
-		}
-		if outstanding, ok := data["outstanding"].(int64); ok {
-			s.Outstanding = sql.NullInt64{Int64: outstanding, Valid: true}
-		}
-		if beta, ok := data["beta"].(int64); ok {
-			s.Beta = sql.NullInt64{Int64: beta, Valid: true}
-		}
-		if eps, ok := data["eps"].(int64); ok {
-			s.EPS = sql.NullInt64{Int64: eps, Valid: true}
-		}
-		if pe, ok := data["pe"].(int64); ok {
-			s.PE = sql.NullInt64{Int64: pe, Valid: true}
-		}
-		if stm, ok := data["stm"].(string); ok {
-			s.STM = sql.NullString{String: stm, Valid: true}
-		}
-		if bidSize, ok := data["bidsz"].(int64); ok {
-			s.BidSize = sql.NullInt64{Int64: bidSize, Valid: true}
-		}
-		if askSize, ok := data["asksz"].(int64); ok {
-			s.AskSize = sql.NullInt64{Int64: askSize, Valid: true}
-		}
+	// Scan all fields from the row
+	err := rows.Scan(
+		&s.Ticker, &s.Exchange, &s.Typology, &s.Currency, &s.FullName,
+		&s.Price, &s.PC, &s.PCP, &s.YearLow, &s.YearHigh, &s.DayLow, &s.DayHigh,
+		&s.MarketCap, &s.Volume, &s.AvgVolume, &s.Outstanding, &s.Beta,
+		&s.PClose, &s.COpen, &s.Bid, &s.BidSize, &s.Ask, &s.AskSize,
+		&s.EPS, &s.PE, &s.STM, &s.Created, &s.Updated,
 
-		// Handle related Dividend data
-		if dividendData, ok := data["dividend"].(map[string]any); ok {
-			dividend := &Dividend{}
-			dividend.Ticker = dividendData["ticker"].(string)
-			dividend.Exchange = dividendData["exchange"].(string)
-			dividend.Yield = dividendData["yield"].(int)
+		// Dividend Fields
+		&dividendYield, &dividendTiming, &dividendAnnualPayout, &dividendPayoutRatio,
+		&dividendGrowthRate, &dividendYearsGrowth, &dividendLastAnnounced, &dividendFrequency,
+		&dividendExDivDate, &dividendPayoutDate,
+	)
+	if err != nil {
+		return err
+	}
 
-			//Hanle nullable fields
-			if annualPayout, ok := dividendData["ap"].(int64); ok {
-				dividend.AnnualPayout = sql.NullInt64{Int64: annualPayout, Valid: true}
-			}
-			if timing, ok := dividendData["tm"].(string); ok {
-				dividend.Timing = sql.NullString{String: timing, Valid: true}
-			}
-			if payoutRatio, ok := dividendData["pr"].(int64); ok {
-				dividend.PayoutRatio = sql.NullInt64{Int64: payoutRatio, Valid: true}
-			}
-			if growthRate, ok := dividendData["lgr"].(int64); ok {
-				dividend.GrowthRate = sql.NullInt64{Int64: growthRate, Valid: true}
-			}
-			if yearsGrowth, ok := dividendData["yog"].(int64); ok {
-				dividend.YearsGrowth = sql.NullInt64{Int64: yearsGrowth, Valid: true}
-			}
-			if frequency, ok := dividendData["frequency"].(string); ok {
-				dividend.Frequency = sql.NullString{String: frequency, Valid: true}
-			}
-			if lastAnnounced, ok := dividendData["lad"].(int64); ok {
-				dividend.LastAnnounced = sql.NullInt64{Int64: lastAnnounced, Valid: true}
-			}
-			if exDate, ok := dividendData["edd"].(time.Time); ok {
-				dividend.ExDivDate = sql.NullTime{Time: exDate, Valid: true}
-			}
-			if payDate, ok := dividendData["pd"].(time.Time); ok {
-				dividend.PayoutDate = sql.NullTime{Time: payDate, Valid: true}
-			}
-			s.Dividend = dividend
+	// If dividend data exists, create the Dividend struct
+	if dividendYield.Valid || dividendAnnualPayout.Valid || dividendPayoutRatio.Valid {
+		s.Dividend = &Dividend{
+			Yield:         int(dividendYield.Int64),
+			Timing:        dividendTiming,
+			AnnualPayout:  dividendAnnualPayout,
+			PayoutRatio:   dividendPayoutRatio,
+			GrowthRate:    dividendGrowthRate,
+			YearsGrowth:   dividendYearsGrowth,
+			LastAnnounced: dividendLastAnnounced,
+			Frequency:     dividendFrequency,
+			ExDivDate:     dividendExDivDate,
+			PayoutDate:    dividendPayoutDate,
 		}
-
-	default:
-		return fmt.Errorf("unsupported Scan source: %T", src)
 	}
 
 	return nil
@@ -436,7 +370,7 @@ func UpdateSecurity(tx *sqlx.Tx, security *Security) error {
 	}
 
 	query := "UPDATE securities SET "
-	args := make(map[string]interface{})
+	args := make(map[string]any)
 	updates := []string{}
 
 	// String fields
@@ -679,7 +613,7 @@ func UpdateDividend(tx *sqlx.Tx, dividend *Dividend) error {
 	}
 
 	query := "UPDATE dividends SET "
-	args := make(map[string]interface{})
+	args := make(map[string]any)
 	updates := []string{}
 
 	// Integer Fields
@@ -852,8 +786,8 @@ func (etf *ETF) PrettyPrintString() string {
 	return sb.String()
 }
 
-func (etf *ETF) flatten() map[string]interface{} {
-	return map[string]interface{}{
+func (etf *ETF) flatten() map[string]any {
+	return map[string]any{
 		"ticker":       etf.Security.Ticker,
 		"exchange":     etf.Security.Exchange,
 		"family":       etf.Family,
@@ -974,7 +908,7 @@ func CreateETF(db *sqlx.DB, etf *ETF) error {
 				return fmt.Errorf("invalid allocation value: %s", parts[2])
 			}
 
-			_, err = tx.NamedExec(relatedQuery, map[string]interface{}{
+			_, err = tx.NamedExec(relatedQuery, map[string]any{
 				"etf_ticker":       etf.Ticker,
 				"etf_exchange":     etf.Exchange,
 				"related_ticker":   parts[0],   // Ticker
@@ -1009,7 +943,7 @@ func UpdateETF(db *sqlx.DB, etf *ETF) error {
 
 	// Step 2: Update the ETFs table
 	query := "UPDATE etfs SET "
-	args := make(map[string]interface{})
+	args := make(map[string]any)
 	updates := []string{}
 
 	if etf.Family != "" {
@@ -1074,7 +1008,7 @@ func UpdateETF(db *sqlx.DB, etf *ETF) error {
 				return fmt.Errorf("invalid allocation value: %s", parts[2])
 			}
 
-			_, err = tx.NamedExec(relatedQuery, map[string]interface{}{
+			_, err = tx.NamedExec(relatedQuery, map[string]any{
 				"etf_ticker":       etf.Ticker,
 				"etf_exchange":     etf.Exchange,
 				"related_ticker":   parts[0],   // Ticker
@@ -1119,8 +1053,8 @@ type REIT struct {
 	Timing     sql.NullString    `db:"tm" json:"timing,omitempty"` // Enum: fwd, ttm
 }
 
-func (reit *REIT) flatten() map[string]interface{} {
-	return map[string]interface{}{
+func (reit *REIT) flatten() map[string]any {
+	return map[string]any{
 		"ticker":     reit.Security.Ticker,
 		"occupation": reit.Security.Exchange,
 		"focus":      reit.Focus,
@@ -1175,7 +1109,7 @@ func UpdateREIT(db *sqlx.DB, reit *REIT) error {
 
 	// Step 2: Update the REITs table
 	query := "UPDATE reits SET "
-	args := make(map[string]interface{})
+	args := make(map[string]any)
 	updates := []string{}
 
 	// Nullable Integer Fields
@@ -1258,7 +1192,7 @@ func GetStock(db *sqlx.DB, input string) (*Security, error) {
 
 	// Execute the query
 	var stock Security
-	err := db.Get(&stock, query, map[string]interface{}{
+	err := db.Get(&stock, query, map[string]any{
 		"ticker":   ticker,
 		"exchange": exchange,
 	})
@@ -1274,24 +1208,27 @@ func GetStock(db *sqlx.DB, input string) (*Security, error) {
 
 func GetStocks(
 	db *sqlx.DB,
-	exchange, country *string,
-	minPrice, maxPrice *int,
-	orderBy, orderDirection *string,
-	limit *int,
+	exchange, country string,
+	minPrice, maxPrice int,
+	orderBy, orderDirection string,
+	limit int,
 	dividend bool,
 ) ([]Security, error) {
 	// Base query selecting relevant security fields where typology = 'STOCK'
 	query := `
 		SELECT
-			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
-			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
-			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
-			d.yield, d.tm AS timing, d.ap AS annualPayout, d.pr AS payoutRatio,
-			d.lgr AS growthRate, d.yog AS yearsGrowth, d.lad AS lastAnnounced,
-			d.frequency, d.edd AS exDivDate, d.pd AS payoutDate
+    s.ticker, s.exchange, s.typology, s.currency, s.fullname,
+    s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh,
+    s.cap, s.volume, s.avgvolume, s.outstanding, s.beta,
+    s.pclose, s.copen, s.bid, s.bidsz, s.ask, s.asksz,
+    s.eps, s.pe, s.stm, s.created, s.updated,
+
+    d.yield AS dividend_yield, d.tm AS dividend_timing,
+    d.ap AS dividend_annualPayout, d.pr AS dividend_payoutRatio,
+    d.lgr AS dividend_growthRate, d.yog AS dividend_yearsGrowth,
+    d.lad AS dividend_lastAnnounced, d.frequency AS dividend_frequency,
+    d.edd AS dividend_exDivDate, d.pd AS dividend_payoutDate
 		FROM securities s
-		WHERE s.typology = 'STOCK'
 	`
 
 	// Adjust JOIN type based on dividend presence
@@ -1303,11 +1240,12 @@ func GetStocks(
 
 	// WHERE conditions
 	query += `
-		AND (:exchange IS NULL OR s.exchange = :exchange)
-		AND (:country IS NULL OR s.exchange IN (SELECT title FROM exchanges WHERE cc = :country))
-		AND (:minPrice IS NULL OR s.price >= :minPrice)
-		AND (:maxPrice IS NULL OR s.price <= :maxPrice)
-	`
+	WHERE s.typology = 'STOCK'
+	AND (COALESCE(:exchange, '') = '' OR s.exchange = CAST(:exchange AS TEXT))
+	AND (COALESCE(:country, '') = '' OR s.exchange IN (SELECT title FROM exchanges WHERE cc = :country))
+	AND (COALESCE(:minPrice, -1) = -1 OR s.price >= CAST(:minPrice AS NUMERIC))
+	AND (COALESCE(:maxPrice, -1) = -1 OR s.price <= CAST(:maxPrice AS NUMERIC))
+`
 
 	// Apply ordering
 	orderColumn := map[string]string{
@@ -1321,9 +1259,9 @@ func GetStocks(
 	}
 
 	order := "s.price ASC" // Default ordering
-	if orderBy != nil && *orderBy != "" {
-		if col, exists := orderColumn[*orderBy]; exists {
-			if orderDirection != nil && *orderDirection == "desc" {
+	if orderBy != "" {
+		if col, exists := orderColumn[orderBy]; exists {
+			if orderDirection == "desc" {
 				order = fmt.Sprintf("%s DESC", col)
 			} else {
 				order = fmt.Sprintf("%s ASC", col)
@@ -1332,22 +1270,24 @@ func GetStocks(
 	}
 	query += fmt.Sprintf(" ORDER BY %s", order)
 
-	// Add limit
-	if limit != nil && *limit > 0 {
-		query += " LIMIT :limit"
+	// PostgreSQL does NOT support named parameters in LIMIT
+	if limit > 0 {
+		query += fmt.Sprintf(" LIMIT %d", limit)
 	}
 
-	// Query parameters
-	params := map[string]interface{}{
-		"exchange": exchange,
-		"country":  country,
-		"minPrice": minPrice,
-		"maxPrice": maxPrice,
-		"limit":    limit,
+	// Query parameters (use sql.NullString and sql.NullInt64 for explicit types)
+	params := map[string]any{
+		"exchange": sql.NullString{String: exchange, Valid: exchange != ""},
+		"country":  sql.NullString{String: country, Valid: country != ""},
+		"minPrice": sql.NullInt64{Int64: int64(minPrice), Valid: minPrice > 0},
+		"maxPrice": sql.NullInt64{Int64: int64(maxPrice), Valid: maxPrice > 0},
 	}
+
+	// log.Debugf("Executing Query: %s", query)
+	// log.Debugf("Params: %+v", params)
 
 	// Execute the query
-	rows, err := db.Queryx(query, params)
+	rows, err := db.NamedQuery(query, params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve stocks: %w", err)
 	}
@@ -1392,7 +1332,7 @@ func GetETF(db *sqlx.DB, input string) (*Security, error) {
 
 	// Execute the query
 	var etf Security
-	err := db.Get(&etf, query, map[string]interface{}{
+	err := db.Get(&etf, query, map[string]any{
 		"ticker":   ticker,
 		"exchange": exchange,
 	})
@@ -1408,10 +1348,10 @@ func GetETF(db *sqlx.DB, input string) (*Security, error) {
 
 func GetETFs(
 	db *sqlx.DB,
-	exchange, country *string,
-	minPrice, maxPrice *int,
-	orderBy, orderDirection *string,
-	limit *int,
+	exchange, country string,
+	minPrice, maxPrice int,
+	orderBy, orderDirection string,
+	limit int,
 	dividend bool,
 ) ([]Security, error) {
 	// Base query selecting relevant security fields where typology = 'ETF'
@@ -1425,7 +1365,6 @@ func GetETFs(
 			d.lgr AS growthRate, d.yog AS yearsGrowth, d.lad AS lastAnnounced,
 			d.frequency, d.edd AS exDivDate, d.pd AS payoutDate
 		FROM securities s
-		WHERE s.typology = 'ETF'
 	`
 
 	// Adjust JOIN type based on dividend presence
@@ -1437,6 +1376,7 @@ func GetETFs(
 
 	// WHERE conditions
 	query += `
+	  WHERE s.typology = 'ETF'
 		AND (:exchange IS NULL OR s.exchange = :exchange)
 		AND (:country IS NULL OR s.exchange IN (SELECT title FROM exchanges WHERE cc = :country))
 		AND (:minPrice IS NULL OR s.price >= :minPrice)
@@ -1455,9 +1395,9 @@ func GetETFs(
 	}
 
 	order := "s.price ASC"
-	if orderBy != nil && *orderBy != "" {
-		if col, exists := orderColumn[*orderBy]; exists {
-			if orderDirection != nil && *orderDirection == "desc" {
+	if orderBy != "" {
+		if col, exists := orderColumn[orderBy]; exists {
+			if orderDirection == "desc" {
 				order = fmt.Sprintf("%s DESC", col)
 			} else {
 				order = fmt.Sprintf("%s ASC", col)
@@ -1467,12 +1407,12 @@ func GetETFs(
 	query += fmt.Sprintf(" ORDER BY %s", order)
 
 	// Add limit
-	if limit != nil && *limit > 0 {
+	if limit > 0 {
 		query += " LIMIT :limit"
 	}
 
 	// Query parameters
-	params := map[string]interface{}{
+	params := map[string]any{
 		"exchange": exchange,
 		"country":  country,
 		"minPrice": minPrice,
@@ -1526,7 +1466,7 @@ func GetREIT(db *sqlx.DB, input string) (*Security, error) {
 
 	// Execute the query
 	var reit Security
-	err := db.Get(&reit, query, map[string]interface{}{
+	err := db.Get(&reit, query, map[string]any{
 		"ticker":   ticker,
 		"exchange": exchange,
 	})
@@ -1542,10 +1482,10 @@ func GetREIT(db *sqlx.DB, input string) (*Security, error) {
 
 func GetREITs(
 	db *sqlx.DB,
-	exchange, country *string,
-	minPrice, maxPrice *int,
-	orderBy, orderDirection *string,
-	limit *int,
+	exchange, country string,
+	minPrice, maxPrice int,
+	orderBy, orderDirection string,
+	limit int,
 	dividend bool,
 ) ([]Security, error) {
 	// Base query selecting relevant security fields where typology = 'REIT'
@@ -1559,7 +1499,7 @@ func GetREITs(
 			d.lgr AS growthRate, d.yog AS yearsGrowth, d.lad AS lastAnnounced,
 			d.frequency, d.edd AS exDivDate, d.pd AS payoutDate
 		FROM securities s
-		WHERE s.typology = 'REIT'
+
 	`
 
 	// Adjust JOIN type based on dividend presence
@@ -1571,6 +1511,7 @@ func GetREITs(
 
 	// WHERE conditions
 	query += `
+	  WHERE s.typology = 'REIT'
 		AND (:exchange IS NULL OR s.exchange = :exchange)
 		AND (:country IS NULL OR s.exchange IN (SELECT title FROM exchanges WHERE cc = :country))
 		AND (:minPrice IS NULL OR s.price >= :minPrice)
@@ -1589,9 +1530,9 @@ func GetREITs(
 	}
 
 	order := "s.price ASC"
-	if orderBy != nil && *orderBy != "" {
-		if col, exists := orderColumn[*orderBy]; exists {
-			if orderDirection != nil && *orderDirection == "desc" {
+	if orderBy != "" {
+		if col, exists := orderColumn[orderBy]; exists {
+			if orderDirection == "desc" {
 				order = fmt.Sprintf("%s DESC", col)
 			} else {
 				order = fmt.Sprintf("%s ASC", col)
@@ -1601,12 +1542,12 @@ func GetREITs(
 	query += fmt.Sprintf(" ORDER BY %s", order)
 
 	// Add limit
-	if limit != nil && *limit > 0 {
+	if limit > 0 {
 		query += " LIMIT :limit"
 	}
 
 	// Query parameters
-	params := map[string]interface{}{
+	params := map[string]any{
 		"exchange": exchange,
 		"country":  country,
 		"minPrice": minPrice,

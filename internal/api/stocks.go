@@ -10,20 +10,20 @@ import (
 
 func GetStocks() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		var payload models.SecParams
+		var payload models.SecParamsPointers
 		err := c.Bind(&payload)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, models.JSONErrorResponse{Code: http.StatusBadRequest, Message: "Invalid stocks request payload"})
+			return c.JSON(http.StatusBadRequest, models.JSONErrorResponse{Code: http.StatusBadRequest, Message: "Invalid stocks request payload", Error: err.Error()})
 		}
 
-		err = payload.Validate()
+		params, err := payload.Validate()
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, models.JSONErrorResponse{Code: http.StatusBadRequest, Message: err.Error()})
+			return c.JSON(http.StatusBadRequest, models.JSONErrorResponse{Code: http.StatusBadRequest, Message: "Validation Error", Error: err.Error()})
 		}
 
-		stocks, err := models.GetStocks(database.DB, payload.Exchange, payload.Country, payload.MinPrice, payload.MaxPrice, payload.Order, payload.Asc, payload.Limit, payload.Dividend != nil && *payload.Dividend)
+		stocks, err := models.GetStocks(database.DB, params.Exchange, params.Country, params.MinPrice, params.MaxPrice, params.Order, params.Asc, params.Limit, params.Dividend)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve stocks"})
+			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve stocks", Error: err.Error()})
 		}
 
 		return c.JSON(http.StatusOK, stocks)
@@ -34,7 +34,7 @@ func GetStock() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		stock, err := models.GetStock(database.DB, c.Param("id"))
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve stock"})
+			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve stock", Error: err.Error()})
 		}
 
 		return c.JSON(http.StatusOK, stock)

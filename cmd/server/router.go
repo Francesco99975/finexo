@@ -34,8 +34,8 @@ func createRouter(ctx context.Context) *echo.Echo {
 	web := e.Group("")
 
 	if boot.Environment.GoEnv == "development" {
-		e.Logger.SetLevel(log.ERROR)
-		log.SetLevel(log.ERROR)
+		e.Logger.SetLevel(log.DEBUG)
+		log.SetLevel(log.DEBUG)
 		web.Use(middlewares.SecurityHeadersDev())
 	}
 
