@@ -800,10 +800,24 @@ func (etf *ETF) flatten() map[string]any {
 }
 
 func (etf *ETF) Scan(rows *sqlx.Rows) error {
-	// Temporary variables for related securities and nullable fields
-	var relatedSecurities string
+	// Temporary variables for nullable fields
+	var relatedSecurities sql.NullString
 
-	// Scan all fields
+	// Define variables to scan values
+	var (
+		dividendYield         sql.NullInt64
+		dividendTiming        sql.NullString
+		dividendAnnualPayout  sql.NullInt64
+		dividendPayoutRatio   sql.NullInt64
+		dividendGrowthRate    sql.NullInt64
+		dividendYearsGrowth   sql.NullInt64
+		dividendLastAnnounced sql.NullInt64
+		dividendFrequency     sql.NullString
+		dividendExDivDate     sql.NullTime
+		dividendPayoutDate    sql.NullTime
+	)
+
+	// Scan all fields from the row
 	err := rows.Scan(
 		&etf.Security.Ticker,
 		&etf.Security.Exchange,
@@ -816,10 +830,10 @@ func (etf *ETF) Scan(rows *sqlx.Rows) error {
 		&etf.Security.Price,
 		&etf.Security.PC,
 		&etf.Security.PCP,
-		&etf.Security.YearHigh,
 		&etf.Security.YearLow,
-		&etf.Security.DayHigh,
+		&etf.Security.YearHigh,
 		&etf.Security.DayLow,
+		&etf.Security.DayHigh,
 		&etf.Security.Consensus,
 		&etf.Security.Score,
 		&etf.Security.Coverage,
@@ -836,31 +850,48 @@ func (etf *ETF) Scan(rows *sqlx.Rows) error {
 		&etf.Security.AskSize,
 		&etf.Security.Created,
 		&etf.Security.Updated,
+
+		// ETF-specific fields (order fixed)
 		&etf.Holdings,
 		&etf.Family,
 		&etf.AUM,
 		&etf.ExpenseRatio,
-		&relatedSecurities, // Comma-separated related securities
-		&etf.Security.Dividend.Yield,
-		&etf.Security.Dividend.Timing,
-		&etf.Security.Dividend.AnnualPayout,
-		&etf.Security.Dividend.PayoutRatio,
-		&etf.Security.Dividend.GrowthRate,
-		&etf.Security.Dividend.YearsGrowth,
-		&etf.Security.Dividend.LastAnnounced,
-		&etf.Security.Dividend.Frequency,
-		&etf.Security.Dividend.ExDivDate,
-		&etf.Security.Dividend.PayoutDate,
+		&etf.NAV,
+		&etf.InceptionDate,
+
+		// Related Securities
+		&relatedSecurities,
+
+		// Dividend Fields
+		&dividendYield, &dividendTiming, &dividendAnnualPayout, &dividendPayoutRatio,
+		&dividendGrowthRate, &dividendYearsGrowth, &dividendLastAnnounced, &dividendFrequency,
+		&dividendExDivDate, &dividendPayoutDate,
 	)
+
 	if err != nil {
 		return fmt.Errorf("failed to scan ETF fields: %w", err)
 	}
 
-	// Parse related securities
-	if relatedSecurities != "" {
-		etf.RelatedSecurities = strings.Split(relatedSecurities, ",")
+	if relatedSecurities.Valid {
+		etf.RelatedSecurities = strings.Split(strings.ReplaceAll(relatedSecurities.String, "|", ":"), ",")
 	} else {
 		etf.RelatedSecurities = []string{}
+	}
+
+	// If dividend data exists, create the Dividend struct
+	if dividendYield.Valid || dividendAnnualPayout.Valid || dividendPayoutRatio.Valid {
+		etf.Security.Dividend = &Dividend{
+			Yield:         int(dividendYield.Int64),
+			Timing:        dividendTiming,
+			AnnualPayout:  dividendAnnualPayout,
+			PayoutRatio:   dividendPayoutRatio,
+			GrowthRate:    dividendGrowthRate,
+			YearsGrowth:   dividendYearsGrowth,
+			LastAnnounced: dividendLastAnnounced,
+			Frequency:     dividendFrequency,
+			ExDivDate:     dividendExDivDate,
+			PayoutDate:    dividendPayoutDate,
+		}
 	}
 
 	return nil
@@ -1174,33 +1205,49 @@ func GetStock(db *sqlx.DB, input string) (*Security, error) {
 	// Parse the input into ticker and exchange
 	parts := strings.Split(input, ":")
 	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid input format, expected '<ticker>:<exchange>'")
+		return nil, fmt.Errorf("invalid input format, expected: ticker:exchange")
 	}
 	ticker, exchange := parts[0], parts[1]
 
 	// Query for retrieving stock details, including dividend (if available)
 	query := `
 		SELECT
-			s.*,
-			d.yield, d.tm AS timing, d.ap AS annualPayout, d.pr AS payoutRatio,
-			d.lgr AS growthRate, d.yog AS yearsGrowth, d.lad AS lastAnnounced,
-			d.frequency, d.edd AS exDivDate, d.pd AS payoutDate
+			s.ticker, s.exchange, s.typology, s.currency, s.fullname,
+    s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh,
+    s.cap, s.volume, s.avgvolume, s.outstanding, s.beta,
+    s.pclose, s.copen, s.bid, s.bidsz, s.ask, s.asksz,
+    s.eps, s.pe, s.stm, s.created, s.updated,
+
+			d.yield AS dividend_yield, d.tm AS dividend_timing,
+    d.ap AS dividend_annualPayout, d.pr AS dividend_payoutRatio,
+    d.lgr AS dividend_growthRate, d.yog AS dividend_yearsGrowth,
+    d.lad AS dividend_lastAnnounced, d.frequency AS dividend_frequency,
+    d.edd AS dividend_exDivDate, d.pd AS dividend_payoutDate
+
 		FROM securities s
 		LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange
 		WHERE s.ticker = :ticker AND s.exchange = :exchange AND s.typology = 'STOCK'
 	`
 
-	// Execute the query
-	var stock Security
-	err := db.Get(&stock, query, map[string]any{
+	// Execute the query using NamedQuery
+	rows, err := db.NamedQuery(query, map[string]any{
 		"ticker":   ticker,
 		"exchange": exchange,
 	})
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("stock '%s' not found", input)
-		}
 		return nil, fmt.Errorf("failed to retrieve stock '%s': %w", input, err)
+	}
+	defer rows.Close()
+
+	// Check if any rows were returned
+	if !rows.Next() {
+		return nil, fmt.Errorf("stock '%s' not found", input)
+	}
+
+	// Parse result into Security struct
+	var stock Security
+	if err := stock.Scan(rows); err != nil {
+		return nil, fmt.Errorf("failed to scan stock '%s': %w", input, err)
 	}
 
 	return &stock, nil
@@ -1353,18 +1400,32 @@ func GetETFs(
 	orderBy, orderDirection string,
 	limit int,
 	dividend bool,
-) ([]Security, error) {
-	// Base query selecting relevant security fields where typology = 'ETF'
+) ([]ETF, error) {
+	// Base query selecting relevant ETF fields, including related securities
 	query := `
 		SELECT
 			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
-			d.yield, d.tm AS timing, d.ap AS annualPayout, d.pr AS payoutRatio,
-			d.lgr AS growthRate, d.yog AS yearsGrowth, d.lad AS lastAnnounced,
-			d.frequency, d.edd AS exDivDate, d.pd AS payoutDate
+			s.ask, s.asksz, s.created, s.updated,
+
+			e.holdings, e.family, e.aum, e.er AS expenseRatio, e.nav, e.inception,
+
+
+			COALESCE(STRING_AGG(
+					er.related_ticker || '|' || er.related_exchange || '|' || er.allocation, ','
+			), '') AS related_securities,
+
+
+			d.yield AS dividend_yield, d.tm AS dividend_timing,
+			d.ap AS dividend_annualPayout, d.pr AS dividend_payoutRatio,
+			d.lgr AS dividend_growthRate, d.yog AS dividend_yearsGrowth,
+			d.lad AS dividend_lastAnnounced, d.frequency AS dividend_frequency,
+			d.edd AS dividend_exDivDate, d.pd AS dividend_payoutDate
+
 		FROM securities s
+		INNER JOIN etfs e ON s.ticker = e.ticker AND s.exchange = e.exchange
+		LEFT JOIN etf_related_securities er ON e.ticker = er.etf_ticker AND e.exchange = er.etf_exchange
 	`
 
 	// Adjust JOIN type based on dividend presence
@@ -1376,12 +1437,15 @@ func GetETFs(
 
 	// WHERE conditions
 	query += `
-	  WHERE s.typology = 'ETF'
-		AND (:exchange IS NULL OR s.exchange = :exchange)
-		AND (:country IS NULL OR s.exchange IN (SELECT title FROM exchanges WHERE cc = :country))
-		AND (:minPrice IS NULL OR s.price >= :minPrice)
-		AND (:maxPrice IS NULL OR s.price <= :maxPrice)
+		WHERE s.typology = 'ETF'
+		AND (COALESCE(:exchange, '') = '' OR s.exchange = CAST(:exchange AS TEXT))
+		AND (COALESCE(:country, '') = '' OR s.exchange IN (SELECT title FROM exchanges WHERE cc = :country))
+		AND (COALESCE(:minPrice, -1) = -1 OR s.price >= CAST(:minPrice AS NUMERIC))
+		AND (COALESCE(:maxPrice, -1) = -1 OR s.price <= CAST(:maxPrice AS NUMERIC))
 	`
+
+	// Grouping by ETF to ensure `STRING_AGG()` works correctly
+	query += " GROUP BY s.ticker, s.exchange, e.holdings, e.family, e.aum, e.er, e.nav, e.inception, d.yield, d.tm, d.ap, d.pr, d.lgr, d.yog, d.lad, d.frequency, d.edd, d.pd"
 
 	// Apply ordering
 	orderColumn := map[string]string{
@@ -1406,32 +1470,31 @@ func GetETFs(
 	}
 	query += fmt.Sprintf(" ORDER BY %s", order)
 
-	// Add limit
+	// PostgreSQL does NOT support named parameters in LIMIT
 	if limit > 0 {
-		query += " LIMIT :limit"
+		query += fmt.Sprintf(" LIMIT %d", limit) // Convert to integer before execution
 	}
 
-	// Query parameters
+	// Query parameters (handle NULL values properly)
 	params := map[string]any{
-		"exchange": exchange,
-		"country":  country,
-		"minPrice": minPrice,
-		"maxPrice": maxPrice,
-		"limit":    limit,
+		"exchange": sql.NullString{String: exchange, Valid: exchange != ""},
+		"country":  sql.NullString{String: country, Valid: country != ""},
+		"minPrice": sql.NullInt64{Int64: int64(minPrice), Valid: minPrice > 0},
+		"maxPrice": sql.NullInt64{Int64: int64(maxPrice), Valid: maxPrice > 0},
 	}
 
 	// Execute the query
-	rows, err := db.Queryx(query, params)
+	rows, err := db.NamedQuery(query, params)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve ETFs: %w", err)
+		return nil, fmt.Errorf("failed to retrieve ETFs rows: %w", err)
 	}
 	defer rows.Close()
 
 	// Parse results
-	var etfs []Security
+	var etfs []ETF
 	for rows.Next() {
-		var etf Security
-		if err := etf.Scan(rows); err != nil {
+		var etf ETF
+		if err := etf.Scan(rows); err != nil { // Use custom Scan() method
 			return nil, fmt.Errorf("failed to scan ETF row: %w", err)
 		}
 		etfs = append(etfs, etf)

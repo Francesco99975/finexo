@@ -3,3 +3,4 @@ assets
 .vscode
 *compose*
 Dockerfile
+report.txt

@@ -26,6 +26,10 @@ func GetREITs() echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve reits"})
 		}
 
+		if len(reits) == 0 {
+			return c.JSON(http.StatusNotFound, models.JSONErrorResponse{Code: http.StatusNotFound, Message: "No matching reits found", Error: "No matching reits found"})
+		}
+
 		return c.JSON(http.StatusOK, reits)
 	}
 }

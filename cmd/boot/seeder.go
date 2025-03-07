@@ -1,8 +1,10 @@
 package boot
 
 import (
+	"fmt"
 	"sync"
 
+	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/Francesco99975/finexo/internal/tools"
 	"github.com/labstack/gommon/log"
@@ -17,6 +19,18 @@ func SeedDatabase() error {
 		return err
 	}
 
+	ScraperReporter, err := helpers.NewReporter("scraper.log")
+	if err != nil {
+		log.Errorf("failed to create reporter: %v", err)
+	}
+
+	defer func() {
+		err := ScraperReporter.Close()
+		if err != nil {
+			log.Errorf("failed to close reporter: %v", err)
+		}
+	}()
+
 	manager := models.NewBrowserManager(100)
 	go manager.MonitorMemory()
 
@@ -29,12 +43,20 @@ func SeedDatabase() error {
 			defer func() {
 				if r := recover(); r != nil {
 					log.Errorf("Panic occurred while scraping seed (%s): %v", seed, r)
+					err := ScraperReporter.Report(helpers.SeverityLevels.PANIC, fmt.Sprintf("was scraping seed (%s) -> %v", seed, r))
+					if err != nil {
+						log.Errorf("failed to report panic: %v", err)
+					}
 				}
 			}()
 
 			err := tools.Scrape(seed, nil, manager, sem, &wg)
 			if err != nil {
 				log.Errorf("Could not Scrape <- %v", err)
+				err := ScraperReporter.Report(helpers.SeverityLevels.ERROR, fmt.Sprintf("was scraping seed (%s) -> %v", seed, err))
+				if err != nil {
+					log.Errorf("failed to report error: %v", err)
+				}
 			}
 		}(seed)
 	}

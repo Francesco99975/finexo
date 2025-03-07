@@ -26,6 +26,10 @@ func GetStocks() echo.HandlerFunc {
 			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve stocks", Error: err.Error()})
 		}
 
+		if len(stocks) == 0 {
+			return c.JSON(http.StatusNotFound, models.JSONErrorResponse{Code: http.StatusNotFound, Message: "No matching stocks found", Error: "No matching stocks found"})
+		}
+
 		return c.JSON(http.StatusOK, stocks)
 	}
 }
