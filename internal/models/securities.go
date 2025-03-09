@@ -914,7 +914,7 @@ func CreateETF(db *sqlx.DB, etf *ETF) error {
 	// Step 2: Insert into the etfs table
 	etfsQuery := `
 		INSERT INTO etfs (ticker, exchange, family, holdings, aum, er, nav, inception)
-		VALUES (:ticker, :exchange, :holdings, :family, :aum, :expenseRatio, :nav, :inception)
+		VALUES (:ticker, :exchange, :family, :holdings, :aum, :expenseRatio, :nav, :inception)
 	`
 	_, err = tx.NamedExec(etfsQuery, etf.flatten())
 	if err != nil {

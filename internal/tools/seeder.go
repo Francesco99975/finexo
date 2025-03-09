@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/Francesco99975/finexo/internal/helpers"
 )
 
 func ReadAllSeeds() ([]string, error) {
@@ -38,7 +40,11 @@ func ReadAllSeeds() ([]string, error) {
 		return nil, fmt.Errorf("Error reading seeds: %v", err)
 	}
 
-	return seeds, nil
+	filterSeeds := helpers.FilteredSlice(seeds, func(s string) bool {
+		return len(s) < 6
+	})
+
+	return filterSeeds, nil
 }
 
 func readSeed(path string) ([]string, error) {
@@ -49,7 +55,7 @@ func readSeed(path string) ([]string, error) {
 	}
 	defer file.Close()
 
-	var records []string
+	recordsSet := make(map[string]bool)
 
 	// Create CSV reader
 	reader := csv.NewReader(file)
@@ -81,10 +87,15 @@ func readSeed(path string) ([]string, error) {
 		if err != nil {
 			break // EOF
 		}
-		records = append(records, normalizeSeed(record[columnIndex]))
+		recordsSet[normalizeSeed(record[columnIndex])] = true
 		if strings.Contains(path, "canadian-stocks-us-stocks") {
-			records = append(records, normalizeSeed(record[columnIndex])+".TO")
+			recordsSet[normalizeSeed(record[columnIndex])+".TO"] = true
 		}
+	}
+
+	records := make([]string, 0, len(recordsSet))
+	for record := range recordsSet {
+		records = append(records, record)
 	}
 
 	return records, nil

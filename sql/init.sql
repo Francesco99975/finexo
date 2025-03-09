@@ -111,9 +111,9 @@ CREATE TABLE IF NOT EXISTS etfs (
 
 CREATE TABLE IF NOT EXISTS etf_related_securities (
     etf_ticker VARCHAR(20) NOT NULL,
-    etf_exchange VARCHAR(3) NOT NULL,
+    etf_exchange VARCHAR(10) NOT NULL,
     related_ticker VARCHAR(20) NOT NULL,
-    related_exchange VARCHAR(3) NOT NULL,
+    related_exchange VARCHAR(10) NOT NULL,
     allocation INT NOT NULL,
     PRIMARY KEY (etf_ticker, etf_exchange, related_ticker, related_exchange),
     FOREIGN KEY (etf_ticker, etf_exchange) REFERENCES etfs (ticker, exchange) ON DELETE CASCADE,

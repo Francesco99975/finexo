@@ -1,12 +1,12 @@
 package models
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
+	"github.com/labstack/gommon/log"
 	"github.com/shirou/gopsutil/mem"
 )
 
@@ -31,7 +31,7 @@ func NewBrowserManager(maxRequests int) *BrowserManager {
 
 // 🚀 Launches a new browser with your settings
 func (bm *BrowserManager) launchNewBrowser() *rod.Browser {
-	fmt.Println("Starting new Chrome instance...")
+	log.Info("Starting new Chrome instance...")
 
 	u := launcher.New().NoSandbox(true).Headless(true).Devtools(false).
 		Set("disable-dev-shm-usage").
@@ -64,20 +64,20 @@ func (bm *BrowserManager) ReleaseBrowser() {
 	defer bm.mu.Unlock()
 
 	bm.activeScrapers--
-	fmt.Printf("Active scrapers remaining: %d\n", bm.activeScrapers)
+	log.Debugf("Active scrapers remaining: %d\n", bm.activeScrapers)
 
 	// ✅ If the scraper was using the old browser, decrease the counter
 	if bm.oldBrowser != nil {
 		bm.oldBrowserScrapers--
-		fmt.Println("Old browser scrapers remaining:", bm.oldBrowserScrapers)
+		log.Debug("Old browser scrapers remaining:", bm.oldBrowserScrapers)
 	}
 
 	// ✅ Now correctly close the old browser only when it's no longer needed
 	if bm.oldBrowser != nil && bm.oldBrowserScrapers == 0 {
-		fmt.Println("All old browser scrapers are done. Closing old Chrome...")
+		log.Info("All old browser scrapers are done. Closing old Chrome...")
 		bm.oldBrowser.MustClose()
 		bm.oldBrowser = nil
-		fmt.Println("Old Chrome successfully closed.")
+		log.Info("Old Chrome successfully closed.")
 	}
 }
 
@@ -91,7 +91,7 @@ func (bm *BrowserManager) RestartBrowserSafely() {
 		return
 	}
 
-	fmt.Println("🚀 Creating backup browser before restart...")
+	log.Info("🚀 Creating backup browser before restart...")
 
 	// 1️⃣ Start a backup browser first (as a fallback in case the new one fails)
 	bm.backupBrowser = bm.launchNewBrowser()
@@ -106,7 +106,7 @@ func (bm *BrowserManager) RestartBrowserSafely() {
 
 	bm.mu.Unlock()
 
-	fmt.Println("✅ New Chrome is now active. Waiting for old scrapers to finish...")
+	log.Info("✅ New Chrome is now active. Waiting for old scrapers to finish...")
 
 	// 4️⃣ Old Chrome closes once scrapers are done (handled in ReleaseBrowser)
 }
@@ -118,7 +118,7 @@ func (bm *BrowserManager) MonitorMemory() {
 
 		vm, _ := mem.VirtualMemory()
 		if vm.UsedPercent > 70 {
-			fmt.Println("🚨 High memory usage detected! Restarting Chrome...")
+			log.Warn("🚨 High memory usage detected! Restarting Chrome...")
 			go bm.RestartBrowserSafely()
 		}
 	}

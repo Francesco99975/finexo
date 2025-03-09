@@ -25,7 +25,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	defer mwg.Done()
 	err := sem.Acquire(context.Background(), 1) // Limit concurrency
 	if err != nil {
-		return fmt.Errorf("failed to acquire semaphore while sscraping seed (%s): %v", seed, err)
+		return fmt.Errorf("failed to acquire semaphore while scraping seed (%s): %v", seed, err)
 	}
 	defer sem.Release(1)
 
@@ -1221,6 +1221,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			if !models.SecurityExists(database.DB, relatedTicker, relatedExchangeInfo.Title) {
 				var twg sync.WaitGroup
 				tmpsem := semaphore.NewWeighted(1) // Control concurrency
+				twg.Add(1)
 				go func() {
 					err := Scrape(relatedTicker, &relatedExchangeInfo.Title, manager, tmpsem, &twg)
 					if err != nil {

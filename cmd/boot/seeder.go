@@ -3,6 +3,7 @@ package boot
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 
 	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/models"
@@ -13,10 +14,16 @@ import (
 
 const maxWorkers = 7
 
-func SeedDatabase() error {
+func SeedDatabase(test bool) error {
 	seeds, err := tools.ReadAllSeeds()
 	if err != nil {
 		return err
+	}
+
+	helpers.Shuffle(seeds)
+
+	if test {
+		seeds = seeds[:30]
 	}
 
 	ScraperReporter, err := helpers.NewReporter("scraper.log")
@@ -36,8 +43,9 @@ func SeedDatabase() error {
 
 	var wg sync.WaitGroup
 	sem := semaphore.NewWeighted(maxWorkers) // Control concurrency
+	var progress atomic.Uint32
 
-	for index, seed := range seeds {
+	for _, seed := range seeds {
 		wg.Add(1)
 
 		go func(seed string) {
@@ -51,8 +59,7 @@ func SeedDatabase() error {
 					}
 				}
 			}()
-			//Log Progress
-			log.Infof("\n\nScraping seed %d of %d: %s\n\n", index+1, len(seeds), seed)
+
 			err := tools.Scrape(seed, nil, manager, sem, &wg)
 			if err != nil {
 				log.Errorf("Could not Scrape <- %v", err)
@@ -61,6 +68,10 @@ func SeedDatabase() error {
 					log.Errorf("failed to report error: %v", err)
 				}
 			}
+			currentProgress := progress.Add(1)
+
+			// Log Progress
+			log.Printf("\n\nScraped seed %d of %d: [%s]\n\n", currentProgress, len(seeds), seed)
 		}(seed)
 	}
 

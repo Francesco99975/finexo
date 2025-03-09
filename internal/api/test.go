@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/Francesco99975/finexo/cmd/boot"
 	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/Francesco99975/finexo/internal/tools"
 	"github.com/labstack/echo/v4"
@@ -27,6 +28,17 @@ func Test() echo.HandlerFunc {
 		err := tools.Scrape(seed, nil, manager, sem, &wg)
 		if err != nil {
 			log.Errorf("Failed to scrape: %v", err)
+		}
+
+		return c.JSON(http.StatusOK, "OK")
+	}
+}
+
+func TestScrape() echo.HandlerFunc {
+	return func(c echo.Context) error {
+		err := boot.SeedDatabase(true)
+		if err != nil {
+			log.Errorf("Failed to seed database: %v", err)
 		}
 
 		return c.JSON(http.StatusOK, "OK")

@@ -73,6 +73,7 @@ func createRouter(ctx context.Context) *echo.Echo {
 
 	apiv1.GET("/test/:seed", api.Test())
 	apiv1.GET("/test/seeds", api.TestSeeds())
+	apiv1.GET("/test/scrape", api.TestScrape())
 
 	e.HTTPErrorHandler = serverErrorHandler
 
