@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"math"
-	"math/rand"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,135 +19,6 @@ import (
 	"github.com/labstack/gommon/log"
 	"golang.org/x/sync/semaphore"
 )
-
-const BASE_YAHOO_URL = "https://finance.yahoo.com/quote/"              // TICKER.EXCHANGE_SUFFIX
-const BASE_MARKETBEAT_URL = "https://www.marketbeat.com/stocks/"       // EXCHANGE_PREFIX/TICKER
-const BASE_DIVIDENDHISTORY_URL = "https://dividendhistory.org/payout/" // EXCHANGE_TITLE?uk!/TICKER
-
-// List of User Agents
-var userAgents = []string{
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
-	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
-	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
-	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
-}
-
-// Randomly select a User-Agent
-func getRandomUserAgent() string {
-	log.Debug("Selecting a random User-Agent")
-	rand.NewSource(time.Now().UnixNano())
-	return userAgents[rand.Intn(len(userAgents))]
-}
-
-// func scrollLikeHuman(page *rod.Page) {
-// 	// Simulate human-like scrolling
-// 	for range 3 {
-// 		page.MustEval(`window.scrollBy(0, 100)`)
-// 		time.Sleep(time.Millisecond * time.Duration(rand.Intn(500)+300))
-// 	}
-// }
-
-// Simulates human-like mouse movements
-func moveMouseLikeHuman(page *rod.Page) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Errorf("Panic occurred while moving mouse: %v", r)
-		}
-	}()
-	mouse := page.Mouse
-	width, height := 800, 600 // Adjust viewport size
-
-	// Move randomly within the viewport
-	for range 5 {
-		x := rand.Intn(width)
-		y := rand.Intn(height)
-		mouse.MustMoveTo(float64(x), float64(y))
-		time.Sleep(time.Millisecond * time.Duration(rand.Intn(500)+200))
-	}
-
-	// Click in a natural position (e.g., middle of the page)
-	mouse.MustMoveTo(400, 300)
-}
-
-// Background behavior routine
-func randomUserBehavior(ctx context.Context, page *rod.Page, wg *sync.WaitGroup) {
-	log.Debugf("Starting random behavior.")
-	defer wg.Done()
-	for {
-		select {
-		case <-ctx.Done():
-			log.Debugf("Stopping random behavior.")
-			return // Stop the Goroutine
-		default:
-			if page != nil {
-
-				// Ensure we check context before running actions
-				if ctx.Err() != nil {
-					return
-				}
-				// Randomly choose between scrolling and mouse movement
-				if rand.Intn(2) == 0 {
-					moveMouseLikeHuman(page)
-				} else {
-					moveMouseLikeHuman(page)
-				}
-			}
-
-			// Wait for a random time before next action
-			time.Sleep(time.Second * time.Duration(rand.Intn(5)+3))
-		}
-	}
-}
-
-func tickerExtractor(seed string) (string, string, error) {
-	log.Debugf("Extracting ticker and exchange from seed: %s", seed)
-	if len(seed) <= 0 {
-		return "", "", fmt.Errorf("seed is empty")
-	}
-
-	seed = strings.ToUpper(seed)
-	seed = strings.TrimSpace(seed)
-
-	if strings.Contains(seed, ":") {
-		parts := strings.Split(seed, ":")
-		if len(parts) == 2 {
-			return parts[1], parts[0], nil
-		}
-	} else if strings.Contains(seed, ".") {
-		parts := strings.Split(seed, ".")
-		if len(parts) == 2 {
-			return parts[0], parts[1], nil
-		}
-	}
-	return seed, "", nil
-
-}
-
-func isAnEmptyString(s string) bool {
-	s = strings.TrimSpace(s)
-	return s == "" || s == "N/A" || s == "-" || s == "--" || s == "n/a"
-}
-
-func disableWebRTC(page *rod.Page) {
-	log.Debug("Disabling WebRTC")
-	_, err := page.Eval(`(function() {
-    if (navigator.mediaDevices) {
-        Object.defineProperty(navigator.mediaDevices, "enumerateDevices", {
-            get: function() {
-                return () => Promise.resolve([]);
-            }
-        });
-    } else {
-        console.warn("navigator.mediaDevices is undefined");
-    }
-})();`, nil)
-	if err != nil {
-		log.Debugf("failed to disable WebRTC: %v", err)
-	}
-}
 
 func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManager, sem *semaphore.Weighted, mwg *sync.WaitGroup) error {
 
@@ -260,7 +129,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	}
 	var wg sync.WaitGroup
 	// Create a context to control the Goroutine
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	// Start random behavior in a separate Goroutine
@@ -1387,6 +1256,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	case "REIT":
 		var reit models.REIT
+		reit.Security = security
 		// if scrapedSeekingAlphaData.FFO != nil {
 		// 	reit.FFO = sql.NullInt64{
 		// 		Int64: int64(*scrapedSeekingAlphaData.FFO),
@@ -1529,33 +1399,4 @@ func findExchangeInPage(ticker string, scrapingUrl string, browser *rod.Browser)
 
 		return exchange, nil
 	}
-}
-
-func operandByFrequency(freq *string) int {
-	switch *freq {
-	case "weekly":
-		return 52
-	case "monthly":
-		return 12
-	case "quarterly":
-		return 4
-	case "semi-annual":
-		return 2
-	case "annual":
-		return 1
-	default:
-		return 0
-	}
-}
-
-func extractPercentage(input string) string {
-	// Regular expression to capture content inside parentheses
-	re := regexp.MustCompile(`\(([^)]+)\)`)
-	match := re.FindStringSubmatch(input)
-
-	// If a match is found, return the captured group
-	if len(match) > 1 {
-		return match[1] // Extracted percentage (without parentheses)
-	}
-	return "" // Return empty string if no match found
 }

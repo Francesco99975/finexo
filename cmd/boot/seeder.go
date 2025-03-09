@@ -11,7 +11,7 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-const maxWorkers = 5
+const maxWorkers = 7
 
 func SeedDatabase() error {
 	seeds, err := tools.ReadAllSeeds()
@@ -37,9 +37,11 @@ func SeedDatabase() error {
 	var wg sync.WaitGroup
 	sem := semaphore.NewWeighted(maxWorkers) // Control concurrency
 
-	for _, seed := range seeds {
+	for index, seed := range seeds {
 		wg.Add(1)
+
 		go func(seed string) {
+
 			defer func() {
 				if r := recover(); r != nil {
 					log.Errorf("Panic occurred while scraping seed (%s): %v", seed, r)
@@ -49,7 +51,8 @@ func SeedDatabase() error {
 					}
 				}
 			}()
-
+			//Log Progress
+			log.Infof("\n\nScraping seed %d of %d: %s\n\n", index+1, len(seeds), seed)
 			err := tools.Scrape(seed, nil, manager, sem, &wg)
 			if err != nil {
 				log.Errorf("Could not Scrape <- %v", err)

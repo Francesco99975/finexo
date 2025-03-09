@@ -43,19 +43,19 @@ func main() {
 		e.Logger.Fatal(e.Start(":" + port))
 	}()
 
-	isDBEmpty, err := models.IsSecuritiesTableEmpty(database.DB)
-	if err != nil {
-		panic(err)
-	}
+	// isDBEmpty, err := models.IsSecuritiesTableEmpty(database.DB)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	if isDBEmpty {
-		go func() {
-			err = boot.SeedDatabase()
-			if err != nil {
-				e.Logger.Fatal(err)
-			}
-		}()
-	}
+	// if isDBEmpty {
+	go func() {
+		err = boot.SeedDatabase()
+		if err != nil {
+			e.Logger.Fatal(err)
+		}
+	}()
+	// }
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)

@@ -711,7 +711,7 @@ func UpdateStock(db *sqlx.DB, stock *Security) (err error) {
 
 	// Check if stock exists
 	var exists bool
-	err = tx.Get(&exists, "SELECT EXISTS(SELECT 1 FROM securities WHERE ticker = $1)", stock.Ticker)
+	err = tx.Get(&exists, "SELECT EXISTS(SELECT 1 FROM securities WHERE ticker = $1 AND exchange = $2)", stock.Ticker, stock.Exchange)
 	if err != nil {
 		return fmt.Errorf("failed to check stock existence: %w", err)
 	}
@@ -1087,7 +1087,8 @@ type REIT struct {
 func (reit *REIT) flatten() map[string]any {
 	return map[string]any{
 		"ticker":     reit.Security.Ticker,
-		"occupation": reit.Security.Exchange,
+		"exchange":   reit.Security.Exchange,
+		"occupation": reit.Occupation,
 		"focus":      reit.Focus,
 		"ffo":        reit.FFO,
 		"pffo":       reit.PFFO,

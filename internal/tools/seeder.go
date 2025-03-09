@@ -82,6 +82,9 @@ func readSeed(path string) ([]string, error) {
 			break // EOF
 		}
 		records = append(records, normalizeSeed(record[columnIndex]))
+		if strings.Contains(path, "canadian-stocks-us-stocks") {
+			records = append(records, normalizeSeed(record[columnIndex])+".TO")
+		}
 	}
 
 	return records, nil
@@ -91,6 +94,11 @@ func normalizeSeed(seed string) string {
 	seed = strings.ToUpper(seed)
 	seed = strings.TrimSpace(seed)
 	seed = strings.ReplaceAll(seed, " ", "")
-	seed = strings.ReplaceAll(seed, ".UN", "-UN")
+
+	seed = strings.Replace(seed, ".", "-", 1)
+	seed = strings.ReplaceAll(seed, "-TO", ".TO")
+	seed = strings.ReplaceAll(seed, "-NE", ".NE")
+	seed = strings.ReplaceAll(seed, "-L", ".L")
+	seed = strings.ReplaceAll(seed, "-V", ".V")
 	return seed
 }
