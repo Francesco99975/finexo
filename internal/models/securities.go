@@ -374,14 +374,6 @@ func UpdateSecurity(tx *sqlx.Tx, security *Security) error {
 	updates := []string{}
 
 	// String fields
-	if security.Exchange != "" {
-		updates = append(updates, "exchange = :exchange")
-		args["exchange"] = security.Exchange
-	}
-	if security.Typology != "" {
-		updates = append(updates, "typology = :typology")
-		args["typology"] = security.Typology
-	}
 	if security.Currency != "" {
 		updates = append(updates, "currency = :currency")
 		args["currency"] = security.Currency

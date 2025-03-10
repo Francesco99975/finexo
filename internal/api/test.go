@@ -2,14 +2,12 @@ package api
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/Francesco99975/finexo/cmd/boot"
 	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/Francesco99975/finexo/internal/tools"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
-	"golang.org/x/sync/semaphore"
 )
 
 func Test() echo.HandlerFunc {
@@ -23,9 +21,7 @@ func Test() echo.HandlerFunc {
 
 		manager := models.NewBrowserManager(500)
 
-		var wg sync.WaitGroup
-		sem := semaphore.NewWeighted(10) // Control concurrency
-		err := tools.Scrape(seed, nil, manager, sem, &wg)
+		err := tools.Scrape(seed, nil, manager, nil, nil)
 		if err != nil {
 			log.Errorf("Failed to scrape: %v", err)
 		}

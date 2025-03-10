@@ -22,12 +22,14 @@ import (
 
 func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManager, sem *semaphore.Weighted, mwg *sync.WaitGroup) error {
 
-	defer mwg.Done()
-	err := sem.Acquire(context.Background(), 1) // Limit concurrency
-	if err != nil {
-		return fmt.Errorf("failed to acquire semaphore while scraping seed (%s): %v", seed, err)
+	if sem != nil && mwg != nil {
+		defer mwg.Done()
+		err := sem.Acquire(context.Background(), 1) // Limit concurrency
+		if err != nil {
+			return fmt.Errorf("failed to acquire semaphore while scraping seed (%s): %v", seed, err)
+		}
+		defer sem.Release(1)
 	}
-	defer sem.Release(1)
 
 	browser := manager.GetBrowser()
 	defer manager.ReleaseBrowser()
@@ -1219,19 +1221,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			}
 
 			if !models.SecurityExists(database.DB, relatedTicker, relatedExchangeInfo.Title) {
-				var twg sync.WaitGroup
-				tmpsem := semaphore.NewWeighted(1) // Control concurrency
-				twg.Add(1)
-				go func() {
-					err := Scrape(relatedTicker, &relatedExchangeInfo.Title, manager, tmpsem, &twg)
-					if err != nil {
-						log.Errorf("error scraping security(%s) related to %s: %v", relatedTicker+":"+relatedExchange, security.Ticker+":"+security.Exchange, err)
-					}
-				}()
 
+				err := Scrape(relatedTicker, &relatedExchangeInfo.Title, manager, nil, nil)
+				if err != nil {
+					log.Errorf("error scraping security(%s) related to %s: %v", relatedTicker+":"+relatedExchange, security.Ticker+":"+security.Exchange, err)
+				} else {
+					etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchange, scrapedAllocation))
+				}
+
+			} else {
+				etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchange, scrapedAllocation))
 			}
 
-			etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchange, scrapedAllocation))
 		}
 
 		// if scrapedSeekingAlphaData.Holdings != nil {
