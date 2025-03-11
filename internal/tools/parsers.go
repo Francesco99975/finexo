@@ -16,6 +16,7 @@ func tickerExtractor(seed string) (string, string, error) {
 
 	seed = strings.ToUpper(seed)
 	seed = strings.TrimSpace(seed)
+	seed = strings.ReplaceAll(seed, "/", "-")
 
 	if strings.Contains(seed, ":") {
 		parts := strings.Split(seed, ":")

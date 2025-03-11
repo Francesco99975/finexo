@@ -21,7 +21,12 @@ func Test() echo.HandlerFunc {
 
 		manager := models.NewBrowserManager(500)
 
-		err := tools.Scrape(seed, nil, manager, nil, nil)
+		d, err := tools.NewDiscoverer()
+		if err != nil {
+			log.Errorf("Failed to create discoverer: %v", err)
+		}
+
+		err = tools.Scrape(seed, nil, manager, nil, nil, d)
 		if err != nil {
 			log.Errorf("Failed to scrape: %v", err)
 		}

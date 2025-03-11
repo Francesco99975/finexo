@@ -31,6 +31,17 @@ func SeedDatabase(test bool) error {
 		log.Errorf("failed to create reporter: %v", err)
 	}
 
+	d, err := tools.NewDiscoverer()
+	if err != nil {
+		log.Errorf("Failed to create discoverer: %v", err)
+	}
+	defer func() {
+		err := d.Close()
+		if err != nil {
+			log.Errorf("failed to close discoverer: %v", err)
+		}
+	}()
+
 	defer func() {
 		err := ScraperReporter.Close()
 		if err != nil {
@@ -60,7 +71,7 @@ func SeedDatabase(test bool) error {
 				}
 			}()
 
-			err := tools.Scrape(seed, nil, manager, sem, &wg)
+			err := tools.Scrape(seed, nil, manager, sem, &wg, d)
 			if err != nil {
 				log.Errorf("Could not Scrape <- %v", err)
 				err := ScraperReporter.Report(helpers.SeverityLevels.ERROR, fmt.Sprintf("was scraping seed (%s) -> %v", seed, err))
