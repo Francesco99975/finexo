@@ -15,7 +15,7 @@ type Discoverer struct {
 }
 
 func NewDiscoverer() (*Discoverer, error) {
-	file, err := os.OpenFile("seeds/discovered.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("seeds/discovered.csv", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		return nil, err
 	}

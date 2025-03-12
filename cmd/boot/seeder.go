@@ -30,24 +30,26 @@ func SeedDatabase(test bool) error {
 	if err != nil {
 		log.Errorf("failed to create reporter: %v", err)
 	}
-
-	d, err := tools.NewDiscoverer()
-	if err != nil {
-		log.Errorf("Failed to create discoverer: %v", err)
-	}
-	defer func() {
-		err := d.Close()
-		if err != nil {
-			log.Errorf("failed to close discoverer: %v", err)
-		}
-	}()
-
 	defer func() {
 		err := ScraperReporter.Close()
 		if err != nil {
 			log.Errorf("failed to close reporter: %v", err)
 		}
 	}()
+
+	var d *tools.Discoverer
+	if Environment.GoEnv == "development" {
+		d, err := tools.NewDiscoverer()
+		if err != nil {
+			log.Errorf("Failed to create discoverer: %v", err)
+		}
+		defer func() {
+			err := d.Close()
+			if err != nil {
+				log.Errorf("failed to close discoverer: %v", err)
+			}
+		}()
+	}
 
 	manager := models.NewBrowserManager(100)
 	go manager.MonitorMemory()
@@ -82,7 +84,7 @@ func SeedDatabase(test bool) error {
 			currentProgress := progress.Add(1)
 
 			// Log Progress
-			log.Printf("\n\nScraped seed %d of %d: [%s]\n\n", currentProgress, len(seeds), seed)
+			log.Infof("<<< Scraped seed %d of %d: [%s] >>>", currentProgress, len(seeds), seed)
 		}(seed)
 	}
 

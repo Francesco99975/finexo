@@ -1242,15 +1242,20 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 				}
 			}
 
-			err = Scrape(relatedTicker, &relatedExchangeInfo.Title, manager, nil, nil, discoverer)
-			if err != nil {
-				log.Errorf("error scraping security(%s) related to %s: %v", relatedTicker+":"+relatedExchange, security.Ticker+":"+security.Exchange, err)
-				continue
+			if !models.SecurityExists(database.DB, relatedTicker, relatedExchangeInfo.Title) {
+				err = Scrape(relatedTicker, &relatedExchangeInfo.Title, manager, nil, nil, discoverer)
+				if err != nil {
+					log.Errorf("error scraping security(%s) related to %s: %v", relatedTicker+":"+relatedExchangeInfo.Title, security.Ticker+":"+security.Exchange, err)
+					continue
+				}
 			}
-
-			etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchange, scrapedAllocation))
+			etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchangeInfo.Title, scrapedAllocation))
 
 		}
+
+		log.Debugf("Related securities for %s:%s -> %v", security.Ticker, security.Exchange, etf.RelatedSecurities)
+
+		etf.Holdings = len(etf.RelatedSecurities)
 
 		// if scrapedSeekingAlphaData.Holdings != nil {
 		// 	etf.Holdings = *scrapedSeekingAlphaData.Holdings
