@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"math"
 	"strconv"
@@ -173,19 +172,19 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			log.Debugf("Scraped MarketBeat data: %s = %s", key, scrapedMarketBeatDataValuesArray[i])
 
 			if strings.Contains(key, "sector") {
-				security.Sector = sql.NullString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
+				security.Sector = models.NullableString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
 			}
 
 			if key == "industry" {
-				security.Industry = sql.NullString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
+				security.Industry = models.NullableString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
 			}
 
 			if strings.Contains(key, "sub") {
-				security.SubIndustry = sql.NullString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
+				security.SubIndustry = models.NullableString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
 			}
 
 			if strings.Contains(key, "consensus") {
-				security.Consensus = sql.NullString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
+				security.Consensus = models.NullableString{String: scrapedMarketBeatDataValuesArray[i], Valid: true}
 			}
 
 			if strings.Contains(key, "score") {
@@ -196,7 +195,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 				if err != nil {
 					log.Warnf("failed to parse score: %v. For seed %s", err, seed)
 				} else {
-					security.Score = sql.NullInt64{Int64: int64(scrapedScore), Valid: true}
+					security.Score = models.NullableInt{Int64: int64(scrapedScore), Valid: true}
 				}
 
 			}
@@ -208,7 +207,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 				if err != nil {
 					log.Warnf("failed to parse coverage: %v. For seed %s", err, seed)
 				} else {
-					security.Coverage = sql.NullInt64{Int64: int64(scrapedCoverage), Valid: true}
+					security.Coverage = models.NullableInt{Int64: int64(scrapedCoverage), Valid: true}
 				}
 			}
 
@@ -220,7 +219,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 				if err != nil {
 					log.Warnf("failed to parse outstanding: %v. For seed %s", err, seed)
 				} else {
-					security.Outstanding = sql.NullInt64{Int64: scrapedOutstanding, Valid: true}
+					security.Outstanding = models.NullableInt{Int64: scrapedOutstanding, Valid: true}
 				}
 
 			}
@@ -611,7 +610,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	marketCapStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='marketCap']")
 	if err != nil {
 		log.Warnf("market cap not found in page - target: %s:%s", security.Ticker, security.Exchange)
-		security.MarketCap = sql.NullInt64{
+		security.MarketCap = models.NullableInt{
 			Valid: false,
 		}
 	} else {
@@ -620,18 +619,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 		if isAnEmptyString(marketCapStr) {
 			log.Warnf("empty market cap: %s - target: %s:%s", marketCapStr, security.Ticker, security.Exchange)
-			security.MarketCap = sql.NullInt64{
+			security.MarketCap = models.NullableInt{
 				Valid: false,
 			}
 		} else {
 			scrapedMarketCap, err := helpers.ParseNumberString(marketCapStr)
 			if err != nil || scrapedMarketCap <= 0 {
 				log.Warnf("invalid market cap: %s - target: %s:%s", marketCapStr, security.Ticker, security.Exchange)
-				security.MarketCap = sql.NullInt64{
+				security.MarketCap = models.NullableInt{
 					Valid: false,
 				}
 			} else {
-				security.MarketCap = sql.NullInt64{
+				security.MarketCap = models.NullableInt{
 					Int64: scrapedMarketCap,
 					Valid: true,
 				}
@@ -642,7 +641,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	volumeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='regularMarketVolume']")
 	if err != nil {
 		log.Warnf("volume not found in page - target: %s:%s", security.Ticker, security.Exchange)
-		security.Volume = sql.NullInt64{
+		security.Volume = models.NullableInt{
 			Valid: false,
 		}
 	} else {
@@ -652,18 +651,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 		if isAnEmptyString(volumeStr) {
 			log.Warnf("empty volume: %s - target: %s:%s", volumeStr, security.Ticker, security.Exchange)
-			security.Volume = sql.NullInt64{
+			security.Volume = models.NullableInt{
 				Valid: false,
 			}
 		} else {
 			scrapedVolume, err := strconv.ParseInt(volumeStr, 10, 64)
 			if err != nil || scrapedVolume <= 0 {
 				log.Warnf("invalid volume: %s - target: %s:%s", volumeStr, security.Ticker, security.Exchange)
-				security.Volume = sql.NullInt64{
+				security.Volume = models.NullableInt{
 					Valid: false,
 				}
 			} else {
-				security.Volume = sql.NullInt64{
+				security.Volume = models.NullableInt{
 					Int64: scrapedVolume,
 					Valid: true,
 				}
@@ -676,7 +675,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	avgVolumeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='averageVolume']")
 	if err != nil {
 		log.Warnf("average volume not found in page - target: %s:%s", security.Ticker, security.Exchange)
-		security.AvgVolume = sql.NullInt64{
+		security.AvgVolume = models.NullableInt{
 			Valid: false,
 		}
 	} else {
@@ -686,18 +685,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 		if isAnEmptyString(avgVolumeStr) {
 			log.Warnf("empty average volume: %s - target: %s:%s", avgVolumeStr, security.Ticker, security.Exchange)
-			security.AvgVolume = sql.NullInt64{
+			security.AvgVolume = models.NullableInt{
 				Valid: false,
 			}
 		} else {
 			scrapedAvgVolume, err := strconv.ParseInt(avgVolumeStr, 10, 64)
 			if err != nil || scrapedAvgVolume <= 0 {
 				log.Warnf("invalid average volume: %s - target: %s:%s", avgVolumeStr, security.Ticker, security.Exchange)
-				security.AvgVolume = sql.NullInt64{
+				security.AvgVolume = models.NullableInt{
 					Valid: false,
 				}
 			} else {
-				security.AvgVolume = sql.NullInt64{
+				security.AvgVolume = models.NullableInt{
 					Int64: scrapedAvgVolume,
 					Valid: true,
 				}
@@ -711,7 +710,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	betaStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Beta (5Y Monthly)'] ~ span")
 	if err != nil {
 		log.Warnf("beta not found in page - target: %s:%s", security.Ticker, security.Exchange)
-		security.Beta = sql.NullInt64{
+		security.Beta = models.NullableInt{
 			Valid: false,
 		}
 	} else {
@@ -720,18 +719,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		betaStr = helpers.NormalizeFloatStrToIntStr(betaStr)
 		if isAnEmptyString(betaStr) {
 			log.Warnf("empty beta: %s - target: %s:%s", betaStr, security.Ticker, security.Exchange)
-			security.Beta = sql.NullInt64{
+			security.Beta = models.NullableInt{
 				Valid: false,
 			}
 		} else {
 			scrapedBeta, err := strconv.Atoi(betaStr)
 			if err != nil || scrapedBeta <= 0 {
 				log.Warnf("invalid beta: %s - target: %s:%s", betaStr, security.Ticker, security.Exchange)
-				security.Beta = sql.NullInt64{
+				security.Beta = models.NullableInt{
 					Valid: false,
 				}
 			} else {
-				security.Beta = sql.NullInt64{
+				security.Beta = models.NullableInt{
 					Int64: int64(scrapedBeta),
 					Valid: true,
 				}
@@ -822,18 +821,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		bidSizeStr := bidPayloadArr[1]
 		if isAnEmptyString(bidSizeStr) {
 			log.Warnf("empty bid size: %s - target: %s:%s", bidSizeStr, security.Ticker, security.Exchange)
-			security.BidSize = sql.NullInt64{
+			security.BidSize = models.NullableInt{
 				Valid: false,
 			}
 		} else {
 			scrapedBidSize, err := strconv.Atoi(bidSizeStr)
 			if err != nil || scrapedBidSize < 0 {
 				log.Warnf("invalid bid size: %s - target: %s:%s", bidSizeStr, security.Ticker, security.Exchange)
-				security.BidSize = sql.NullInt64{
+				security.BidSize = models.NullableInt{
 					Valid: false,
 				}
 			} else {
-				security.BidSize = sql.NullInt64{
+				security.BidSize = models.NullableInt{
 					Int64: int64(scrapedBidSize),
 					Valid: true,
 				}
@@ -878,19 +877,19 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		askSizeStr := askPayloadArr[1]
 		if isAnEmptyString(askSizeStr) {
 			log.Warnf("empty ask size: %s - target: %s:%s", askSizeStr, security.Ticker, security.Exchange)
-			security.AskSize = sql.NullInt64{
+			security.AskSize = models.NullableInt{
 				Valid: false,
 			}
 		} else {
 			scrapedAskSize, err := strconv.Atoi(askSizeStr)
 			if err != nil || scrapedAskSize <= 0 {
 				log.Warnf("invalid ask size: %s - target: %s:%s", askSizeStr, security.Ticker, security.Exchange)
-				security.AskSize = sql.NullInt64{
+				security.AskSize = models.NullableInt{
 					Valid: false,
 				}
 			}
 
-			security.AskSize = sql.NullInt64{
+			security.AskSize = models.NullableInt{
 				Int64: int64(scrapedAskSize),
 				Valid: true,
 			}
@@ -906,7 +905,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	if len(stockDataElements) == 0 {
 		log.Warnf("empty trailing PE: %s - target: %s:%s", stockDataElements, security.Ticker, security.Exchange)
-		security.PE = sql.NullInt64{
+		security.PE = models.NullableInt{
 			Valid: false,
 		}
 	}
@@ -922,11 +921,11 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		scrapedPe, err := strconv.Atoi(peStr)
 		if err != nil || scrapedPe <= 0 {
 			log.Warnf("invalid trailing PE: %s - target: %s:%s", peStr, security.Ticker, security.Exchange)
-			security.PE = sql.NullInt64{
+			security.PE = models.NullableInt{
 				Valid: false,
 			}
 		} else {
-			security.PE = sql.NullInt64{
+			security.PE = models.NullableInt{
 				Int64: int64(scrapedPe),
 				Valid: true,
 			}
@@ -945,11 +944,11 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		scrapedEps, err := strconv.Atoi(epsStr)
 		if err != nil || scrapedEps <= 0 {
 			log.Warnf("invalid EPS: %s - target: %s:%s", epsStr, security.Ticker, security.Exchange)
-			security.EPS = sql.NullInt64{
+			security.EPS = models.NullableInt{
 				Valid: false,
 			}
 		} else {
-			security.EPS = sql.NullInt64{
+			security.EPS = models.NullableInt{
 				Int64: int64(scrapedEps),
 				Valid: true,
 			}
@@ -958,7 +957,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	log.Debug("Scraped EPS")
 
-	security.STM = sql.NullString{
+	security.STM = models.NullableString{
 		String: string(models.TimingTTM),
 		Valid:  true,
 	}
@@ -968,61 +967,61 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	if security.Dividend != nil {
 		if dividendScrap.Lad != nil {
-			security.Dividend.LastAnnounced = sql.NullInt64{
+			security.Dividend.LastAnnounced = models.NullableInt{
 				Int64: int64(*dividendScrap.Lad),
 				Valid: true,
 			}
 		}
 
 		if *dividendScrap.Frequency != string(models.FrequencyUnknown) {
-			security.Dividend.AnnualPayout = sql.NullInt64{
+			security.Dividend.AnnualPayout = models.NullableInt{
 				Int64: int64(*dividendScrap.Lad * operandByFrequency(dividendScrap.Frequency)),
 				Valid: true,
 			}
 		} else {
-			security.Dividend.AnnualPayout = sql.NullInt64{
+			security.Dividend.AnnualPayout = models.NullableInt{
 				Int64: int64(math.Floor(float64(security.Price) * (float64(security.Dividend.Yield) / 100) / 100)),
 				Valid: true,
 			}
 		}
 
 		if dividendScrap.Pr != nil {
-			security.Dividend.PayoutRatio = sql.NullInt64{
+			security.Dividend.PayoutRatio = models.NullableInt{
 				Int64: int64(*dividendScrap.Pr),
 				Valid: true,
 			}
 		}
 
 		// if scrapedSeekingAlphaData.Lgr != nil {
-		// 	security.Dividend.GrowthRate = sql.NullInt64{
+		// 	security.Dividend.GrowthRate = models.NullableInt{
 		// 		Int64: int64(*scrapedSeekingAlphaData.Lgr),
 		// 		Valid: true,
 		// 	}
 		// }
 
 		// if scrapedSeekingAlphaData.Yog != nil {
-		// 	security.Dividend.YearsGrowth = sql.NullInt64{
+		// 	security.Dividend.YearsGrowth = models.NullableInt{
 		// 		Int64: int64(*scrapedSeekingAlphaData.Yog),
 		// 		Valid: true,
 		// 	}
 		// }
 
 		if dividendScrap.Frequency != nil {
-			security.Dividend.Frequency = sql.NullString{
+			security.Dividend.Frequency = models.NullableString{
 				String: string(models.Frequency(*dividendScrap.Frequency)),
 				Valid:  true,
 			}
 		}
 
 		if dividendScrap.ExDivDate != nil {
-			security.Dividend.ExDivDate = sql.NullTime{
+			security.Dividend.ExDivDate = models.NullableTime{
 				Time:  time.Time(*dividendScrap.ExDivDate),
 				Valid: true,
 			}
 		}
 
 		if dividendScrap.PayoutDate != nil {
-			security.Dividend.PayoutDate = sql.NullTime{
+			security.Dividend.PayoutDate = models.NullableTime{
 				Time:  time.Time(*dividendScrap.PayoutDate),
 				Valid: true,
 			}
@@ -1056,7 +1055,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		aumStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Net Assets'] ~ span")
 		if err != nil {
 			log.Warnf("AUM not found in page - target: %s:%s", security.Ticker, security.Exchange)
-			etf.AUM = sql.NullInt64{
+			etf.AUM = models.NullableInt{
 				Valid: false,
 			}
 		} else {
@@ -1065,11 +1064,11 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			scrapedAum, err := helpers.ParseNumberString(aumStr)
 			if err != nil || scrapedAum <= 0 {
 				log.Warnf("invalid AUM: %s - target: %s:%s", aumStr, security.Ticker, security.Exchange)
-				etf.AUM = sql.NullInt64{
+				etf.AUM = models.NullableInt{
 					Valid: false,
 				}
 			} else {
-				etf.AUM = sql.NullInt64{
+				etf.AUM = models.NullableInt{
 					Int64: scrapedAum,
 					Valid: true,
 				}
@@ -1081,7 +1080,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		erStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Expense Ratio (net)'] ~ span")
 		if err != nil {
 			log.Warnf("expense ratio not found in page - target: %s:%s", security.Ticker, security.Exchange)
-			etf.ExpenseRatio = sql.NullInt64{
+			etf.ExpenseRatio = models.NullableInt{
 				Valid: false,
 			}
 		} else {
@@ -1090,18 +1089,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			erStr = helpers.NormalizeFloatStrToIntStr(erStr)
 			if erStr == "" {
 				log.Warnf("empty expense ratio: %s - target: %s:%s", erStr, security.Ticker, security.Exchange)
-				etf.ExpenseRatio = sql.NullInt64{
+				etf.ExpenseRatio = models.NullableInt{
 					Valid: false,
 				}
 			} else {
 				scrapedEr, err := strconv.Atoi(erStr)
 				if err != nil || scrapedEr <= 0 {
 					log.Warnf("invalid expense ratio: %s - target: %s:%s", erStr, security.Ticker, security.Exchange)
-					etf.ExpenseRatio = sql.NullInt64{
+					etf.ExpenseRatio = models.NullableInt{
 						Valid: false,
 					}
 				} else {
-					etf.ExpenseRatio = sql.NullInt64{
+					etf.ExpenseRatio = models.NullableInt{
 						Int64: int64(scrapedEr),
 						Valid: true,
 					}
@@ -1114,7 +1113,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		navStrElem, err := page.Timeout(5 * time.Second).Element("span[title='NAV'] ~ span")
 		if err != nil {
 			log.Warnf("NAV not found in page - target: %s:%s", security.Ticker, security.Exchange)
-			etf.NAV = sql.NullInt64{
+			etf.NAV = models.NullableInt{
 				Valid: false,
 			}
 		} else {
@@ -1123,18 +1122,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			navStr = helpers.NormalizeFloatStrToIntStr(navStr)
 			if isAnEmptyString(navStr) {
 				log.Warnf("empty NAV: %s - target: %s:%s", navStr, security.Ticker, security.Exchange)
-				etf.NAV = sql.NullInt64{
+				etf.NAV = models.NullableInt{
 					Valid: false,
 				}
 			} else {
 				scrapedNav, err := strconv.Atoi(navStr)
 				if err != nil || scrapedNav <= 0 {
 					log.Warnf("invalid NAV: %s - target: %s:%s", navStr, security.Ticker, security.Exchange)
-					etf.NAV = sql.NullInt64{
+					etf.NAV = models.NullableInt{
 						Valid: false,
 					}
 				} else {
-					etf.NAV = sql.NullInt64{
+					etf.NAV = models.NullableInt{
 						Int64: int64(scrapedNav),
 						Valid: true,
 					}
@@ -1147,7 +1146,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		EtfDataElems, err := page.Timeout(5 * time.Second).Elements("section[data-testid='company-overview-card'] p[title]")
 		if err != nil {
 			log.Warnf("inception date not found in page - target: %s:%s", security.Ticker, security.Exchange)
-			etf.InceptionDate = sql.NullTime{
+			etf.InceptionDate = models.NullableTime{
 				Valid: false,
 			}
 		} else {
@@ -1159,18 +1158,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			log.Debugf("Scraped inception date: %s", inceptionDateStr)
 			if isAnEmptyString(inceptionDateStr) {
 				log.Warnf("empty inception date: %s - target: %s:%s", inceptionDateStr, security.Ticker, security.Exchange)
-				etf.InceptionDate = sql.NullTime{
+				etf.InceptionDate = models.NullableTime{
 					Valid: false,
 				}
 			} else {
 				scrapedInceptionDate, err := time.Parse("2006-01-02", inceptionDateStr)
 				if err != nil {
 					log.Warnf("invalid inception date: %s - target: %s:%s", inceptionDateStr, security.Ticker, security.Exchange)
-					etf.InceptionDate = sql.NullTime{
+					etf.InceptionDate = models.NullableTime{
 						Valid: false,
 					}
 				} else {
-					etf.InceptionDate = sql.NullTime{
+					etf.InceptionDate = models.NullableTime{
 						Time:  scrapedInceptionDate,
 						Valid: true,
 					}
@@ -1289,21 +1288,21 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		var reit models.REIT
 		reit.Security = security
 		// if scrapedSeekingAlphaData.FFO != nil {
-		// 	reit.FFO = sql.NullInt64{
+		// 	reit.FFO = models.NullableInt{
 		// 		Int64: int64(*scrapedSeekingAlphaData.FFO),
 		// 		Valid: true,
 		// 	}
 		// }
 
 		// if scrapedSeekingAlphaData.PFFO != nil {
-		// 	reit.PFFO = sql.NullInt64{
+		// 	reit.PFFO = models.NullableInt{
 		// 		Int64: int64(*scrapedSeekingAlphaData.PFFO),
 		// 		Valid: true,
 		// 	}
 		// }
 
 		// if scrapedSeekingAlphaData.REITiming != nil {
-		// 	reit.Timing = sql.NullString{
+		// 	reit.Timing = models.NullableString{
 		// 		String: *scrapedSeekingAlphaData.REITiming,
 		// 		Valid:  true,
 		// 	}
@@ -1350,7 +1349,7 @@ func scrapeDividend(ticker string, exchange string, typology string, page *rod.P
 		} else {
 			yieldStr = yieldStrElem.MustText()
 			log.Debugf("Scraped yield: %s", yieldStr)
-			dividend.Timing = sql.NullString{
+			dividend.Timing = models.NullableString{
 				String: string(models.TimingTTM),
 				Valid:  true,
 			}
@@ -1365,7 +1364,7 @@ func scrapeDividend(ticker string, exchange string, typology string, page *rod.P
 			yieldStr = yieldStrElem.MustText()
 			yieldStr = extractPercentage(yieldStr)
 			log.Debugf("Scraped forward dividend & yield: %s", yieldStr)
-			dividend.Timing = sql.NullString{
+			dividend.Timing = models.NullableString{
 				String: string(models.TimingFWD),
 				Valid:  true,
 			}

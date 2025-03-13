@@ -2,6 +2,8 @@ package models
 
 import (
 	"database/sql"
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -47,13 +49,78 @@ func ParseFrequency(frequency string) (Frequency, error) {
 	}
 }
 
+type NullableString sql.NullString
+
+// Implement json.Marshaler for NullableString
+func (ns NullableString) MarshalJSON() ([]byte, error) {
+	if ns.Valid {
+		return json.Marshal(ns.String)
+	}
+	return json.Marshal(nil) // Return null if invalid
+}
+
+// Implement sql.Scanner for NullableString
+func (ns *NullableString) Scan(value any) error {
+	return (*sql.NullString)(ns).Scan(value)
+}
+
+// Implement driver.Valuer for NullableString
+func (ns NullableString) Value() (driver.Value, error) {
+	// Explicitly convert NullableString to sql.NullString
+	nullStr := sql.NullString(ns) // Convert to sql.NullString
+	return nullStr.Value()        // Call the Value method of sql.NullString
+}
+
+type NullableInt sql.NullInt64
+
+// Implement json.Marshaler for NullableInt
+func (ni NullableInt) MarshalJSON() ([]byte, error) {
+	if ni.Valid {
+		return json.Marshal(ni.Int64)
+	}
+	return json.Marshal(nil) // Return null if invalid
+}
+
+// Implement sql.Scanner for NullableInt
+func (ni *NullableInt) Scan(value any) error {
+	return (*sql.NullInt64)(ni).Scan(value)
+}
+
+// Implement driver.Valuer for NullableInt
+func (ni NullableInt) Value() (driver.Value, error) {
+	// Explicitly convert NullableInt to sql.NullInt64
+	nullInt := sql.NullInt64(ni) // Convert to sql.NullInt64
+	return nullInt.Value()       // Call the Value method of sql.NullInt64
+}
+
+type NullableTime sql.NullTime
+
+func (nt NullableTime) MarshalJSON() ([]byte, error) {
+	if nt.Valid {
+		return json.Marshal(nt.Time)
+	}
+	return json.Marshal(nil)
+}
+
+// Implement sql.Scanner for NullableTime
+func (nt *NullableTime) Scan(value any) error {
+	return (*sql.NullTime)(nt).Scan(value)
+}
+
+// Implement driver.Valuer for NullableTime
+func (nt NullableTime) Value() (driver.Value, error) {
+	// Explicitly convert NullableTime to sql.NullTime
+	nullTime := sql.NullTime(nt) // Convert to sql.NullTime
+	return nullTime.Value()      // Call the Value method of sql.NullTime
+}
+
 type Exchange struct {
 	Title     string         `db:"title" json:"title"`
-	Prefix    sql.NullString `db:"prefix" json:"prefix,omitempty"`
-	Suffix    sql.NullString `db:"suffix" json:"suffix,omitempty"`
+	Prefix    NullableString `db:"prefix" json:"prefix,omitempty"`
+	Suffix    NullableString `db:"suffix" json:"suffix,omitempty"`
 	CC        string         `db:"cc" json:"countryCode"`
-	OpenTime  sql.NullTime   `db:"opentime" json:"openTime,omitempty"`
-	CloseTime sql.NullTime   `db:"closetime" json:"closeTime,omitempty"`
+	OpenTime  NullableTime   `db:"opentime" json:"openTime,omitempty"`
+	CloseTime NullableTime   `db:"closetime" json:"closeTime,omitempty"`
 }
 
 func InitExchanges(db *sqlx.DB) error {
@@ -62,11 +129,11 @@ func InitExchanges(db *sqlx.DB) error {
 		{
 			Title: "NYSE",
 			CC:    "US",
-			OpenTime: sql.NullTime{
+			OpenTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
-			CloseTime: sql.NullTime{
+			CloseTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
@@ -74,71 +141,71 @@ func InitExchanges(db *sqlx.DB) error {
 		{
 			Title: "NASDAQ",
 			CC:    "US",
-			OpenTime: sql.NullTime{
+			OpenTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
-			CloseTime: sql.NullTime{
+			CloseTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
 		},
 		{
 			Title: "TSX",
-			Prefix: sql.NullString{
+			Prefix: NullableString{
 				String: "TSE",
 				Valid:  true,
 			},
-			Suffix: sql.NullString{
+			Suffix: NullableString{
 				String: "TO",
 				Valid:  true,
 			},
 			CC: "CA",
-			OpenTime: sql.NullTime{
+			OpenTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
-			CloseTime: sql.NullTime{
+			CloseTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
 		},
 		{
 			Title: "TSXV",
-			Prefix: sql.NullString{
+			Prefix: NullableString{
 				String: "CVE",
 				Valid:  true,
 			},
-			Suffix: sql.NullString{
+			Suffix: NullableString{
 				String: "V",
 				Valid:  true,
 			},
 			CC: "CA",
-			OpenTime: sql.NullTime{
+			OpenTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
-			CloseTime: sql.NullTime{
+			CloseTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
 		},
 		{
 			Title: "CBOE",
-			Prefix: sql.NullString{
+			Prefix: NullableString{
 				String: "NEOA",
 				Valid:  true,
 			},
-			Suffix: sql.NullString{
+			Suffix: NullableString{
 				String: "NE",
 				Valid:  true,
 			},
 			CC: "CA",
-			OpenTime: sql.NullTime{
+			OpenTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
-			CloseTime: sql.NullTime{
+			CloseTime: NullableTime{
 				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
@@ -211,9 +278,9 @@ type Security struct {
 	Typology    string         `db:"typology" json:"typology"` // STOCK, ETF, REIT
 	Currency    string         `db:"currency" json:"currency"`
 	FullName    string         `db:"fullname" json:"fullName"`
-	Sector      sql.NullString `db:"sector" json:"sector,omitempty"`
-	Industry    sql.NullString `db:"industry" json:"industry,omitempty"`
-	SubIndustry sql.NullString `db:"subindustry" json:"subIndustry,omitempty"`
+	Sector      NullableString `db:"sector" json:"sector,omitempty"`
+	Industry    NullableString `db:"industry" json:"industry,omitempty"`
+	SubIndustry NullableString `db:"subindustry" json:"subIndustry,omitempty"`
 	Price       int            `db:"price" json:"price"`
 	PC          int            `db:"pc" json:"pc"`
 	PCP         int            `db:"pcp" json:"pcp"`
@@ -221,23 +288,23 @@ type Security struct {
 	YearHigh    int            `db:"yrh" json:"yearHigh"`
 	DayLow      int            `db:"drl" json:"dayLow"`
 	DayHigh     int            `db:"drh" json:"dayHigh"`
-	Consensus   sql.NullString `db:"consensus" json:"consensus,omitempty"`
-	Score       sql.NullInt64  `db:"score" json:"score,omitempty"`
-	Coverage    sql.NullInt64  `db:"coverage" json:"coverage,omitempty"`
-	MarketCap   sql.NullInt64  `db:"cap" json:"marketCap,omitempty"`
-	Volume      sql.NullInt64  `db:"volume" json:"volume,omitempty"`
-	AvgVolume   sql.NullInt64  `db:"avgvolume" json:"avgVolume,omitempty"`
-	Outstanding sql.NullInt64  `db:"outstanding" json:"outstanding,omitempty"`
-	Beta        sql.NullInt64  `db:"beta" json:"beta,omitempty"`
+	Consensus   NullableString `db:"consensus" json:"consensus,omitempty"`
+	Score       NullableInt    `db:"score" json:"score,omitempty"`
+	Coverage    NullableInt    `db:"coverage" json:"coverage,omitempty"`
+	MarketCap   NullableInt    `db:"cap" json:"marketCap,omitempty"`
+	Volume      NullableInt    `db:"volume" json:"volume,omitempty"`
+	AvgVolume   NullableInt    `db:"avgvolume" json:"avgVolume,omitempty"`
+	Outstanding NullableInt    `db:"outstanding" json:"outstanding,omitempty"`
+	Beta        NullableInt    `db:"beta" json:"beta,omitempty"`
 	PClose      int            `db:"pclose" json:"previousClose"`
 	COpen       int            `db:"copen" json:"currentOpen"`
 	Bid         int            `db:"bid" json:"bid"`
-	BidSize     sql.NullInt64  `db:"bidsz" json:"bidSize,omitempty"`
+	BidSize     NullableInt    `db:"bidsz" json:"bidSize,omitempty"`
 	Ask         int            `db:"ask" json:"ask"`
-	AskSize     sql.NullInt64  `db:"asksz" json:"askSize,omitempty"`
-	EPS         sql.NullInt64  `db:"eps" json:"eps,omitempty"`
-	PE          sql.NullInt64  `db:"pe" json:"pe,omitempty"`
-	STM         sql.NullString `db:"stm" json:"stm,omitempty"` // Enum: fwd, ttm
+	AskSize     NullableInt    `db:"asksz" json:"askSize,omitempty"`
+	EPS         NullableInt    `db:"eps" json:"eps,omitempty"`
+	PE          NullableInt    `db:"pe" json:"pe,omitempty"`
+	STM         NullableString `db:"stm" json:"stm,omitempty"` // Enum: fwd, ttm
 	Created     time.Time      `db:"created" json:"created"`
 	Updated     time.Time      `db:"updated" json:"updated"`
 
@@ -248,16 +315,16 @@ type Security struct {
 func (s *Security) Scan(rows *sqlx.Rows) error {
 	// Define variables to scan values
 	var (
-		dividendYield         sql.NullInt64
-		dividendTiming        sql.NullString
-		dividendAnnualPayout  sql.NullInt64
-		dividendPayoutRatio   sql.NullInt64
-		dividendGrowthRate    sql.NullInt64
-		dividendYearsGrowth   sql.NullInt64
-		dividendLastAnnounced sql.NullInt64
-		dividendFrequency     sql.NullString
-		dividendExDivDate     sql.NullTime
-		dividendPayoutDate    sql.NullTime
+		dividendYield         NullableInt
+		dividendTiming        NullableString
+		dividendAnnualPayout  NullableInt
+		dividendPayoutRatio   NullableInt
+		dividendGrowthRate    NullableInt
+		dividendYearsGrowth   NullableInt
+		dividendLastAnnounced NullableInt
+		dividendFrequency     NullableString
+		dividendExDivDate     NullableTime
+		dividendPayoutDate    NullableTime
 	)
 
 	// Scan all fields from the row
@@ -548,15 +615,15 @@ type Dividend struct {
 	Ticker        string         `db:"ticker" json:"ticker"`
 	Exchange      string         `db:"exchange" json:"exchange"`
 	Yield         int            `db:"yield" json:"yield"`
-	AnnualPayout  sql.NullInt64  `db:"ap" json:"annualPayout,omitempty"`
-	Timing        sql.NullString `db:"tm" json:"timing,omitempty"` // Enum: fwd, ttm
-	PayoutRatio   sql.NullInt64  `db:"pr" json:"payoutRatio,omitempty"`
-	GrowthRate    sql.NullInt64  `db:"lgr" json:"growthRate,omitempty"`
-	YearsGrowth   sql.NullInt64  `db:"yog" json:"yearsGrowth,omitempty"`
-	LastAnnounced sql.NullInt64  `db:"lad" json:"lastAnnounced,omitempty"`
-	Frequency     sql.NullString `db:"frequency" json:"frequency,omitempty"` // Enum: Frequency
-	ExDivDate     sql.NullTime   `db:"edd" json:"exDivDate,omitempty"`
-	PayoutDate    sql.NullTime   `db:"pd" json:"payoutDate,omitempty"`
+	AnnualPayout  NullableInt    `db:"ap" json:"annualPayout,omitempty"`
+	Timing        NullableString `db:"tm" json:"timing,omitempty"` // Enum: fwd, ttm
+	PayoutRatio   NullableInt    `db:"pr" json:"payoutRatio,omitempty"`
+	GrowthRate    NullableInt    `db:"lgr" json:"growthRate,omitempty"`
+	YearsGrowth   NullableInt    `db:"yog" json:"yearsGrowth,omitempty"`
+	LastAnnounced NullableInt    `db:"lad" json:"lastAnnounced,omitempty"`
+	Frequency     NullableString `db:"frequency" json:"frequency,omitempty"` // Enum: Frequency
+	ExDivDate     NullableTime   `db:"edd" json:"exDivDate,omitempty"`
+	PayoutDate    NullableTime   `db:"pd" json:"payoutDate,omitempty"`
 }
 
 func (d *Dividend) PrettyPrintString() string {
@@ -765,10 +832,10 @@ type ETF struct {
 	Security          `json:"security"` // Embedded security properties
 	Holdings          int               `db:"holdings" json:"holdings"`
 	Family            string            `db:"family" json:"family"`
-	AUM               sql.NullInt64     `db:"aum" json:"aum,omitempty"`
-	ExpenseRatio      sql.NullInt64     `db:"er" json:"expenseRatio,omitempty"`
-	NAV               sql.NullInt64     `db:"nav" json:"nav,omitempty"`
-	InceptionDate     sql.NullTime      `db:"inception" json:"inception,omitempty"`
+	AUM               NullableInt       `db:"aum" json:"aum,omitempty"`
+	ExpenseRatio      NullableInt       `db:"er" json:"expenseRatio,omitempty"`
+	NAV               NullableInt       `db:"nav" json:"nav,omitempty"`
+	InceptionDate     NullableTime      `db:"inception" json:"inception,omitempty"`
 	RelatedSecurities []string          `json:"relatedSecurities"` // Related securities as "TICKER:EXCHANGE:ALLOCATION"
 }
 
@@ -812,20 +879,20 @@ func (etf *ETF) flatten() map[string]any {
 
 func (etf *ETF) Scan(rows *sqlx.Rows) error {
 	// Temporary variables for nullable fields
-	var relatedSecurities sql.NullString
+	var relatedSecurities NullableString
 
 	// Define variables to scan values
 	var (
-		dividendYield         sql.NullInt64
-		dividendTiming        sql.NullString
-		dividendAnnualPayout  sql.NullInt64
-		dividendPayoutRatio   sql.NullInt64
-		dividendGrowthRate    sql.NullInt64
-		dividendYearsGrowth   sql.NullInt64
-		dividendLastAnnounced sql.NullInt64
-		dividendFrequency     sql.NullString
-		dividendExDivDate     sql.NullTime
-		dividendPayoutDate    sql.NullTime
+		dividendYield         NullableInt
+		dividendTiming        NullableString
+		dividendAnnualPayout  NullableInt
+		dividendPayoutRatio   NullableInt
+		dividendGrowthRate    NullableInt
+		dividendYearsGrowth   NullableInt
+		dividendLastAnnounced NullableInt
+		dividendFrequency     NullableString
+		dividendExDivDate     NullableTime
+		dividendPayoutDate    NullableTime
 	)
 
 	// Scan all fields from the row
@@ -1091,11 +1158,11 @@ func UpdateETF(db *sqlx.DB, etf *ETF) error {
 // REIT represents a row from the reits table.
 type REIT struct {
 	Security   `json:"security"` // Embedded security properties
-	Occupation sql.NullInt64     `db:"occupation" json:"occupation,omitempty"`
-	Focus      sql.NullString    `db:"focus" json:"focus,omitempty"`
-	FFO        sql.NullInt64     `db:"ffo" json:"ffo,omitempty"`
-	PFFO       sql.NullInt64     `db:"pffo" json:"pffo,omitempty"`
-	Timing     sql.NullString    `db:"tm" json:"timing,omitempty"` // Enum: fwd, ttm
+	Occupation NullableInt       `db:"occupation" json:"occupation,omitempty"`
+	Focus      NullableString    `db:"focus" json:"focus,omitempty"`
+	FFO        NullableInt       `db:"ffo" json:"ffo,omitempty"`
+	PFFO       NullableInt       `db:"pffo" json:"pffo,omitempty"`
+	Timing     NullableString    `db:"tm" json:"timing,omitempty"` // Enum: fwd, ttm
 }
 
 func (reit *REIT) flatten() map[string]any {
@@ -1113,16 +1180,16 @@ func (reit *REIT) flatten() map[string]any {
 func (r *REIT) Scan(rows *sqlx.Rows) error {
 	// Define variables to scan values
 	var (
-		dividendYield         sql.NullInt64
-		dividendTiming        sql.NullString
-		dividendAnnualPayout  sql.NullInt64
-		dividendPayoutRatio   sql.NullInt64
-		dividendGrowthRate    sql.NullInt64
-		dividendYearsGrowth   sql.NullInt64
-		dividendLastAnnounced sql.NullInt64
-		dividendFrequency     sql.NullString
-		dividendExDivDate     sql.NullTime
-		dividendPayoutDate    sql.NullTime
+		dividendYield         NullableInt
+		dividendTiming        NullableString
+		dividendAnnualPayout  NullableInt
+		dividendPayoutRatio   NullableInt
+		dividendGrowthRate    NullableInt
+		dividendYearsGrowth   NullableInt
+		dividendLastAnnounced NullableInt
+		dividendFrequency     NullableString
+		dividendExDivDate     NullableTime
+		dividendPayoutDate    NullableTime
 	)
 
 	// Scan all fields from the row
@@ -1390,10 +1457,10 @@ func GetStocks(
 
 	// Query parameters (use sql.NullString and sql.NullInt64 for explicit types)
 	params := map[string]any{
-		"exchange": sql.NullString{String: exchange, Valid: exchange != ""},
-		"country":  sql.NullString{String: country, Valid: country != ""},
-		"minPrice": sql.NullInt64{Int64: int64(minPrice), Valid: minPrice > 0},
-		"maxPrice": sql.NullInt64{Int64: int64(maxPrice), Valid: maxPrice > 0},
+		"exchange": NullableString{String: exchange, Valid: exchange != ""},
+		"country":  NullableString{String: country, Valid: country != ""},
+		"minPrice": NullableInt{Int64: int64(minPrice), Valid: minPrice > 0},
+		"maxPrice": NullableInt{Int64: int64(maxPrice), Valid: maxPrice > 0},
 	}
 
 	// log.Debugf("Executing Query: %s", query)
@@ -1569,10 +1636,10 @@ func GetETFs(
 
 	// Query parameters (handle NULL values properly)
 	params := map[string]any{
-		"exchange": sql.NullString{String: exchange, Valid: exchange != ""},
-		"country":  sql.NullString{String: country, Valid: country != ""},
-		"minPrice": sql.NullInt64{Int64: int64(minPrice), Valid: minPrice > 0},
-		"maxPrice": sql.NullInt64{Int64: int64(maxPrice), Valid: maxPrice > 0},
+		"exchange": NullableString{String: exchange, Valid: exchange != ""},
+		"country":  NullableString{String: country, Valid: country != ""},
+		"minPrice": NullableInt{Int64: int64(minPrice), Valid: minPrice > 0},
+		"maxPrice": NullableInt{Int64: int64(maxPrice), Valid: maxPrice > 0},
 	}
 
 	// Execute the query
@@ -1727,10 +1794,10 @@ func GetREITs(
 
 	// Query parameters (use sql.NullString and sql.NullInt64 for explicit types)
 	params := map[string]any{
-		"exchange": sql.NullString{String: exchange, Valid: exchange != ""},
-		"country":  sql.NullString{String: country, Valid: country != ""},
-		"minPrice": sql.NullInt64{Int64: int64(minPrice), Valid: minPrice > 0},
-		"maxPrice": sql.NullInt64{Int64: int64(maxPrice), Valid: maxPrice > 0},
+		"exchange": NullableString{String: exchange, Valid: exchange != ""},
+		"country":  NullableString{String: country, Valid: country != ""},
+		"minPrice": NullableInt{Int64: int64(minPrice), Valid: minPrice > 0},
+		"maxPrice": NullableInt{Int64: int64(maxPrice), Valid: maxPrice > 0},
 	}
 
 	// log.Debugf("Executing Query: %s", query)
