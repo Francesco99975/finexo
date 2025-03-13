@@ -70,19 +70,18 @@ func (r *Discoverer) Collect(seed string) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
-	if exists := r.memory[seed]; exists {
+	if _, exists := r.memory[seed]; exists {
 		return nil
-	} else {
-		r.memory[seed] = true
-		r.discoveries++
-		log.Infof("Discovered new SEED >>>: %s", seed)
+	}
+	r.memory[seed] = true
+	r.discoveries++
+	log.Infof("Discovered new SEED >>>: %s", seed)
 
-		entry := fmt.Sprintf("%s\n", seed)
+	entry := fmt.Sprintf("%s\n", seed)
 
-		_, err := r.file.WriteString(entry)
-		if err != nil {
-			return err
-		}
+	_, err := r.file.WriteString(entry)
+	if err != nil {
+		return err
 	}
 
 	return nil
