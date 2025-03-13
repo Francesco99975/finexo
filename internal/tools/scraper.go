@@ -23,6 +23,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	if sem != nil && mwg != nil {
 		defer mwg.Done()
+
 		err := sem.Acquire(context.Background(), 1) // Limit concurrency
 		if err != nil {
 			return fmt.Errorf("failed to acquire semaphore while scraping seed (%s): %v", seed, err)
@@ -108,27 +109,18 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	if err != nil {
 		return fmt.Errorf("failed to create initial page while working on seed (%s): %v", seed, err)
 	}
-	defer page.MustClose()
+	defer page.Close()
 
 	// Set a random User-Agent
 	userAgent := getRandomUserAgent()
 	page.MustSetUserAgent(&proto.NetworkSetUserAgentOverride{UserAgent: userAgent})
 
 	// Spoof WebGL fingerprinting
-	_, err = page.Eval(`WebGLRenderingContext.prototype.getParameter = function () { return "spoofed"; };`)
-	if err != nil {
-		log.Warnf("failed to spoof WebGL fingerprinting: %v", err)
-	}
+	spoofWebGLFingerPrint(page)
 
 	// Spoof Canvas fingerprinting
-	_, err = page.Eval(`
-		HTMLCanvasElement.prototype.getContext = function () {
-			return { getImageData: () => new Uint8ClampedArray([faker.Number(0,255)]) };
-		};
-	`)
-	if err != nil {
-		log.Warnf("failed to spoof Canvas fingerprinting: %v", err)
-	}
+	spoofCanvasFingerPrint(page)
+
 	var wg sync.WaitGroup
 	// Create a context to control the Goroutine
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
@@ -155,8 +147,8 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	log.Debugf("Scraping MarketBeat for %s at exchange %s", security.Ticker, security.Exchange)
 
 	//Scrape MarketBeat
-	scrapedMarketBeatDataKeys, uperr := page.Timeout(5 * time.Second).Elements(".price-data-area dt")
-	scrapedMarketBeatDataValues, err := page.Timeout(5 * time.Second).Elements(".price-data-area strong")
+	scrapedMarketBeatDataKeys, uperr := page.Timeout(5 * time.Second).Elements(MB_DATA_KEYS)
+	scrapedMarketBeatDataValues, err := page.Timeout(5 * time.Second).Elements(MB_DATA_VALUES)
 	if err != nil || uperr != nil || len(scrapedMarketBeatDataKeys) == 0 || len(scrapedMarketBeatDataValues) == 0 {
 		log.Warnf("failed to scrape MarketBeat data: %v. For seed %s", err, seed)
 	} else {
@@ -356,11 +348,13 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	// disableWebRTC(page)
 
 	if discoverer != nil {
-		log.Debugf("Scraping Yahoo reccomanded seeds for %s at exchange %s", security.Ticker, security.Exchange)
-		scrapedDiscoveredSeeds, err := page.Timeout(5 * time.Second).Elements(".carousel-top a.yf-6zl6fb")
+
+		scrapedDiscoveredSeeds, err := page.Timeout(5 * time.Second).Elements(YH_DISCOVER_SEEDS_SELECTOR)
 		if err != nil {
 			log.Warnf("failed to scrape discovered seeds: %v. For seed %s", err, seed)
 		}
+
+		log.Debugf("Scraping Yahoo reccomanded seeds for %s at exchange %s -- Found %d seeds", security.Ticker, security.Exchange, len(scrapedDiscoveredSeeds))
 
 		for _, discoveredSeed := range scrapedDiscoveredSeeds {
 			seed, err := discoveredSeed.Attribute("title")
@@ -373,7 +367,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		log.Debugf("Collected Yahoo reccomanded seeds for %s at exchange %s", security.Ticker, security.Exchange)
 	}
 
-	scrapedCurrencyElem, err := page.Timeout(5 * time.Second).Element("span.exchange.yf-wk4yba span:nth-child(3)")
+	scrapedCurrencyElem, err := page.Timeout(5 * time.Second).Element(YH_CURRENCY_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("currency not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -390,7 +384,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	security.Currency = scrapedCurrency
 
-	scrapedFullNameElem, err := page.Timeout(5 * time.Second).Element(".yf-xxbei9")
+	scrapedFullNameElem, err := page.Timeout(5 * time.Second).Element(YH_FULLNAME_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("full name not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -404,7 +398,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	security.FullName = scrapedFullName
 	log.Debug("Scraped full name")
 
-	scrapedTypologyREITHint, err := page.Timeout(5 * time.Second).Element(".titleInfo.yf-1d08kze")
+	scrapedTypologyREITHint, err := page.Timeout(5 * time.Second).Element(YH_REIT_HINT_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("typology hint not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -414,7 +408,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		return fmt.Errorf("failed to get typology hint text: %v. For seed %s", err, seed)
 	}
 
-	scrapdTypologyETFHint, err := page.Timeout(5 * time.Second).Element("h3.yf-1ja4ll8")
+	scrapdTypologyETFHint, err := page.Timeout(5 * time.Second).Element(YH_ETF_HINT_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("typology ETF hint not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -436,7 +430,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	security.Typology = scrapedTypology
 	log.Debugf("Scraped typology: %s", scrapedTypology)
 
-	priceStrElem, err := page.Timeout(5 * time.Second).Element("span[data-testid='qsp-price']")
+	priceStrElem, err := page.Timeout(5 * time.Second).Element(YH_PRICE_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("price not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -460,7 +454,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	security.Price = scrapedPrice
 
-	priceChangeStrElem, err := page.Timeout(5 * time.Second).Element("span[data-testid='qsp-price-change']")
+	priceChangeStrElem, err := page.Timeout(5 * time.Second).Element(YH_PCHANGE_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("price change not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -480,7 +474,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	security.PC = scrapedPriceChange
 	log.Debug("Scraped price change")
 
-	priceChangePercentageStrElem, err := page.Timeout(5 * time.Second).Element("span[data-testid='qsp-price-change-percent']")
+	priceChangePercentageStrElem, err := page.Timeout(5 * time.Second).Element(YH_PRICE_PERCENTAGE_CHANGE_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("price change percentage not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -500,7 +494,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	security.PCP = scrapedPriceChangePercentage
 
-	yearlyRangeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='fiftyTwoWeekRange']")
+	yearlyRangeStrElem, err := page.Timeout(5 * time.Second).Element(YH_YEARLY_RANGE_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("yearly range not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -555,7 +549,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	security.YearHigh = scrapedYrh
 	log.Debug("Scraped yearly range high")
 
-	daylyRangeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='regularMarketDayRange']")
+	daylyRangeStrElem, err := page.Timeout(5 * time.Second).Element(YH_DAILY_RANGE_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("daily range not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -609,7 +603,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	security.DayHigh = scrapedDrh
 	log.Debug("Scraped daily range high")
 
-	marketCapStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='marketCap']")
+	marketCapStrElem, err := page.Timeout(5 * time.Second).Element(YH_MARKET_CAP_SELECTOR)
 	if err != nil {
 		log.Warnf("market cap not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		security.MarketCap = models.NullableInt{
@@ -640,7 +634,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		}
 	}
 
-	volumeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='regularMarketVolume']")
+	volumeStrElem, err := page.Timeout(5 * time.Second).Element(YH_VOLUME_SELECTOR)
 	if err != nil {
 		log.Warnf("volume not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		security.Volume = models.NullableInt{
@@ -674,7 +668,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	log.Debug("Scraped volume")
 
-	avgVolumeStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='averageVolume']")
+	avgVolumeStrElem, err := page.Timeout(5 * time.Second).Element(YH_AVG_VOLUME_SELECTOR)
 	if err != nil {
 		log.Warnf("average volume not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		security.AvgVolume = models.NullableInt{
@@ -709,7 +703,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	log.Debug("Scraped average volume")
 
-	betaStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Beta (5Y Monthly)'] ~ span")
+	betaStrElem, err := page.Timeout(5 * time.Second).Element(YH_BETA_SELECTOR)
 	if err != nil {
 		log.Warnf("beta not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		security.Beta = models.NullableInt{
@@ -742,7 +736,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	log.Debug("Scraped beta")
 
-	pcloseStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='regularMarketPreviousClose']")
+	pcloseStrElem, err := page.Timeout(5 * time.Second).Element(YH_PCLOSE_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("previous close not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -766,7 +760,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	security.PClose = scrapedPclose
 	log.Debug("Scraped previous close")
 
-	copenStrElem, err := page.Timeout(5 * time.Second).Element("[data-field='regularMarketOpen']")
+	copenStrElem, err := page.Timeout(5 * time.Second).Element(YH_COPEN_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("open not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -789,7 +783,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	security.COpen = scrapedCopen
 	log.Debug("Scraped open")
 
-	bidPayloadStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Bid'] ~ span")
+	bidPayloadStrElem, err := page.Timeout(5 * time.Second).Element(YH_BID_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("bid not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -844,7 +838,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		log.Debug("Scraped bid size")
 	}
 
-	askPayloadStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Ask'] ~ span")
+	askPayloadStrElem, err := page.Timeout(5 * time.Second).Element(YH_ASK_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("ask not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -900,7 +894,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		log.Debug("Scraped ask size")
 	}
 
-	stockDataElements, err := page.Timeout(5 * time.Second).Elements("[data-field='trailingPE']")
+	stockDataElements, err := page.Timeout(5 * time.Second).Elements(YH_STOCK_DATA_SELECTOR)
 	if err != nil {
 		return fmt.Errorf("trailing PE not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
@@ -1057,7 +1051,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 		etf.Security = security
 
-		aumStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Net Assets'] ~ span")
+		aumStrElem, err := page.Timeout(5 * time.Second).Element(YH_AUM_SELECTOR)
 		if err != nil {
 			log.Warnf("AUM not found in page - target: %s:%s", security.Ticker, security.Exchange)
 			etf.AUM = models.NullableInt{
@@ -1082,7 +1076,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 		log.Debug("Scraped AUM")
 
-		erStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Expense Ratio (net)'] ~ span")
+		erStrElem, err := page.Timeout(5 * time.Second).Element(YH_ER_SELECTOR)
 		if err != nil {
 			log.Warnf("expense ratio not found in page - target: %s:%s", security.Ticker, security.Exchange)
 			etf.ExpenseRatio = models.NullableInt{
@@ -1115,7 +1109,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 		log.Debug("Scraped expense ratio")
 
-		navStrElem, err := page.Timeout(5 * time.Second).Element("span[title='NAV'] ~ span")
+		navStrElem, err := page.Timeout(5 * time.Second).Element(YH_NAV_SELECTOR)
 		if err != nil {
 			log.Warnf("NAV not found in page - target: %s:%s", security.Ticker, security.Exchange)
 			etf.NAV = models.NullableInt{
@@ -1148,7 +1142,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 		log.Debug("Scraped NAV")
 
-		EtfDataElems, err := page.Timeout(5 * time.Second).Elements("section[data-testid='company-overview-card'] p[title]")
+		EtfDataElems, err := page.Timeout(5 * time.Second).Elements(YH_ETF_DATA_SELECTOR)
 		if err != nil {
 			log.Warnf("inception date not found in page - target: %s:%s", security.Ticker, security.Exchange)
 			etf.InceptionDate = models.NullableTime{
@@ -1184,12 +1178,12 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 		log.Debug("Scraped inception date")
 
-		relationsElementsTickers, err := page.Timeout(5 * time.Second).Elements("section[data-testid='top-holdings'] a[data-testid='ticker-container']")
+		relationsElementsTickers, err := page.Timeout(5 * time.Second).Elements(YH_HOLDINGS_TICKERS_SELECTOR)
 		if err != nil {
 			log.Warnf("top holdings not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		}
 
-		relationsElementsAllocations, err := page.Timeout(5 * time.Second).Elements("section[data-testid='top-holdings'] a[data-testid='ticker-container'] ~ span.data")
+		relationsElementsAllocations, err := page.Timeout(5 * time.Second).Elements(YH_HOLDING_ALLOCATIONS_SELECTOR)
 		if err != nil {
 			log.Warnf("top holdings not found in page - target: %s:%s", security.Ticker, security.Exchange)
 		}
@@ -1345,7 +1339,7 @@ func scrapeDividend(ticker string, exchange string, typology string, page *rod.P
 
 	var yieldStr string
 	if typology == "ETF" {
-		yieldStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Yield'] ~ span")
+		yieldStrElem, err := page.Timeout(5 * time.Second).Element(YH_YIELD_SELECTOR)
 		if err != nil {
 			log.Warnf("yield not found in page - target: %s:%s", ticker, exchange)
 			return nil
@@ -1359,7 +1353,7 @@ func scrapeDividend(ticker string, exchange string, typology string, page *rod.P
 		}
 
 	} else {
-		yieldStrElem, err := page.Timeout(5 * time.Second).Element("span[title='Forward Dividend & Yield'] ~ span")
+		yieldStrElem, err := page.Timeout(5 * time.Second).Element(YH_FWD_YIELD_SELECTOR)
 		if err != nil {
 			log.Warnf("forward dividend & yield not found in page - target: %s:%s", ticker, exchange)
 			return nil
@@ -1406,7 +1400,7 @@ func findExchangeInPage(ticker string, scrapingUrl string, browser *rod.Browser)
 
 	defer page.MustClose()
 
-	exchangeElem, err := page.Timeout(5 * time.Second).Element("span.exchange span")
+	exchangeElem, err := page.Timeout(5 * time.Second).Element(YH_EXCHANGE_SELECTOR)
 	if err != nil {
 		return "", fmt.Errorf("exchange not found in page - target: %s", ticker)
 	} else {

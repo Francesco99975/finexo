@@ -53,6 +53,7 @@ func SeedDatabase(test bool) error {
 
 	manager := models.NewBrowserManager(100)
 	go manager.MonitorMemory()
+	go manager.MonitorBrowserHealth()
 
 	var wg sync.WaitGroup
 	sem := semaphore.NewWeighted(maxWorkers) // Control concurrency

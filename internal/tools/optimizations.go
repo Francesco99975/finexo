@@ -22,3 +22,21 @@ func disableWebRTC(page *rod.Page) {
 		log.Debugf("failed to disable WebRTC: %v", err)
 	}
 }
+
+func spoofWebGLFingerPrint(page *rod.Page) {
+	_, err := page.Eval(`WebGLRenderingContext.prototype.getParameter = function () { return "spoofed"; };`)
+	if err != nil {
+		log.Warnf("failed to spoof WebGL fingerprinting: %v", err)
+	}
+}
+
+func spoofCanvasFingerPrint(page *rod.Page) {
+	_, err := page.Eval(`
+		HTMLCanvasElement.prototype.getContext = function () {
+			return { getImageData: () => new Uint8ClampedArray([faker.Number(0,255)]) };
+		};
+	`)
+	if err != nil {
+		log.Warnf("failed to spoof Canvas fingerprinting: %v", err)
+	}
+}

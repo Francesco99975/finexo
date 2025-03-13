@@ -3,6 +3,7 @@ package tools
 import (
 	"encoding/csv"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -18,7 +19,7 @@ type Discoverer struct {
 }
 
 func NewDiscoverer() (*Discoverer, error) {
-	file, err := os.OpenFile("seeds/discovered.csv", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
+	file, err := os.OpenFile("seeds/discovered.csv", os.O_RDONLY, 0644)
 	if err != nil {
 		return nil, err
 	}
@@ -52,14 +53,28 @@ func NewDiscoverer() (*Discoverer, error) {
 	// Read and extract values from the found column
 	for {
 		record, err := reader.Read()
-		if err != nil {
-			break // EOF
+		if err == io.EOF { // Fix EOF handling
+			break
 		}
-		mem[normalizeSeed(record[columnIndex])] = true
+		if err != nil {
+			return nil, fmt.Errorf("Error reading CSV: %v", err)
+		}
+
+		normalized := normalizeSeed(record[columnIndex]) // Normalize before storing
+		mem[normalized] = true
 	}
 
+	file.Close()
+
+	fileInstance, err := os.OpenFile("seeds/discovered.csv", os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Infof("Loaded %d seeds", len(mem))
+
 	return &Discoverer{
-		file:        file,
+		file:        fileInstance,
 		memory:      mem,
 		discoveries: 0,
 	}, nil
@@ -70,6 +85,9 @@ func (r *Discoverer) Collect(seed string) error {
 	r.lock.Lock()
 	defer r.lock.Unlock()
 
+	// Normalize the seed
+	seed = normalizeSeed(seed)
+
 	if _, exists := r.memory[seed]; exists {
 		return nil
 	}
@@ -77,10 +95,10 @@ func (r *Discoverer) Collect(seed string) error {
 	r.discoveries++
 	log.Infof("Discovered new SEED >>>: %s", seed)
 
-	entry := fmt.Sprintf("%s\n", seed)
+	writer := csv.NewWriter(r.file)
+	defer writer.Flush()
 
-	_, err := r.file.WriteString(entry)
-	if err != nil {
+	if err := writer.Write([]string{seed}); err != nil {
 		return err
 	}
 

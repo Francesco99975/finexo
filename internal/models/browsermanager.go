@@ -123,3 +123,26 @@ func (bm *BrowserManager) MonitorMemory() {
 		}
 	}
 }
+
+func (bm *BrowserManager) MonitorBrowserHealth() {
+	for {
+		time.Sleep(30 * time.Second) // 🕒 Check every 30 seconds
+
+		bm.mu.Lock()
+
+		// ✅ Check if the browser is still responding
+		_, err := bm.activeBrowser.GetCookies() // Rod Health Check
+		if err == nil {
+			bm.mu.Unlock()
+			continue // If healthy, no need to restart
+		}
+
+		log.Warn("🚨 Browser is unresponsive! Restarting Chrome...")
+
+		// 🚀 Restart the browser safely
+		bm.requests = 0
+		go bm.RestartBrowserSafely()
+
+		bm.mu.Unlock()
+	}
+}
