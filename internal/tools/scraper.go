@@ -108,6 +108,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	if err != nil {
 		return fmt.Errorf("failed to create initial page while working on seed (%s): %v", seed, err)
 	}
+	defer page.MustClose()
 
 	// Set a random User-Agent
 	userAgent := getRandomUserAgent()
@@ -137,6 +138,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	wg.Add(1)
 	// Start random behavior in a separate Goroutine
 	go randomUserBehavior(ctx, page, &wg)
+	defer wg.Wait()
 
 	log.Debugf("Scraping MarketBeat at url: ", marketbeatScrapingUrl)
 	err = page.Navigate(marketbeatScrapingUrl)
@@ -973,18 +975,6 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			}
 		}
 
-		if *dividendScrap.Frequency != string(models.FrequencyUnknown) {
-			security.Dividend.AnnualPayout = models.NullableInt{
-				Int64: int64(*dividendScrap.Lad * operandByFrequency(dividendScrap.Frequency)),
-				Valid: true,
-			}
-		} else {
-			security.Dividend.AnnualPayout = models.NullableInt{
-				Int64: int64(math.Floor(float64(security.Price) * (float64(security.Dividend.Yield) / 100) / 100)),
-				Valid: true,
-			}
-		}
-
 		if dividendScrap.Pr != nil {
 			security.Dividend.PayoutRatio = models.NullableInt{
 				Int64: int64(*dividendScrap.Pr),
@@ -1010,6 +1000,21 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			security.Dividend.Frequency = models.NullableString{
 				String: string(models.Frequency(*dividendScrap.Frequency)),
 				Valid:  true,
+			}
+
+		}
+
+		if security.Dividend.Frequency.Valid && security.Dividend.LastAnnounced.Valid {
+			if security.Dividend.Frequency.String != string(models.FrequencyUnknown) {
+				security.Dividend.AnnualPayout = models.NullableInt{
+					Int64: int64(int(security.Dividend.LastAnnounced.Int64) * operandByFrequency(dividendScrap.Frequency)),
+					Valid: true,
+				}
+			} else {
+				security.Dividend.AnnualPayout = models.NullableInt{
+					Int64: int64(math.Floor(float64(security.Price) * (float64(security.Dividend.Yield) / 100) / 100)),
+					Valid: true,
+				}
 			}
 		}
 
@@ -1328,8 +1333,6 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	}
 
 	cancel()
-	wg.Wait()
-	page.MustClose()
 
 	return nil
 }

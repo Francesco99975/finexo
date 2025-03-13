@@ -6,12 +6,15 @@ import (
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/labstack/gommon/log"
 )
 
 type Discoverer struct {
-	lock   sync.Mutex
-	file   *os.File
-	memory map[string]bool
+	lock        sync.Mutex
+	file        *os.File
+	memory      map[string]bool
+	discoveries uint
 }
 
 func NewDiscoverer() (*Discoverer, error) {
@@ -56,8 +59,9 @@ func NewDiscoverer() (*Discoverer, error) {
 	}
 
 	return &Discoverer{
-		file:   file,
-		memory: mem,
+		file:        file,
+		memory:      mem,
+		discoveries: 0,
 	}, nil
 }
 
@@ -70,6 +74,8 @@ func (r *Discoverer) Collect(seed string) error {
 		return nil
 	} else {
 		r.memory[seed] = true
+		r.discoveries++
+		log.Infof("Discovered new SEED >>>: %s", seed)
 
 		entry := fmt.Sprintf("%s\n", seed)
 
@@ -84,5 +90,6 @@ func (r *Discoverer) Collect(seed string) error {
 
 // Close the report file
 func (r *Discoverer) Close() error {
+	log.Infof("Discovered %d new seeds", r.discoveries)
 	return r.file.Close()
 }
