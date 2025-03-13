@@ -268,11 +268,21 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 			if strings.Contains(paragraphText, "frequency") && strings.Contains(paragraphText, ":") {
 				log.Debugf("Scraped Dividend History data: %s", paragraphText)
-				dividendScrap.Frequency = &strings.Split(paragraphText, ":")[1]
-			} else {
-				freqStr := string(models.FrequencyUnknown)
-				dividendScrap.Frequency = &freqStr
+				freq, err := models.ParseFrequency(strings.Split(paragraphText, ":")[1])
+				if err != nil {
+					log.Warnf("failed to parse frequency: %v. For seed %s", err, seed)
+					freqStr := string(models.FrequencyUnknown)
+					dividendScrap.Frequency = &freqStr
+				} else {
+					freqStr := string(freq)
+					dividendScrap.Frequency = &freqStr
+				}
 			}
+		}
+
+		if dividendScrap.Frequency == nil {
+			freqStr := string(models.FrequencyUnknown)
+			dividendScrap.Frequency = &freqStr
 		}
 	}
 
@@ -344,9 +354,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	}
 	// disableWebRTC(page)
 
-	if discoverer == nil {
-		log.Warnf("failed to create discoverer: %v. For seed %s", err, seed)
-	} else {
+	if discoverer != nil {
 		log.Debugf("Scraping Yahoo reccomanded seeds for %s at exchange %s", security.Ticker, security.Exchange)
 		scrapedDiscoveredSeeds, err := page.Timeout(5 * time.Second).Elements(".carousel-top a.yf-6zl6fb")
 		if err != nil {

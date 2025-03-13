@@ -39,7 +39,7 @@ func SeedDatabase(test bool) error {
 
 	var d *tools.Discoverer
 	if Environment.GoEnv == "development" {
-		d, err := tools.NewDiscoverer()
+		d, err = tools.NewDiscoverer()
 		if err != nil {
 			log.Errorf("Failed to create discoverer: %v", err)
 		}
@@ -57,6 +57,7 @@ func SeedDatabase(test bool) error {
 	var wg sync.WaitGroup
 	sem := semaphore.NewWeighted(maxWorkers) // Control concurrency
 	var progress atomic.Uint32
+	var failed atomic.Uint32
 
 	for _, seed := range seeds {
 		wg.Add(1)
@@ -65,26 +66,34 @@ func SeedDatabase(test bool) error {
 
 			defer func() {
 				if r := recover(); r != nil {
+					failed.Add(1)
 					log.Errorf("Panic occurred while scraping seed (%s): %v", seed, r)
 					err := ScraperReporter.Report(helpers.SeverityLevels.PANIC, fmt.Sprintf("was scraping seed (%s) -> %v", seed, r))
 					if err != nil {
 						log.Errorf("failed to report panic: %v", err)
 					}
 				}
+
+				currentProgress := progress.Add(1)
+				// Log Progress
+				log.Infof("<<< Processed seed %d of %d: [%s] >>>", currentProgress, len(seeds), seed)
+
+				failedProgress := failed.Load()
+				if failedProgress > 0 {
+					log.Errorf("Failed to scrape %d seeds", failedProgress)
+				}
 			}()
 
 			err := tools.Scrape(seed, nil, manager, sem, &wg, d)
 			if err != nil {
+				failed.Add(1)
 				log.Errorf("Could not Scrape <- %v", err)
 				err := ScraperReporter.Report(helpers.SeverityLevels.ERROR, fmt.Sprintf("was scraping seed (%s) -> %v", seed, err))
 				if err != nil {
 					log.Errorf("failed to report error: %v", err)
 				}
 			}
-			currentProgress := progress.Add(1)
 
-			// Log Progress
-			log.Infof("<<< Scraped seed %d of %d: [%s] >>>", currentProgress, len(seeds), seed)
 		}(seed)
 	}
 

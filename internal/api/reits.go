@@ -13,7 +13,7 @@ func GetREITs() echo.HandlerFunc {
 		var payload models.SecParamsPointers
 		err := c.Bind(&payload)
 		if err != nil {
-			return c.JSON(http.StatusBadRequest, models.JSONErrorResponse{Code: http.StatusBadRequest, Message: "Invalid reits request payload"})
+			return c.JSON(http.StatusBadRequest, models.JSONErrorResponse{Code: http.StatusBadRequest, Message: "Invalid reits request payload", Error: err.Error()})
 		}
 
 		params, err := payload.Validate()
@@ -23,7 +23,7 @@ func GetREITs() echo.HandlerFunc {
 
 		reits, err := models.GetREITs(database.DB, params.Exchange, params.Country, params.MinPrice, params.MaxPrice, params.Order, params.Asc, params.Limit, params.Dividend)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve reits"})
+			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to retrieve reits", Error: err.Error()})
 		}
 
 		if len(reits) == 0 {
