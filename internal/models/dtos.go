@@ -3,7 +3,10 @@ package models
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
+
+	"github.com/Francesco99975/finexo/internal/helpers"
 )
 
 type SecParams struct {
@@ -18,14 +21,14 @@ type SecParams struct {
 }
 
 type SecParamsPointers struct {
-	Exchange *string `query:"exchange"`
-	Country  *string `query:"country"`
-	MinPrice *int    `query:"minPrice"`
-	MaxPrice *int    `query:"maxPrice"`
-	Dividend *bool   `query:"dividend"`
-	Order    *string `query:"order"`
-	Asc      *string `query:"asc"`
-	Limit    *int    `query:"limit"`
+	Exchange *string  `query:"exchange"`
+	Country  *string  `query:"country"`
+	MinPrice *float64 `query:"minPrice"`
+	MaxPrice *float64 `query:"maxPrice"`
+	Dividend *bool    `query:"dividend"`
+	Order    *string  `query:"order"`
+	Asc      *string  `query:"asc"`
+	Limit    *int     `query:"limit"`
 }
 
 // Possible valid values for Order and Asc fields
@@ -73,19 +76,29 @@ func (p *SecParamsPointers) Validate() (*SecParams, error) {
 	if p.MinPrice != nil && *p.MinPrice < 0 {
 		return nil, errors.New("minPrice cannot be negative")
 	} else if p.MinPrice != nil {
-		params.MinPrice = *p.MinPrice
+		mpStr := helpers.NormalizeFloatStrToIntStr(fmt.Sprintf("%.2f", float64(*p.MinPrice)))
+		mp, err := strconv.Atoi(mpStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert minPrice to int: %w", err)
+		}
+		params.MinPrice = mp
 	}
 
 	// Validate MaxPrice (must be non-negative)
 	if p.MaxPrice != nil && *p.MaxPrice < 0 {
 		return nil, errors.New("maxPrice cannot be negative")
 	} else if p.MaxPrice != nil {
-		params.MaxPrice = *p.MaxPrice
+		mpStr := helpers.NormalizeFloatStrToIntStr(fmt.Sprintf("%.2f", float64(*p.MaxPrice)))
+		mp, err := strconv.Atoi(mpStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert maxPrice to int: %w", err)
+		}
+		params.MaxPrice = mp
 	}
 
 	// Ensure MinPrice is less than or equal to MaxPrice
 	if p.MinPrice != nil && p.MaxPrice != nil && *p.MinPrice > *p.MaxPrice {
-		return nil, fmt.Errorf("minPrice (%d) cannot be greater than maxPrice (%d)", *p.MinPrice, *p.MaxPrice)
+		return nil, fmt.Errorf("minPrice (%d) cannot be greater than maxPrice (%d)", params.MinPrice, params.MaxPrice)
 	}
 
 	// Validate and normalize Order
