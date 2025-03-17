@@ -138,7 +138,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		log.Warnf("failed to open page on MarketBeat: %v. For seed %s", err, seed)
 	}
 
-	err = page.WaitLoad()
+	err = page.Timeout(20 * time.Second).WaitLoad()
 	if err != nil {
 		log.Warnf("failed to wait for page load on MarketBeat: %v. For seed %s", err, seed)
 	}
@@ -228,7 +228,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		log.Warnf("failed to open page on Dividend History: %v. For seed %s", err, seed)
 	}
 
-	err = page.WaitLoad()
+	err = page.Timeout(20 * time.Second).WaitLoad()
 	if err != nil {
 		log.Warnf("failed to wait for page load on Dividend History: %v. For seed %s", err, seed)
 	}
@@ -341,7 +341,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		return fmt.Errorf("failed to open page on Yahoo: %v. For seed %s", err, seed)
 	}
 
-	err = page.WaitLoad()
+	err = page.Timeout(20 * time.Second).WaitLoad()
 	if err != nil {
 		return fmt.Errorf("failed to wait for page load on Yahoo: %v. For seed %s", err, seed)
 	}
