@@ -10,8 +10,8 @@ import (
 
 // Dividend represents a row from the dividends table.
 type Dividend struct {
-	Ticker        string         `db:"ticker" json:"ticker"`
-	Exchange      string         `db:"exchange" json:"exchange"`
+	Ticker        string         `db:"ticker" json:"ticker,omitempty"`
+	Exchange      string         `db:"exchange" json:"exchange,omitempty"`
 	Yield         int            `db:"yield" json:"yield"`
 	AnnualPayout  NullableInt    `db:"ap" json:"annualPayout,omitempty"`
 	Timing        NullableString `db:"tm" json:"timing,omitempty"` // Enum: fwd, ttm

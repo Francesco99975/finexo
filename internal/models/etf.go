@@ -7,6 +7,7 @@ import (
 
 	"github.com/Francesco99975/finexo/internal/database"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 // ETF represents a row from the etfs table.
@@ -401,9 +402,9 @@ func GetETF(db *sqlx.DB, input string) (*ETF, error) {
 
 func GetETFs(
 	db *sqlx.DB,
-	exchange, country string,
+	exchange, country []string,
 	minPrice, maxPrice int,
-	orderBy, orderDirection string,
+	orderBy []string, orderDirection string,
 	limit int,
 	dividend bool,
 ) ([]ETF, error) {
@@ -444,10 +445,10 @@ func GetETFs(
 	// WHERE conditions
 	query += `
 		WHERE s.typology = 'ETF'
-		AND (COALESCE(:exchange, '') = '' OR s.exchange = CAST(:exchange AS TEXT))
-		AND (COALESCE(:country, '') = '' OR s.exchange IN (SELECT title FROM exchanges WHERE cc = :country))
-		AND (COALESCE(:minPrice, -1) = -1 OR s.price >= CAST(:minPrice AS NUMERIC))
-		AND (COALESCE(:maxPrice, -1) = -1 OR s.price <= CAST(:maxPrice AS NUMERIC))
+		AND (array_length(COALESCE($1, ARRAY[]::text[]), 1) = 0 OR s.exchange = ANY($1::text[]))
+		AND (array_length(COALESCE($2, ARRAY[]::text[]), 1) = 0 OR s.exchange IN (SELECT title FROM exchanges WHERE cc = ANY($2::text[])))
+		AND CAST($3 AS NUMERIC) = -1 OR s.price >= CAST($3 AS NUMERIC)
+		AND CAST($4 AS NUMERIC) = -1 OR s.price <= CAST($4 AS NUMERIC)
 	`
 
 	// Grouping by ETF to ensure `STRING_AGG()` works correctly
@@ -455,22 +456,38 @@ func GetETFs(
 
 	// Apply ordering
 	orderColumn := map[string]string{
-		"price":     "s.price",
-		"volume":    "s.volume",
-		"avgvolume": "s.avgvolume",
-		"marketcap": "s.cap",
-		"pc":        "s.pc",
-		"pcp":       "s.pcp",
-		"updated":   "s.updated",
+		"price":       "s.price",
+		"consensus":   "s.consensus", // New field
+		"score":       "s.score",     // New field
+		"coverage":    "s.coverage",  // New field
+		"volume":      "s.volume",
+		"avgvolume":   "s.avgvolume",
+		"marketcap":   "s.cap",
+		"outstanding": "s.outstanding", // New field
+		"beta":        "s.beta",        // New field
+		"eps":         "s.eps",         // New field
+		"pe":          "s.pe",          // New field
+		"yield":       "d.yield",       // New field
+		"payout":      "d.pr",          // New field
+		"holdings":    "e.holdings",    // New field
+		"aum":         "e.aum",         // New field
+		"expense":     "e.er",          // New field
+		"nav":         "e.nav",         // New field
+		"inception":   "e.inception",   // New field
+		"pc":          "s.pc",
+		"pcp":         "s.pcp",
+		"updated":     "s.updated",
 	}
 
 	order := "s.price ASC"
-	if orderBy != "" {
-		if col, exists := orderColumn[orderBy]; exists {
-			if orderDirection == "desc" {
-				order = fmt.Sprintf("%s DESC", col)
-			} else {
-				order = fmt.Sprintf("%s ASC", col)
+	if len(orderBy) > 0 {
+		for _, col := range orderBy {
+			if colx, exists := orderColumn[col]; exists {
+				if orderDirection == "desc" {
+					order = fmt.Sprintf("%s DESC", colx)
+				} else {
+					order = fmt.Sprintf("%s ASC", colx)
+				}
 			}
 		}
 	}
@@ -481,16 +498,39 @@ func GetETFs(
 		query += fmt.Sprintf(" LIMIT %d", limit) // Convert to integer before execution
 	}
 
-	// Query parameters (handle NULL values properly)
-	params := map[string]any{
-		"exchange": NullableString{String: exchange, Valid: exchange != ""},
-		"country":  NullableString{String: country, Valid: country != ""},
-		"minPrice": NullableInt{Int64: int64(minPrice), Valid: minPrice > 0},
-		"maxPrice": NullableInt{Int64: int64(maxPrice), Valid: maxPrice > 0},
+	// Handle empty slices by converting them to PostgreSQL-friendly empty arrays
+	var exchangeArray any = "{}" // PostgreSQL empty array format
+	var countryArray any = "{}"
+
+	if len(exchange) > 0 {
+		exchangeArray = pq.Array(exchange) // Use pq.Array() only when non-empty
+	}
+	if len(country) > 0 {
+		countryArray = pq.Array(country)
 	}
 
-	// Execute the query
-	rows, err := db.NamedQuery(query, params)
+	// Define "unset" sentinel values
+	const unsetPrice = -1
+
+	// If minPrice or maxPrice are 0, replace with -1
+	minP := minPrice
+	maxP := maxPrice
+	if minPrice == 0 {
+		minP = unsetPrice
+	}
+	if maxPrice == 0 {
+		maxP = unsetPrice
+	}
+
+	args := []any{
+		exchangeArray, // Wrap slices in pq.Array() for PostgreSQL compatibility
+		countryArray,
+		minP, // Now it defaults to -1 instead of 0
+		maxP,
+	}
+
+	// Execute query using `Queryx`, NOT `NamedQuery`
+	rows, err := db.Queryx(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve ETFs rows: %w", err)
 	}
