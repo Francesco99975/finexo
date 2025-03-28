@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS securities (
     asksz INT,
     eps INT,
     pe INT,
+    target INT,
     stm timing,
     created TIMESTAMP NOT NULL DEFAULT NOW(),
     updated TIMESTAMP NOT NULL DEFAULT NOW(),

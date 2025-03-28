@@ -52,7 +52,7 @@ func (r *REIT) Scan(rows *sqlx.Rows) error {
 		&r.Price, &r.PC, &r.PCP, &r.YearLow, &r.YearHigh, &r.DayLow, &r.DayHigh, &r.Consensus, &r.Score, &r.Coverage,
 		&r.MarketCap, &r.Volume, &r.AvgVolume, &r.Outstanding, &r.Beta,
 		&r.PClose, &r.COpen, &r.Bid, &r.BidSize, &r.Ask, &r.AskSize,
-		&r.EPS, &r.PE, &r.STM, &r.Created, &r.Updated,
+		&r.EPS, &r.PE, &r.Target, &r.STM, &r.Created, &r.Updated,
 
 		&r.Occupation, &r.Focus, &r.FFO, &r.PFFO, &r.Timing,
 
@@ -204,7 +204,7 @@ func GetREIT(db *sqlx.DB, input string) (*REIT, error) {
 			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
+			s.ask, s.asksz, s.eps, s.pe, s.target, s.stm, s.created, s.updated,
 
 			r.occupation, r.focus, r.ffo, r.pffo, r.tm,
 
@@ -258,7 +258,7 @@ func GetREITs(
 			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
+			s.ask, s.asksz, s.eps, s.pe, s.target, s.stm, s.created, s.updated,
 
 			r.occupation, r.focus, r.ffo, r.pffo, r.tm,
 

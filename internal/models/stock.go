@@ -89,7 +89,7 @@ func GetStock(db *sqlx.DB, input string) (*Security, error) {
 			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
+			s.ask, s.asksz, s.eps, s.pe, s.target, s.stm, s.created, s.updated,
 
 			d.yield AS dividend_yield, d.tm AS dividend_timing,
     d.ap AS dividend_annualPayout, d.pr AS dividend_payoutRatio,
@@ -140,7 +140,7 @@ func GetStocks(
     	s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 		s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 		s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-		s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
+		s.ask, s.asksz, s.eps, s.pe, s.target, s.stm, s.created, s.updated,
 
     	d.yield AS dividend_yield, d.tm AS dividend_timing,
     	d.ap AS dividend_annualPayout, d.pr AS dividend_payoutRatio,

@@ -111,6 +111,7 @@ func (etf *ETF) Scan(rows *sqlx.Rows) error {
 		&etf.Security.AskSize,
 		&etf.Security.EPS,
 		&etf.Security.PE,
+		&etf.Security.Target,
 		&etf.Security.STM,
 		&etf.Security.Created,
 		&etf.Security.Updated,
@@ -352,7 +353,7 @@ func GetETF(db *sqlx.DB, input string) (*ETF, error) {
 			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
+			s.ask, s.asksz, s.eps, s.pe, s.target, s.stm, s.created, s.updated,
 
 		e.holdings, e.family, e.aum, e.er AS expenseRatio, e.nav, e.inception,
 
@@ -414,7 +415,7 @@ func GetETFs(
 			s.ticker, s.exchange, s.typology, s.currency, s.fullname, s.sector, s.industry, s.subindustry,
 			s.price, s.pc, s.pcp, s.yrl, s.yrh, s.drl, s.drh, s.consensus, s.score, s.coverage,
 			s.cap, s.volume, s.avgvolume, s.outstanding, s.beta, s.pclose, s.copen, s.bid, s.bidsz,
-			s.ask, s.asksz, s.eps, s.pe, s.stm, s.created, s.updated,
+			s.ask, s.asksz, s.eps, s.pe, s.target, s.stm, s.created, s.updated,
 
 			e.holdings, e.family, e.aum, e.er AS expenseRatio, e.nav, e.inception,
 

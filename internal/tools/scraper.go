@@ -362,7 +362,10 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 				log.Warnf("failed to scrape discovered seed url: %v. For seed %s", err, seed)
 			}
 
-			discoverer.Collect(*seed)
+			err = discoverer.Collect(*seed)
+			if err != nil {
+				log.Warnf("failed to collect discovered seed: %v. For seed %s", err, seed)
+			}
 		}
 		log.Debugf("Collected Yahoo reccomanded seeds for %s at exchange %s", security.Ticker, security.Exchange)
 	}
@@ -759,6 +762,28 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	security.PClose = scrapedPclose
 	log.Debug("Scraped previous close")
+
+	targetStrElem, err := page.Timeout(5 * time.Second).Element(YH_TARGET_SELECTOR)
+	if err != nil {
+		log.Warnf("target not found in page - target: %s:%s", security.Ticker, security.Exchange)
+	} else {
+		targetStr := targetStrElem.MustText()
+		log.Debugf("Scraped target: %s", targetStr)
+		targetStr = helpers.NormalizeFloatStrToIntStr(targetStr)
+		if isAnEmptyString(targetStr) {
+			log.Warnf("empty target: %s - target: %s:%s", targetStr, security.Ticker, security.Exchange)
+		} else {
+			scrapedTarget, err := strconv.Atoi(targetStr)
+			if err != nil || scrapedTarget <= 0 {
+				log.Warnf("invalid target: %s - target: %s:%s", targetStr, security.Ticker, security.Exchange)
+			} else {
+				security.Target = models.NullableInt{
+					Int64: int64(scrapedTarget),
+					Valid: true,
+				}
+			}
+		}
+	}
 
 	copenStrElem, err := page.Timeout(5 * time.Second).Element(YH_COPEN_SELECTOR)
 	if err != nil {

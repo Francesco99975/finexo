@@ -41,7 +41,8 @@ type Security struct {
 	AskSize     NullableInt    `db:"asksz" json:"askSize,omitempty"`
 	EPS         NullableInt    `db:"eps" json:"eps,omitempty"`
 	PE          NullableInt    `db:"pe" json:"pe,omitempty"`
-	STM         NullableString `db:"stm" json:"stm,omitempty"` // Enum: fwd, ttm
+	Target      NullableInt    `db:"target" json:"target,omitempty"`
+	STM         NullableString `db:"stm" json:"stm,omitempty"` // Enum: fwd, ttm/
 	Created     time.Time      `db:"created" json:"created"`
 	Updated     time.Time      `db:"updated" json:"updated"`
 
@@ -70,7 +71,7 @@ func (s *Security) Scan(rows *sqlx.Rows) error {
 		&s.Price, &s.PC, &s.PCP, &s.YearLow, &s.YearHigh, &s.DayLow, &s.DayHigh, &s.Consensus, &s.Score, &s.Coverage,
 		&s.MarketCap, &s.Volume, &s.AvgVolume, &s.Outstanding, &s.Beta,
 		&s.PClose, &s.COpen, &s.Bid, &s.BidSize, &s.Ask, &s.AskSize,
-		&s.EPS, &s.PE, &s.STM, &s.Created, &s.Updated,
+		&s.EPS, &s.PE, &s.Target, &s.STM, &s.Created, &s.Updated,
 
 		// Dividend Fields
 		&dividendYield, &dividendTiming, &dividendAnnualPayout, &dividendPayoutRatio,
@@ -138,6 +139,9 @@ func (s *Security) CreatePrettyPrintString() string {
 	if s.PE.Valid {
 		sb.WriteString("PE: " + strconv.Itoa(int(s.PE.Int64)) + " -- ")
 	}
+	if s.Target.Valid {
+		sb.WriteString("Target: " + strconv.Itoa(int(s.Target.Int64)) + " -- ")
+	}
 	if s.STM.Valid {
 		sb.WriteString("STM: " + s.STM.String + " -- ")
 	}
@@ -171,11 +175,11 @@ func InsertSecurity(tx *sqlx.Tx, security *Security) error {
 		INSERT INTO securities (
 			ticker, exchange, typology, currency, fullname, sector, industry, subindustry, price, pc, pcp,
 			yrl, yrh, drl, drh, consensus, score, coverage, cap, volume, avgvolume, outstanding,
-			beta, pclose, copen, bid, bidsz, ask, asksz, eps, pe, stm
+			beta, pclose, copen, bid, bidsz, ask, asksz, eps, pe, target, stm
 		) VALUES (
 			:ticker, :exchange, :typology, :currency, :fullname, :sector, :industry, :subindustry, :price, :pc, :pcp,
 			:yrl, :yrh, :drl, :drh, :consensus, :score, :coverage, :cap, :volume, :avgvolume, :outstanding,
-			:beta, :pclose, :copen, :bid, :bidsz, :ask, :asksz, :eps, :pe, :stm
+			:beta, :pclose, :copen, :bid, :bidsz, :ask, :asksz, :eps, :pe, :target, :stm
 		)
 	`
 
@@ -318,6 +322,10 @@ func UpdateSecurity(tx *sqlx.Tx, security *Security) error {
 	if security.PE.Valid {
 		updates = append(updates, "pe = :pe")
 		args["pe"] = security.PE.Int64
+	}
+	if security.Target.Valid {
+		updates = append(updates, "target = :target")
+		args["target"] = security.Target.Int64
 	}
 
 	// Ensure at least one field is being updated
