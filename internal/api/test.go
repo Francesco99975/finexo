@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/Francesco99975/finexo/cmd/boot"
 	"github.com/Francesco99975/finexo/internal/models"
@@ -37,7 +38,19 @@ func Test() echo.HandlerFunc {
 
 func TestScrape() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		err := boot.SeedDatabase(true)
+		var load int
+		var err error
+		loadParam := c.Param("load")
+		if loadParam == "" {
+			load = 30
+		} else {
+			load, err = strconv.Atoi(loadParam)
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, "Invalid load parameter")
+			}
+		}
+
+		err = boot.SeedDatabase(load)
 		if err != nil {
 			log.Errorf("Failed to seed database: %v", err)
 		}

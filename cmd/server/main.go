@@ -50,7 +50,7 @@ func main() {
 
 	if isDBEmpty {
 		go func() {
-			err = boot.SeedDatabase(false)
+			err = boot.SeedDatabase(0)
 			if err != nil {
 				e.Logger.Fatal(err)
 			}

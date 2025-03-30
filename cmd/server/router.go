@@ -62,6 +62,7 @@ func createRouter(ctx context.Context) *echo.Echo {
 	apigrp := e.Group("/api")
 
 	apiv1 := apigrp.Group("/v1")
+	apiv1.GET("/search", api.SearchSecurities())
 	apiv1.GET("/stocks", api.GetStocks())
 	apiv1.GET("/stock/:id", api.GetStock())
 
@@ -73,7 +74,7 @@ func createRouter(ctx context.Context) *echo.Echo {
 
 	apiv1.GET("/test/:seed", api.Test())
 	apiv1.GET("/test/seeds", api.TestSeeds())
-	apiv1.GET("/test/scrape", api.TestScrape())
+	apiv1.GET("/test/scrape/:load", api.TestScrape())
 
 	e.HTTPErrorHandler = serverErrorHandler
 

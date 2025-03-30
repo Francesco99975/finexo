@@ -10,6 +10,14 @@ import (
 	"github.com/Francesco99975/finexo/internal/helpers"
 )
 
+type SecuritySearchPreview struct {
+	Ticker   string `json:"ticker"`
+	Exchange string `json:"exchange"`
+	Title    string `json:"title"` // derived from fullname
+	Price    string `json:"price"`
+	Typology string `json:"typology"`
+}
+
 type SecParams struct {
 	Exchange        []string  `query:"exchange"`
 	Country         []string  `query:"country"`

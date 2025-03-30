@@ -1,3 +1,7 @@
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+
+
 -- Create a trigger function to update the updated column
 CREATE OR REPLACE FUNCTION update_updated()
 RETURNS TRIGGER AS $$
@@ -95,6 +99,9 @@ CREATE TABLE IF NOT EXISTS securities (
 );
 
 SELECT apply_update_trigger('securities');
+
+CREATE INDEX IF NOT EXISTS securities_trgm_idx ON securities USING GIN (fullname gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS securities_ticker_trgm_idx ON securities USING GIN (ticker gin_trgm_ops);
 
 
 CREATE TABLE IF NOT EXISTS etfs (

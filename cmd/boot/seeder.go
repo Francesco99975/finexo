@@ -14,7 +14,7 @@ import (
 
 const maxWorkers = 7
 
-func SeedDatabase(test bool) error {
+func SeedDatabase(load int) error {
 	seeds, err := tools.ReadAllSeeds()
 	if err != nil {
 		return err
@@ -22,8 +22,8 @@ func SeedDatabase(test bool) error {
 
 	helpers.Shuffle(seeds)
 
-	if test {
-		seeds = seeds[:30]
+	if load > 0 {
+		seeds = seeds[:load]
 	}
 
 	ScraperReporter, err := helpers.NewReporter("scraper.log")
@@ -79,10 +79,6 @@ func SeedDatabase(test bool) error {
 				// Log Progress
 				log.Infof("<<< Processed seed %d of %d: [%s] >>>", currentProgress, len(seeds), seed)
 
-				failedProgress := failed.Load()
-				if failedProgress > 0 {
-					log.Errorf("Failed to scrape %d seeds", failedProgress)
-				}
 			}()
 
 			err := tools.Scrape(seed, nil, manager, sem, &wg, d)
@@ -99,7 +95,12 @@ func SeedDatabase(test bool) error {
 	}
 
 	wg.Wait()
-	log.Info("All seeds have been scraped.")
+
+	failedProgress := failed.Load()
+	if failedProgress > 0 {
+		log.Errorf("Failed to scrape %d seeds", failedProgress)
+	}
+	log.Infof("All seeds have been scraped. Successfully scraped %d seeds", uint32(len(seeds))-failedProgress)
 
 	return nil
 }
