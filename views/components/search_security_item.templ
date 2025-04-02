@@ -1,0 +1,35 @@
+package components
+
+import (
+	"github.com/Francesco99975/finexo/internal/models"
+	"strings"
+)
+
+templ SearchSecurityItems(searchSecurities []models.SecuritySearchPreview) {
+	<div class="max-h-60 overflow-y-auto">
+		for _, searchSecurity := range searchSecurities {
+			<div
+				class="p-3 hover:bg-std/30 cursor-pointer border-b border-std"
+				hx-get={ "/" + strings.ToLower(searchSecurity.Typology) + "/" + searchSecurity.Ticker + ":" + searchSecurity.Exchange }
+				hx-target="#calculate-form"
+				hx-trigger="click"
+				hx-indicator="#security-info-indicator"
+				@click={ "showResults = false; document.getElementById('security-search').value = '" + searchSecurity.Ticker + "';" }
+			>
+				<div class="flex justify-between items-start">
+					<div>
+						<div class="flex items-center gap-2">
+							<span class="font-medium text-primary">{ searchSecurity.Ticker }</span>
+							<span class="text-xs bg-std text-text-secondary px-2 py-0.5 rounded">{ searchSecurity.Exchange }</span>
+							<span class="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded">{ searchSecurity.Typology } </span>
+						</div>
+						<h3 class="text-sm font-medium text-text-primary mt-1">{ searchSecurity.Title }</h3>
+					</div>
+					<div class="text-right">
+						<span class="text-sm font-semibold text-text-primary">{ searchSecurity.Price }</span>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}

@@ -1,8 +1,10 @@
 package layouts
 
-import "github.com/Francesco99975/finexo/internal/models"
-import "github.com/Francesco99975/finexo/views/components"
-import "strconv"
+import (
+	"github.com/Francesco99975/finexo/internal/models"
+	"github.com/Francesco99975/finexo/views/components"
+	"strconv"
+)
 
 templ CoreHTML(site models.Site) {
 	<!DOCTYPE html>
@@ -38,11 +40,13 @@ templ CoreHTML(site models.Site) {
 			<script type="module" src="/assets/dist/index.js"></script>
 			<link rel="stylesheet" href="/assets/dist/index.css"/>
 		</head>
-		<body class="h-full w-full flex flex-col justify-stretch items-stretch relative">
-			<div id="indicator" class="htmx-indicator w-full h-screen absolute bottom-0 right-0 z-50 flex bg-slate-700 opacity-70 justify-center items-center"><div class="loader"></div></div>
-			@components.Header()
-			{ children... }
-			@components.Footer(strconv.Itoa(site.Year))
+		<body class="bg-bg-std min-h-screen transition-colors">
+			// <div id="indicator" class="htmx-indicator w-full h-screen absolute bottom-0 right-0 z-50 flex bg-slate-700 opacity-70 justify-center items-center"><div class="loader"></div></div>
+			<div class="min-h-screen flex flex-col">
+				@components.Header()
+				{ children... }
+				@components.Footer(strconv.Itoa(site.Year))
+			</div>
 		</body>
 	</html>
 }

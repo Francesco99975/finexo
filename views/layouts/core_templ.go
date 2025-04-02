@@ -8,9 +8,11 @@ package layouts
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/Francesco99975/finexo/internal/models"
-import "github.com/Francesco99975/finexo/views/components"
-import "strconv"
+import (
+	"github.com/Francesco99975/finexo/internal/models"
+	"github.com/Francesco99975/finexo/views/components"
+	"strconv"
+)
 
 func CoreHTML(site models.Site) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -40,7 +42,7 @@ func CoreHTML(site models.Site) templ.Component {
 		var templ_7745c5c3_Var2 string
 		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(site.AppName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/layouts/core.templ`, Line: 12, Col: 24}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layouts/core.templ`, Line: 14, Col: 24}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
@@ -53,7 +55,7 @@ func CoreHTML(site models.Site) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(site.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/layouts/core.templ`, Line: 12, Col: 41}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layouts/core.templ`, Line: 14, Col: 41}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -66,7 +68,7 @@ func CoreHTML(site models.Site) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(site.Metatags.Description)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/layouts/core.templ`, Line: 17, Col: 63}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layouts/core.templ`, Line: 19, Col: 63}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -79,13 +81,13 @@ func CoreHTML(site models.Site) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(site.Metatags.Keywords)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/layouts/core.templ`, Line: 18, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `layouts/core.templ`, Line: 20, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><meta name=\"author\" content=\"Francecsco Michele Barranca\"><meta name=\"robots\" content=\"index, follow\"><link rel=\"canonical\" href=\"https://example.com\"><script type=\"application/ld+json\">\n                {\n                    \"@context\": \"http://schema.org\",\n                    \"@type\": \"Organization\",\n                    \"name\": \"GoApp\",\n                    \"url\": \"https://example.com\",\n                    \"logo\": \"https://example.com/assets/images/logo.webp\",\n                    \"contactPoint\": [\n                        {\n                            \"@type\": \"ContactPoint\",\n                            \"telephone\": \"+1\",\n                            \"contactType\": \"\"\n                        }\n                    ]\n                }\n                </script><script type=\"module\" src=\"/assets/dist/index.js\"></script><link rel=\"stylesheet\" href=\"/assets/dist/index.css\"></head><body class=\"h-full w-full flex flex-col justify-stretch items-stretch relative\"><div id=\"indicator\" class=\"htmx-indicator w-full h-screen absolute bottom-0 right-0 z-50 flex bg-slate-700 opacity-70 justify-center items-center\"><div class=\"loader\"></div></div>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><meta name=\"author\" content=\"Francecsco Michele Barranca\"><meta name=\"robots\" content=\"index, follow\"><link rel=\"canonical\" href=\"https://example.com\"><script type=\"application/ld+json\">\n                {\n                    \"@context\": \"http://schema.org\",\n                    \"@type\": \"Organization\",\n                    \"name\": \"GoApp\",\n                    \"url\": \"https://example.com\",\n                    \"logo\": \"https://example.com/assets/images/logo.webp\",\n                    \"contactPoint\": [\n                        {\n                            \"@type\": \"ContactPoint\",\n                            \"telephone\": \"+1\",\n                            \"contactType\": \"\"\n                        }\n                    ]\n                }\n                </script><script type=\"module\" src=\"/assets/dist/index.js\"></script><link rel=\"stylesheet\" href=\"/assets/dist/index.css\"></head><body class=\"bg-bg-std min-h-screen transition-colors\"><div class=\"min-h-screen flex flex-col\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -101,7 +103,7 @@ func CoreHTML(site models.Site) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

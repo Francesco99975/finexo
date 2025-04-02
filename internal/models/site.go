@@ -15,9 +15,9 @@ type Site struct {
 
 func GetDefaultSite(title string) Site {
 	return Site{
-		AppName:  "GoApp",
+		AppName:  "Finexo",
 		Title:    title,
-		Metatags: SEO{Description: "App", Keywords: "tool"},
+		Metatags: SEO{Description: "Compiunt Interest Calulator", Keywords: "tool,finance,calculator,stocks,investment,interest,market"},
 		Year:     time.Now().Year(),
 	}
 }

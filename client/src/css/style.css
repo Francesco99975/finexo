@@ -10,11 +10,44 @@
 
 @layer base {
   :root {
-    --color-std: 216 201 155;
-    --color-primary: 39 62 71;
-    --color-accent: 174 246 199;
-    --color-success: 86 229 46;
-    --color-error: 138 18 18;
+    /* Base neutral color - softer than before */
+    --color-std: 240 240 245;
+
+    /* Professional deep blue for primary elements */
+    --color-primary: 25 91 139;
+
+    /* Teal accent that complements the primary blue */
+    --color-accent: 56 178 172;
+
+    /* Clear green for positive returns/success */
+    --color-success: 34 154 94;
+
+    /* Refined red for errors/negative returns */
+    --color-error: 220 38 38;
+
+    /* Additional useful colors for financial context */
+    --color-warning: 245 158 11;
+    --color-info: 79 129 189;
+
+    /* Text colors */
+    --color-text-primary: 31 41 55;
+    --color-text-secondary: 107 114 128;
+
+    /* Background variations */
+    --color-bg-light: 249 250 251;
+    --color-bg-dark: 17 24 39;
+  }
+
+  .dark {
+    --color-std: 30 41 59;
+    --color-primary: 56 139 196;
+    --color-accent: 79 209 197;
+    --color-success: 52 211 153;
+    --color-error: 248 113 113;
+    --color-text-primary: 243 244 246;
+    --color-text-secondary: 156 163 175;
+    --color-bg-light: 31 41 55;
+    --color-bg-dark: 17 24 39;
   }
 }
 
@@ -28,4 +61,16 @@ html {
   scroll-behavior: smooth;
   /* font-family: "JosefineSans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; */
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+[x-cloak] { display: none !important; }
+.htmx-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+.htmx-request .htmx-indicator {
+  opacity: 1;
+}
+.htmx-request.htmx-indicator {
+  opacity: 1;
 }

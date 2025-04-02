@@ -1,64 +1,105 @@
 package components
 
+import "github.com/Francesco99975/finexo/views/icons"
+
 templ Header() {
-	<header class="flex justify-between items-center bg-std text-center text-primary rounded-b w-full h-24 p-4 sticky top-0 right-0 z-20">
-		<div class="flex items-center p-2 w-[35%]">
-			<img src="/assets/images/logo.webp" alt="App Logo" width="85px" height="85px"/>
-			<h1 class="ml-8 text-3xl"><a href="/">Title</a></h1>
-		</div>
-		<nav class="md:w-auto">
-			<!-- Burger menu icon for small screens -->
-			<div id="burgerMenu" class="burger-menu md:hidden cursor-pointer">
-				<div id="bar1" class="bar w-6 h-1 bg-primary my-1 rounded transition-transform transform rotate-0"></div>
-				<div id="bar2" class="bar w-6 h-1 bg-primary my-1 rounded transition-transform transform rotate-0"></div>
-				<div id="bar3" class="bar w-6 h-1 bg-primary my-1 rounded transition-transform transform rotate-0"></div>
+	<header class="bg-primary text-white shadow-md py-4">
+		<div class="container mx-auto px-4">
+			<div
+				class="flex items-center justify-between"
+				x-data="{
+    mobileMenuOpen: false,
+    darkMode: localStorage.getItem('darkMode') === 'true' ? true :
+             (localStorage.getItem('darkMode') === 'false' ? false :
+             window.matchMedia('(prefers-color-scheme: dark)').matches)
+  }"
+				x-init="
+  if(darkMode) {
+    document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+  }
+
+  $watch('darkMode', val => {
+      localStorage.setItem('darkMode', val);
+      if(val) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+  });
+
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      if (localStorage.getItem('darkMode') === null) {
+        darkMode = e.matches;
+      }
+    });
+  "
+			>
+				<div class="flex items-center">
+					@icons.Logo()
+					<h1 class="ml-2 text-xl font-bold text-white">Finexo</h1>
+				</div>
+				<!-- Desktop Navigation -->
+				<div class="hidden md:flex items-center space-x-6">
+					<nav class="flex items-center space-x-4">
+						<a href="#" class="text-white hover:text-white/80 font-medium">Home</a>
+						<a href="#" class="text-white hover:text-white/80 font-medium">About</a>
+						<a href="#" class="text-white hover:text-white/80 font-medium">Calculator</a>
+					</nav>
+					<!-- Dark Mode Toggle -->
+					<button
+						@click="darkMode = !darkMode"
+						class="p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+						aria-label="Toggle dark mode"
+					>
+						@icons.Sun()
+						@icons.Moon()
+					</button>
+				</div>
+				<!-- Mobile Menu Button -->
+				<div class="flex items-center md:hidden space-x-4">
+					<!-- Dark Mode Toggle (Mobile) -->
+					<button
+						@click="darkMode = !darkMode"
+						class="p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+						aria-label="Toggle dark mode"
+					>
+						@icons.Sun()
+						@icons.Moon()
+					</button>
+					<!-- Hamburger Button -->
+					<button
+						@click="mobileMenuOpen = !mobileMenuOpen"
+						class="p-2 rounded-md hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50"
+						aria-label="Toggle menu"
+					>
+						@icons.Hamburger()
+						@icons.Close()
+					</button>
+				</div>
+				<!-- Mobile Menu -->
+				<div
+					x-show="mobileMenuOpen"
+					x-transition:enter="transition ease-out duration-200"
+					x-transition:enter-start="opacity-0 -translate-y-4"
+					x-transition:enter-end="opacity-100 translate-y-0"
+					x-transition:leave="transition ease-in duration-150"
+					x-transition:leave-start="opacity-100 translate-y-0"
+					x-transition:leave-end="opacity-0 -translate-y-4"
+					class="fixed inset-x-0 top-[60px] bg-primary shadow-lg z-50"
+					x-cloak
+				>
+					<nav class="container mx-auto px-4 py-3">
+						<div class="flex flex-col space-y-3">
+							<a href="#" class="text-white hover:bg-white/10 py-2 px-3 rounded-md">Home</a>
+							<a href="#" class="text-white hover:bg-white/10 py-2 px-3 rounded-md">About</a>
+							<a href="#" class="text-white hover:bg-white/10 py-2 px-3 rounded-md">Calculator</a>
+						</div>
+					</nav>
+				</div>
 			</div>
-			<!-- Navigation links for larger screens -->
-			<ul id="navLinks" class="nav-links md:flex flex-row space-x-4 hidden">
-				<li><a href="/#page1" class="text-primary text-xl md:text-2xl">Page 1</a></li>
-				<li><a href="/#page2" class="text-primary text-xl md:text-2xl">Page 2</a></li>
-				<li><a href="/#page3" class="text-primary text-xl md:text-2xl">Page 3</a></li>
-				<li><a href="/#page4" class="text-primary text-xl md:text-2xl">Page 4</a></li>
-				<li><a href="/#page5" class="text-primary text-xl md:text-2xl">Page 5</a></li>
-			</ul>
-			<!-- Navigation links for mobile view -->
-			<ul id="mobileNavLinks" class="nav-links-mobile md:hidden absolute top-24 left-0 w-full hidden z-30 transition-all ease-in">
-				<li class="bg-std w-full px-4 py-2"><a href="/#page1" class="text-primary text-center  text-xl md:text-2xl">Page 1</a></li>
-				<li class="bg-std w-full px-4 py-2"><a href="/#page2" class="text-primary text-center  text-xl md:text-2xl">Page 2</a></li>
-				<li class="bg-std w-full px-4 py-2"><a href="/#page3" class="text-primary text-center  text-xl md:text-2xl">Page 3</a></li>
-				<li class="bg-std w-full px-4 py-2"><a href="/#page4" class="text-primary text-center  text-xl md:text-2xl">Page 4</a></li>
-				<li class="bg-std w-full px-4 py-2"><a href="/#page5" class="text-primary text-center  text-xl md:text-2xl">Page 5</a></li>
-			</ul>
-		</nav>
-		<script>
-
-            var burgerMenu = document.getElementById('burgerMenu');
-            var navLinks = document.getElementById('mobileNavLinks');
-            var bar1 = document.getElementById('bar1');
-            var bar2 = document.getElementById('bar2');
-            var bar3 = document.getElementById('bar3');
-
-            burgerMenu.addEventListener('click', function () {
-                navLinks.classList.toggle('hidden');
-                  if (bar1.classList.contains('rotate-0')) {
-                    bar1.classList.remove('rotate-0');
-                    bar1.classList.add('rotate-45', 'translate-y-2');
-
-                    bar2.classList.remove('rotate-0');
-                    bar2.classList.add('opacity-0');
-
-                    bar3.classList.remove('rotate-0');
-                    bar3.classList.add('-rotate-45', '-translate-y-2');
-                } else {
-                    bar1.classList.remove('rotate-45', 'translate-y-2');
-                    bar1.classList.add('rotate-0');
-
-                    bar2.classList.remove('opacity-0');
-                    bar3.classList.remove('-rotate-45', '-translate-y-2');
-                    bar3.classList.add('rotate-0');
-                }
-            });
-
-        </script>
+		</div>
 	</header>
 }

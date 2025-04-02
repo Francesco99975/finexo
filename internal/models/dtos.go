@@ -18,6 +18,46 @@ type SecuritySearchPreview struct {
 	Typology string `json:"typology"`
 }
 
+type SelectedSecurityView struct {
+	Ticker       string `json:"ticker"`
+	Exchange     string `json:"exchange"`
+	Fullname     string `json:"fullname"`
+	Price        string `json:"price"`
+	Typology     string `json:"typology"`
+	Currency     string `json:"currency"`
+	Target       string `json:"target"`
+	Yield        string `json:"yield"`
+	Frequency    string `json:"frequency"`
+	Family       string `json:"family"`
+	ExpenseRatio string `json:"expenseRatio"`
+}
+
+type MonthCalcResults struct {
+	MonthName     string `json:"monthName"`
+	Contributions string `json:"contributions"`
+	MonthlyGain   string `json:"monthlyGain"`
+	CumGain       string `json:"cumGain"`
+	Balance       string `json:"balance"`
+	Return        string `json:"return"`
+	DRIP          string `json:"drip"`
+}
+
+type YearCalcResults struct {
+	TotalYearGains string             `json:"totalYearGains"`
+	CumGain        string             `json:"cumGain"`
+	YoyGrowth      string             `json:"yoyGrowth"`
+	TotalGrowth    string             `json:"totalGrowth"`
+	Balance        string             `json:"balance"`
+	MonthsResults  []MonthCalcResults `json:"monthsResults"`
+}
+
+type CalculationResults struct {
+	Principal          string            `json:"principal"`
+	TotalContributions string            `json:"totalContributions"`
+	FinalBalance       string            `json:"finalBalance"`
+	YearResults        []YearCalcResults `json:"yearResults"`
+}
+
 type SecParams struct {
 	Exchange        []string  `query:"exchange"`
 	Country         []string  `query:"country"`
