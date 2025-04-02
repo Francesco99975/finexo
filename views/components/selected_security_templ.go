@@ -34,7 +34,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView) templ.Compon
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Security Information Display --><div id=\"security-info-indicator\" class=\"htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Security Information Display --><div id=\"security-info-indicator\" class=\"htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 pointer-events-none\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -237,7 +237,43 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView) templ.Compon
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span> Contribution</label><div class=\"relative\"><div class=\"absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none\"><span class=\"text-text-secondary\">$</span></div><input type=\"number\" id=\"contribution\" name=\"contribution\" class=\"block w-full pl-8 p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"1000\" min=\"0\"></div></div><!-- Expected Price Increase (hidden initially, shown when security selected) --><div id=\"price-increase-container\" class=\"hidden\"><label for=\"price-increase\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Price Increase (%)</label> <input type=\"number\" id=\"price-increase\" name=\"price_increase\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"7\" min=\"0\" step=\"0.1\"></div><!-- Expected Yield Increase (hidden initially, shown when security has dividend) --><div id=\"yield-increase-container\" class=\"hidden\"><label for=\"yield-increase\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Yield Increase (%)</label> <input type=\"number\" id=\"yield-increase\" name=\"yield_increase\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"2\" min=\"0\" step=\"0.1\"></div><!-- Compounding Years --><div><label for=\"years\" class=\"block text-sm font-medium text-text-primary mb-1\">Compounding Years</label> <input type=\"number\" id=\"years\" name=\"years\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"10\" min=\"1\" max=\"50\"></div><!-- Submit Button --><div class=\"relative\"><button type=\"submit\" class=\"w-full bg-accent text-white py-2 px-4 rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 transition-colors\">Calculate Results</button><div id=\"calculate-indicator\" class=\"htmx-indicator absolute inset-0 flex items-center justify-center bg-accent bg-opacity-75 rounded-md\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span> Contribution</label><div class=\"relative\"><div class=\"absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none\"><span class=\"text-text-secondary\">$</span></div><input type=\"number\" id=\"contribution\" name=\"contribution\" class=\"block w-full pl-8 p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"1000\" min=\"0\"></div></div><!-- Expected Price Increase  --><div id=\"price-increase-container\"><label for=\"price-increase\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Price Increase (%)</label> <input type=\"number\" id=\"price-increase\" name=\"price_increase\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var15 string
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(selectedSecurity.ProjectedPriceIncrease)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 119, Col: 51}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" min=\"0\" step=\"0.01\"></div>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if selectedSecurity.Yield != "" {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Expected Yield Increase  --> <div id=\"yield-increase-container\"><label for=\"yield-increase\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Yield Increase (%)</label> <input type=\"number\" id=\"yield-increase\" name=\"yield_increase\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var16 string
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(selectedSecurity.ProjectedYieldIncrease)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 133, Col: 52}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" min=\"0\" step=\"0.01\"></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Compounding Years --><div><label for=\"years\" class=\"block text-sm font-medium text-text-primary mb-1\">Compounding Years</label> <input type=\"number\" id=\"years\" name=\"years\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"10\" min=\"1\" max=\"50\"></div><!-- Submit Button --><div class=\"relative mt-10\"><button type=\"submit\" class=\"w-full bg-accent text-white py-2 px-4 rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 transition-colors\">Calculate Results</button><div id=\"calculate-indicator\" class=\"htmx-indicator absolute inset-0 flex items-center justify-center bg-accent bg-opacity-75 rounded-md pointer-events-none\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

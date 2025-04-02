@@ -354,3 +354,54 @@ func SecurityExists(db *sqlx.DB, ticker string, exchange string) bool {
 	}
 	return exists
 }
+
+func GetSecurityView(db *sqlx.DB, tp, input string) (*SelectedSecurityView, error) {
+	// Parse the input into ticker and exchange
+	parts := strings.Split(input, ":")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid input format, expected: ticker:exchange")
+	}
+	ticker, exchange := parts[0], parts[1]
+	tp = strings.ToUpper(tp)
+
+	query := `
+		SELECT
+			s.ticker, s.exchange, s.fullname,
+			s.price, s.typology, s.currency, s.target,
+
+			COALESCE(d.yield, 0),
+    		d.ap , d.pr,
+     		d.frequency,
+
+			COALESCE(e.family, ''), e.er
+
+		FROM securities s
+		LEFT JOIN dividends d ON s.ticker = d.ticker AND s.exchange = d.exchange
+		LEFT JOIN etfs e ON s.ticker = e.ticker AND s.exchange = e.exchange
+		WHERE s.ticker = :ticker AND s.exchange = :exchange AND s.typology = :tp
+	`
+
+	// Execute the query using NamedQuery
+	rows, err := db.NamedQuery(query, map[string]any{
+		"ticker":   ticker,
+		"exchange": exchange,
+		"tp":       tp,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve selected security '%s': %w", input, err)
+	}
+	defer rows.Close()
+
+	// Check if any rows were returned
+	if !rows.Next() {
+		return nil, fmt.Errorf("selected security '%s' not found", input)
+	}
+
+	// Parse result into Security struct
+	var selectedSecurity SelectedSecurityView
+	if err := selectedSecurity.Scan(rows); err != nil {
+		return nil, fmt.Errorf("failed to scan selected security '%s': %w", input, err)
+	}
+
+	return &selectedSecurity, nil
+}

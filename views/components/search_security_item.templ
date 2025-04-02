@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-templ SearchSecurityItems(searchSecurities []models.SecuritySearchPreview) {
+templ SearchSecurityItems(searchSecurities []models.SecuritySearchView) {
 	<div class="max-h-60 overflow-y-auto">
 		for _, searchSecurity := range searchSecurities {
 			<div
 				class="p-3 hover:bg-std/30 cursor-pointer border-b border-std"
-				hx-get={ "/" + strings.ToLower(searchSecurity.Typology) + "/" + searchSecurity.Ticker + ":" + searchSecurity.Exchange }
+				hx-get={ "/select/" + strings.ToLower(searchSecurity.Typology) + "/" + searchSecurity.Ticker + ":" + searchSecurity.Exchange }
 				hx-target="#calculate-form"
 				hx-trigger="click"
 				hx-indicator="#security-info-indicator"

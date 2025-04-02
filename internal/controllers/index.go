@@ -13,7 +13,10 @@ func Index() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		data := models.GetDefaultSite("Home")
 
-		html, err := helpers.RenderHTML(views.Index(data))
+		csrfToken := c.Get("csrf").(string)
+		nonce := c.Get("nonce").(string)
+
+		html, err := helpers.RenderHTML(views.Index(data, csrfToken, nonce))
 
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Could not parse page home")

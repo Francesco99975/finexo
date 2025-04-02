@@ -3,33 +3,149 @@ package models
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Francesco99975/finexo/internal/helpers"
+	"github.com/jmoiron/sqlx"
 )
 
-type SecuritySearchPreview struct {
+type SecuritySearchView struct {
 	Ticker   string `json:"ticker"`
 	Exchange string `json:"exchange"`
 	Title    string `json:"title"` // derived from fullname
 	Price    string `json:"price"`
 	Typology string `json:"typology"`
+	Currency string `json:"currency"`
+}
+
+func (s *SecuritySearchView) Scan(rows *sqlx.Rows) error {
+
+	var price int
+
+	// Scan all fields from the row
+	err := rows.Scan(
+		&s.Ticker, &s.Exchange, &s.Title,
+		&price, &s.Typology, &s.Currency,
+	)
+	if err != nil {
+		return err
+	}
+
+	// Format price
+	priceStr, err := helpers.FormatPrice(float64(price)/100.0, s.Currency)
+	if err != nil {
+		return err
+	}
+
+	s.Price = priceStr
+
+	return nil
 }
 
 type SelectedSecurityView struct {
-	Ticker       string `json:"ticker"`
-	Exchange     string `json:"exchange"`
-	Fullname     string `json:"fullname"`
-	Price        string `json:"price"`
-	Typology     string `json:"typology"`
-	Currency     string `json:"currency"`
-	Target       string `json:"target"`
-	Yield        string `json:"yield"`
-	Frequency    string `json:"frequency"`
-	Family       string `json:"family"`
-	ExpenseRatio string `json:"expenseRatio"`
+	Ticker                 string `json:"ticker"`
+	Exchange               string `json:"exchange"`
+	Fullname               string `json:"fullname"`
+	Price                  string `json:"price"`
+	Typology               string `json:"typology"`
+	Currency               string `json:"currency"`
+	Target                 string `json:"target"`
+	Yield                  string `json:"yield"`
+	AnnualPayout           string `json:"annualPayout"`
+	PayoutRatio            string `json:"payoutRatio"`
+	Frequency              string `json:"frequency"`
+	Family                 string `json:"family"`
+	ExpenseRatio           string `json:"expenseRatio"`
+	ProjectedPriceIncrease string `json:"projectedPriceIncrease"`
+	ProjectedYieldIncrease string `json:"projectedYieldIncrease"`
+}
+
+func (s *SelectedSecurityView) Scan(rows *sqlx.Rows) error {
+
+	var price int
+	var target NullableInt
+	var yield int
+	var annualPayout NullableInt
+	var payoutRatio NullableInt
+	var er NullableInt
+
+	// Scan all fields from the row
+	err := rows.Scan(
+		&s.Ticker, &s.Exchange, &s.Fullname,
+		&price, &s.Typology, &s.Currency, &target,
+		&yield, &annualPayout, &payoutRatio, &s.Frequency, &s.Family, &er,
+	)
+	if err != nil {
+		return err
+	}
+
+	s.Frequency = helpers.Capitalize(s.Frequency)
+
+	// Format price
+	priceStr, err := helpers.FormatPrice(float64(price)/100.0, s.Currency)
+	if err != nil {
+		return err
+	}
+	s.Price = priceStr
+
+	// Format yield
+	s.Yield = fmt.Sprintf("%.2f%%", float64(yield)/100.0)
+
+	if er.Valid {
+		// Format expense ratio
+		s.ExpenseRatio = fmt.Sprintf("%.2f%%", float64(er.Int64)/100.0)
+	} else {
+		s.ExpenseRatio = "N/A"
+	}
+
+	defaultProjectedYears := 10.0
+
+	if target.Valid {
+		targetStr, err := helpers.FormatPrice(float64(target.Int64)/100.0, s.Currency)
+		if err != nil {
+			return err
+		}
+
+		s.Target = targetStr
+
+		if s.Typology != "ETF" {
+			s.ProjectedPriceIncrease = fmt.Sprintf("%.2f", (math.Pow(float64(target.Int64/100)/float64(price/100), 1.0/defaultProjectedYears)-1.0)*100.0)
+		}
+
+	} else {
+		s.Target = "N/A"
+		s.ProjectedPriceIncrease = "0"
+	}
+
+	if annualPayout.Valid && payoutRatio.Valid {
+
+		annualPayoutStr, err := helpers.FormatPrice(float64(annualPayout.Int64)/100.0, s.Currency)
+		if err != nil {
+			return err
+		}
+
+		s.AnnualPayout = annualPayoutStr
+
+		s.PayoutRatio = fmt.Sprintf("%.2f%%", float64(payoutRatio.Int64)/100.0)
+
+		apf := float64(annualPayout.Int64) / 100.0
+		prf := float64(payoutRatio.Int64) / 100.0 / 100.0
+		pricef := float64(price) / 100.0
+
+		eps := apf / prf
+		roe := eps / pricef
+
+		s.ProjectedYieldIncrease = fmt.Sprintf("%.2f", 100.0*(roe*(1-prf)))
+	} else {
+		s.AnnualPayout = "N/A"
+		s.PayoutRatio = "N/A"
+		s.ProjectedYieldIncrease = "0"
+	}
+
+	return nil
 }
 
 type MonthCalcResults struct {

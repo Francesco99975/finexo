@@ -58,6 +58,8 @@ func createRouter(ctx context.Context) *echo.Echo {
 	}))
 
 	web.GET("/", controllers.Index())
+	web.GET("/search", controllers.SearchHtmlSecurities())
+	web.GET("/select/:tp/:id", controllers.Select())
 
 	apigrp := e.Group("/api")
 

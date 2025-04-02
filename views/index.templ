@@ -7,8 +7,8 @@ import (
 	"github.com/Francesco99975/finexo/views/layouts"
 )
 
-templ Index(site models.Site) {
-	@layouts.CoreHTML(site) {
+templ Index(site models.Site, csrf, nonce string) {
+	@layouts.CoreHTML(site, nonce, nil, nil, nil) {
 		<main class="flex-grow container mx-auto px-4 py-8 max-w-4xl transition-colors">
 			<h1 class="text-3xl font-bold text-text-primary mb-6 text-center">Investment Compound Calculator</h1>
 			@components.SearchBar()
@@ -17,11 +17,11 @@ templ Index(site models.Site) {
 				class="space-y-4 mb-8 relative"
 				hx-post="/calculate"
 				hx-swap="afterend"
-				hx-target="#calculation-results"
 				hx-indicator="#calculate-indicator"
 			>
+				<input type="hidden" id="csrf" value={ csrf }/>
 				<!-- Security Information Display -->
-				<div id="security-info-indicator" class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+				<div id="security-info-indicator" class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 pointer-events-none">
 					@icons.SelectedLoading()
 				</div>
 				<!-- Initial state - No security selected -->
@@ -44,6 +44,7 @@ templ Index(site models.Site) {
 				<!-- Calculator Form -->
 				<div class="bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-accent">
 					<h2 class="text-lg font-semibold text-text-primary mb-4">Compound Calculator</h2>
+					<input type="hidden" name="security_id" id="security_id" value=""/>
 					<!-- Principal Amount -->
 					<div>
 						<label for="principal" class="block text-sm font-medium text-text-primary mb-1">Initial Investment</label>
@@ -90,7 +91,7 @@ templ Index(site models.Site) {
 							class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
 							value="7"
 							min="0"
-							step="0.1"
+							step="0.01"
 						/>
 					</div>
 					<!-- Compounding Years -->
@@ -107,14 +108,14 @@ templ Index(site models.Site) {
 						/>
 					</div>
 					<!-- Submit Button -->
-					<div class="relative">
+					<div class="relative mt-10">
 						<button
 							type="submit"
 							class="w-full bg-accent text-white py-2 px-4 rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 transition-colors"
 						>
 							Calculate Results
 						</button>
-						<div id="calculate-indicator" class="htmx-indicator absolute inset-0 flex items-center justify-center bg-accent bg-opacity-75 rounded-md">
+						<div id="calculate-indicator" class="htmx-indicator absolute inset-0 flex items-center justify-center bg-accent bg-opacity-75 rounded-md pointer-events-none">
 							@icons.CalculateLoading()
 						</div>
 					</div>

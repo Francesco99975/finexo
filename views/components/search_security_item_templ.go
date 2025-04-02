@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func SearchSecurityItems(searchSecurities []models.SecuritySearchPreview) templ.Component {
+func SearchSecurityItems(searchSecurities []models.SecuritySearchView) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -44,9 +44,9 @@ func SearchSecurityItems(searchSecurities []models.SecuritySearchPreview) templ.
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs("/" + strings.ToLower(searchSecurity.Typology) + "/" + searchSecurity.Ticker + ":" + searchSecurity.Exchange)
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs("/select/" + strings.ToLower(searchSecurity.Typology) + "/" + searchSecurity.Ticker + ":" + searchSecurity.Exchange)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/search_security_item.templ`, Line: 13, Col: 121}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/search_security_item.templ`, Line: 13, Col: 128}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {

@@ -61,6 +61,11 @@ html {
   scroll-behavior: smooth;
   /* font-family: "JosefineSans", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; */
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.3s ease;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 [x-cloak] { display: none !important; }

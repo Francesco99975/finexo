@@ -1,24 +1,26 @@
-package api
+package controllers
 
 import (
 	"net/http"
 
 	"github.com/Francesco99975/finexo/internal/database"
+	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/models"
+	"github.com/Francesco99975/finexo/views/components"
 	"github.com/labstack/echo/v4"
 )
 
-func SearchSecurities() echo.HandlerFunc {
+func SearchHtmlSecurities() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// Grab seed from params
 		query := c.QueryParam("q")
 		if query == "" {
-			return c.JSON(http.StatusBadRequest, "Missing seach query parameter")
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid query")
 		}
 
 		// Perform the search with trigram similarity ordering
 		rows, err := database.DB.Queryx(`
-		SELECT ticker, exchange, fullname, price, typology
+		SELECT ticker, exchange, fullname, price, typology, currency
 		FROM securities
 		WHERE fullname ILIKE '%' || $1 || '%'
 		   OR ticker ILIKE '%' || $1 || '%'
@@ -26,7 +28,7 @@ func SearchSecurities() echo.HandlerFunc {
 		LIMIT 10`, query)
 
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, models.JSONErrorResponse{Code: http.StatusInternalServerError, Message: "Failed to seach db", Error: err.Error()})
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to seach db")
 		}
 		defer rows.Close()
 
@@ -38,7 +40,13 @@ func SearchSecurities() echo.HandlerFunc {
 			}
 		}
 
-		return c.JSON(http.StatusOK, seachResults)
+		html, err := helpers.RenderHTML(components.SearchSecurityItems(seachResults))
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Could not parse page home")
+		}
+
+		return c.Blob(200, "text/html; charset=utf-8", html)
 
 	}
 }

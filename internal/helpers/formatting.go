@@ -15,10 +15,13 @@ func Capitalize(s string) string {
 	return string(unicode.ToUpper(rune(s[0]))) + s[1:]
 }
 
-func FormatPrice(price float64) string {
+func FormatPrice(price float64, curr string) (string, error) {
 	p := message.NewPrinter(language.English)
-	cur := currency.CAD
-	return p.Sprintf("%v", cur.Amount(price))
+	cur, err := currency.ParseISO(curr)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse currency: %w", err)
+	}
+	return p.Sprintf("%v", cur.Amount(price)), nil
 }
 
 func ParseNumberString(input string) (int64, error) {

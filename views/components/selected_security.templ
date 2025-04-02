@@ -7,7 +7,7 @@ import (
 
 templ SelectedSecurity(selectedSecurity models.SelectedSecurityView) {
 	<!-- Security Information Display -->
-	<div id="security-info-indicator" class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+	<div id="security-info-indicator" class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 pointer-events-none">
 		@icons.SelectedLoading()
 	</div>
 	<div class="bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-primary">
@@ -108,32 +108,34 @@ templ SelectedSecurity(selectedSecurity models.SelectedSecurityView) {
 				/>
 			</div>
 		</div>
-		<!-- Expected Price Increase (hidden initially, shown when security selected) -->
-		<div id="price-increase-container" class="hidden">
+		<!-- Expected Price Increase  -->
+		<div id="price-increase-container">
 			<label for="price-increase" class="block text-sm font-medium text-text-primary mb-1">Expected Annual Price Increase (%)</label>
 			<input
 				type="number"
 				id="price-increase"
 				name="price_increase"
 				class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
-				value="7"
+				value={ selectedSecurity.ProjectedPriceIncrease }
 				min="0"
-				step="0.1"
+				step="0.01"
 			/>
 		</div>
-		<!-- Expected Yield Increase (hidden initially, shown when security has dividend) -->
-		<div id="yield-increase-container" class="hidden">
-			<label for="yield-increase" class="block text-sm font-medium text-text-primary mb-1">Expected Annual Yield Increase (%)</label>
-			<input
-				type="number"
-				id="yield-increase"
-				name="yield_increase"
-				class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
-				value="2"
-				min="0"
-				step="0.1"
-			/>
-		</div>
+		if selectedSecurity.Yield != "" {
+			<!-- Expected Yield Increase  -->
+			<div id="yield-increase-container">
+				<label for="yield-increase" class="block text-sm font-medium text-text-primary mb-1">Expected Annual Yield Increase (%)</label>
+				<input
+					type="number"
+					id="yield-increase"
+					name="yield_increase"
+					class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
+					value={ selectedSecurity.ProjectedYieldIncrease }
+					min="0"
+					step="0.01"
+				/>
+			</div>
+		}
 		<!-- Compounding Years -->
 		<div>
 			<label for="years" class="block text-sm font-medium text-text-primary mb-1">Compounding Years</label>
@@ -148,14 +150,14 @@ templ SelectedSecurity(selectedSecurity models.SelectedSecurityView) {
 			/>
 		</div>
 		<!-- Submit Button -->
-		<div class="relative">
+		<div class="relative mt-10">
 			<button
 				type="submit"
 				class="w-full bg-accent text-white py-2 px-4 rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 transition-colors"
 			>
 				Calculate Results
 			</button>
-			<div id="calculate-indicator" class="htmx-indicator absolute inset-0 flex items-center justify-center bg-accent bg-opacity-75 rounded-md">
+			<div id="calculate-indicator" class="htmx-indicator absolute inset-0 flex items-center justify-center bg-accent bg-opacity-75 rounded-md pointer-events-none">
 				@icons.CalculateLoading()
 			</div>
 		</div>

@@ -1,10 +1,12 @@
 package views
 
-import "github.com/Francesco99975/finexo/internal/models"
-import "github.com/Francesco99975/finexo/views/layouts"
+import (
+	"github.com/Francesco99975/finexo/internal/models"
+	"github.com/Francesco99975/finexo/views/layouts"
+)
 
 templ ServerError(site models.Site, err error) {
-	@layouts.CoreHTML(site) {
+	@layouts.CoreHTML(site, "", nil, nil, nil) {
 		<main class="flex flex-col w-full justify-center items-center text-center h-[80vh]">
 			<h1 class="rounded-sm text-2xl p-2 my-3 bg-red-800 shadow-xl text-white text-center">500 - Server encoutered an error</h1>
 			<p class=" rounded-sm text-2xl p-2 my-3 bg-red-800 shadow-xl text-white w-full text-center tracking-wider">{ err.Error() }</p>

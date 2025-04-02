@@ -6,40 +6,10 @@ import (
 	"strconv"
 )
 
-templ CoreHTML(site models.Site) {
+templ CoreHTML(site models.Site, nonce string, stylesheets []string, seoScripts []string, pageScripts []string) {
 	<!DOCTYPE html>
 	<html lang="en">
-		<head>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>{ site.AppName } | { site.Title }</title>
-			<link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon"/>
-			<meta charset="utf-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-			<meta name="description" content={ site.Metatags.Description }/>
-			<meta name="keywords" content={ site.Metatags.Keywords }/>
-			<meta name="author" content="Francecsco Michele Barranca"/>
-			<meta name="robots" content="index, follow"/>
-			<link rel="canonical" href="https://example.com"/>
-			<script type="application/ld+json">
-                {
-                    "@context": "http://schema.org",
-                    "@type": "Organization",
-                    "name": "GoApp",
-                    "url": "https://example.com",
-                    "logo": "https://example.com/assets/images/logo.webp",
-                    "contactPoint": [
-                        {
-                            "@type": "ContactPoint",
-                            "telephone": "+1",
-                            "contactType": ""
-                        }
-                    ]
-                }
-                </script>
-			<script type="module" src="/assets/dist/index.js"></script>
-			<link rel="stylesheet" href="/assets/dist/index.css"/>
-		</head>
+		@components.SEO(site, nonce, stylesheets, seoScripts)
 		<body class="bg-bg-std min-h-screen transition-colors">
 			// <div id="indicator" class="htmx-indicator w-full h-screen absolute bottom-0 right-0 z-50 flex bg-slate-700 opacity-70 justify-center items-center"><div class="loader"></div></div>
 			<div class="min-h-screen flex flex-col">
@@ -48,5 +18,8 @@ templ CoreHTML(site models.Site) {
 				@components.Footer(strconv.Itoa(site.Year))
 			</div>
 		</body>
+		for _, script := range pageScripts {
+			@components.Script(script, nonce)
+		}
 	</html>
 }
