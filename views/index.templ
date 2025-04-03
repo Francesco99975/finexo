@@ -16,10 +16,10 @@ templ Index(site models.Site, csrf, nonce string) {
 				id="calculate-form"
 				class="space-y-4 mb-8 relative"
 				hx-post="/calculate"
-				hx-swap="afterend"
+				hx-target="#calculation-results"
 				hx-indicator="#calculate-indicator"
 			>
-				<input type="hidden" id="csrf" value={ csrf }/>
+				<input type="hidden" name="_csrf" id="_csrf" value={ csrf }/>
 				<!-- Security Information Display -->
 				<div id="security-info-indicator" class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 pointer-events-none">
 					@icons.SelectedLoading()
@@ -29,11 +29,11 @@ templ Index(site models.Site, csrf, nonce string) {
 					<h2 class="text-lg font-semibold text-text-primary mb-4">No Security Selected</h2>
 					<p class="text-text-secondary mb-4">Search and select a security above or enter a custom interest rate below.</p>
 					<div class="mb-4">
-						<label for="expected_return" class="block text-sm font-medium text-text-primary mb-1">Custom Interest Rate (%)</label>
+						<label for="rate" class="block text-sm font-medium text-text-primary mb-1">Custom Interest Rate (%)</label>
 						<input
 							type="number"
-							id="expected_return"
-							name="expected_return"
+							id="rate"
+							name="rate"
 							class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
 							value="7"
 							min="0"
@@ -42,9 +42,9 @@ templ Index(site models.Site, csrf, nonce string) {
 					</div>
 				</div>
 				<!-- Calculator Form -->
-				<div class="bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-accent">
+				<div class="bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-accent" x-data="{ contributionFrequency: 'monthly' }">
 					<h2 class="text-lg font-semibold text-text-primary mb-4">Compound Calculator</h2>
-					<input type="hidden" name="security_id" id="security_id" value=""/>
+					<input type="hidden" name="sid" id="sid" value="default"/>
 					<!-- Principal Amount -->
 					<div>
 						<label for="principal" class="block text-sm font-medium text-text-primary mb-1">Initial Investment</label>
@@ -62,10 +62,23 @@ templ Index(site models.Site, csrf, nonce string) {
 							/>
 						</div>
 					</div>
+					<!-- Contribution Frequency -->
+					<div>
+						<label for="contribfrquency" class="block text-sm font-medium text-text-primary mb-1">Contribution Frequency</label>
+						<select
+							id="contribfrequency"
+							name="contribfrequency"
+							class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
+							x-model="contributionFrequency"
+						>
+							<option value="monthly">Monthly</option>
+							<option value="quarterly">Quarterly</option>
+						</select>
+					</div>
 					<!-- Contribution Amount -->
 					<div>
 						<label for="contribution" class="block text-sm font-medium text-text-primary mb-1">
-							<span id="contribution-frequency">Annual</span> Contribution
+							<span x-text="contributionFrequency.charAt(0).toUpperCase() + contributionFrequency.slice(1)">Monthly</span> Contribution
 						</label>
 						<div class="relative">
 							<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -83,11 +96,11 @@ templ Index(site models.Site, csrf, nonce string) {
 					</div>
 					<!-- Expected Return Rate (shown when no security selected) -->
 					<div id="expected-return-container">
-						<label for="expected-return" class="block text-sm font-medium text-text-primary mb-1">Expected Annual Return (%)</label>
+						<label for="exreturn" class="block text-sm font-medium text-text-primary mb-1">Expected Annual Return (%)</label>
 						<input
 							type="number"
-							id="expected-return"
-							name="expected_return"
+							id="exreturn"
+							name="exreturn"
 							class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
 							value="7"
 							min="0"
@@ -121,6 +134,10 @@ templ Index(site models.Site, csrf, nonce string) {
 					</div>
 				</div>
 			</form>
+			<!-- Calculation Results (will be populated by server) -->
+			<div id="calculation-results" class="mt-8">
+				<!-- Results will be inserted here by the server -->
+			</div>
 		</main>
 	}
 }

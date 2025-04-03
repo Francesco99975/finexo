@@ -9,12 +9,11 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"fmt"
-	"github.com/Francesco99975/finexo/internal/models"
+	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/views/icons"
 )
 
-func Calculations(results models.CalculationResults) templ.Component {
+func Calculations(results helpers.CalculationResults) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -35,27 +34,27 @@ func Calculations(results models.CalculationResults) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- This represents what the server would return after form submission --><div class=\"bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-success\"><h2 class=\"text-lg font-semibold text-text-primary mb-4\">Calculation Results</h2><!-- Summary Card --><div class=\"bg-gradient-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 rounded-lg p-4 mb-6\"><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\"><div class=\"text-center\"><p class=\"text-sm text-text-secondary\">Initial Investment</p><p class=\"text-xl font-bold text-text-primary\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- This represents what the server would return after form submission --><div class=\"bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-success\"><h2 class=\"text-lg font-semibold text-text-primary mb-4\">Calculation Results</h2><!-- Summary Card --><div class=\"bg-gradient-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 rounded-lg p-4 mb-6\"><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\"><div class=\"text-center\"><p class=\"text-sm text-text-secondary\">Total Contributions</p><p class=\"text-xl font-bold text-text-primary\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(results.Principal)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(results.TotalContributions)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 18, Col: 71}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 17, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><div class=\"text-center\"><p class=\"text-sm text-text-secondary\">Total Contributions</p><p class=\"text-xl font-bold text-text-primary\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><div class=\"text-center\"><p class=\"text-sm text-text-secondary\">Final Profit</p><p class=\"text-xl font-bold text-text-primary\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(results.TotalContributions)
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(results.Profit)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 22, Col: 80}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 21, Col: 68}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -68,7 +67,7 @@ func Calculations(results models.CalculationResults) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(results.FinalBalance)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 26, Col: 69}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 25, Col: 69}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -78,15 +77,15 @@ func Calculations(results models.CalculationResults) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		for index, yearResult := range results.YearResults {
+		for _, yearResult := range results.YearResults {
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Year --> <details class=\"group\"><summary class=\"flex items-center justify-between cursor-pointer bg-bg-std border border-std rounded-lg p-4 hover:bg-std/30 dark:hover:bg-std/10\"><div class=\"flex items-center\"><span class=\"font-medium text-text-primary\">Year ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var5 string
-			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", index))
+			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.YearName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 37, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 36, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -99,7 +98,7 @@ func Calculations(results models.CalculationResults) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.TotalYearGains)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 42, Col: 76}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 41, Col: 76}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -112,7 +111,7 @@ func Calculations(results models.CalculationResults) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.YoyGrowth)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 46, Col: 72}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 45, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -125,7 +124,7 @@ func Calculations(results models.CalculationResults) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.Balance)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 50, Col: 74}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 49, Col: 74}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -139,42 +138,16 @@ func Calculations(results models.CalculationResults) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></summary><div class=\"p-4 border-t border-std\"><!-- Year Summary --><div class=\"grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 bg-gradient-to-r from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10 p-3 rounded-lg\"><div><p class=\"text-xs text-text-secondary\">Total Gain This Year</p><p class=\"font-semibold text-success\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></summary><div class=\"p-4 border-t border-std\"><!-- Year Summary --><div class=\"grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 bg-gradient-to-r from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10 p-3 rounded-lg\"><div><p class=\"text-xs text-text-secondary\">Cumulative Gain</p><p class=\"font-semibold text-success\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 string
-			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.TotalYearGains)
+			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.CumGain)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 60, Col: 73}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 59, Col: 66}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><div><p class=\"text-xs text-text-secondary\">Cumulative Gain</p><p class=\"font-semibold text-success\">")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var10 string
-			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.CumGain)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 64, Col: 66}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><div><p class=\"text-xs text-text-secondary\">YoY Growth</p><p class=\"font-semibold text-success\">+")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var11 string
-			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.YoyGrowth)
-			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 68, Col: 69}
-			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -182,12 +155,25 @@ func Calculations(results models.CalculationResults) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var12 string
-			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.TotalGrowth)
+			var templ_7745c5c3_Var10 string
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.TotalGrowth)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 72, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 63, Col: 71}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><div><p class=\"text-xs text-text-secondary\">Held Shares</p><p class=\"font-semibold text-success\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(yearResult.ShareAmount)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 67, Col: 70}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -200,12 +186,12 @@ func Calculations(results models.CalculationResults) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var13 string
-				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.MonthName)
+				var templ_7745c5c3_Var12 string
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.MonthName)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 92, Col: 100}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 87, Col: 100}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -213,10 +199,23 @@ func Calculations(results models.CalculationResults) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.Contributions)
+				var templ_7745c5c3_Var13 string
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.Contributions)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 93, Col: 115}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 88, Col: 115}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"px-3 py-2 whitespace-nowrap text-sm text-right text-success\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var14 string
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.MonthlyGain)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 89, Col: 108}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 				if templ_7745c5c3_Err != nil {
@@ -227,24 +226,11 @@ func Calculations(results models.CalculationResults) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var15 string
-				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.MonthlyGain)
+				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.CumGain)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 94, Col: 108}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 90, Col: 104}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"px-3 py-2 whitespace-nowrap text-sm text-right text-success\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var16 string
-				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.CumGain)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 95, Col: 104}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -252,12 +238,12 @@ func Calculations(results models.CalculationResults) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var17 string
-				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.Balance)
+				var templ_7745c5c3_Var16 string
+				templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.Balance)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 96, Col: 121}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 91, Col: 121}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -265,12 +251,12 @@ func Calculations(results models.CalculationResults) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var18 string
-				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.Return)
+				var templ_7745c5c3_Var17 string
+				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.Return)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 97, Col: 104}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 92, Col: 104}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -278,12 +264,12 @@ func Calculations(results models.CalculationResults) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				var templ_7745c5c3_Var19 string
-				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.DRIP)
+				var templ_7745c5c3_Var18 string
+				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(monthResult.DRIP)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 100, Col: 31}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/calculation.templ`, Line: 95, Col: 31}
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

@@ -34,7 +34,9 @@ func Select() echo.HandlerFunc {
 
 		log.Infof("Selected security: %+v", selectedSecurity)
 
-		html, err := helpers.RenderHTML(components.SelectedSecurity(*selectedSecurity))
+		csrfToken := c.Get("csrf").(string)
+
+		html, err := helpers.RenderHTML(components.SelectedSecurity(*selectedSecurity, csrfToken))
 
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Could not parse page home")

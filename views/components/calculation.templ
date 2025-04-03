@@ -1,12 +1,11 @@
 package components
 
 import (
-	"fmt"
-	"github.com/Francesco99975/finexo/internal/models"
+	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/views/icons"
 )
 
-templ Calculations(results models.CalculationResults) {
+templ Calculations(results helpers.CalculationResults) {
 	<!-- This represents what the server would return after form submission -->
 	<div class="bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-success">
 		<h2 class="text-lg font-semibold text-text-primary mb-4">Calculation Results</h2>
@@ -14,12 +13,12 @@ templ Calculations(results models.CalculationResults) {
 		<div class="bg-gradient-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 rounded-lg p-4 mb-6">
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 				<div class="text-center">
-					<p class="text-sm text-text-secondary">Initial Investment</p>
-					<p class="text-xl font-bold text-text-primary">{ results.Principal }</p>
-				</div>
-				<div class="text-center">
 					<p class="text-sm text-text-secondary">Total Contributions</p>
 					<p class="text-xl font-bold text-text-primary">{ results.TotalContributions }</p>
+				</div>
+				<div class="text-center">
+					<p class="text-sm text-text-secondary">Final Profit</p>
+					<p class="text-xl font-bold text-text-primary">{ results.Profit }</p>
 				</div>
 				<div class="text-center">
 					<p class="text-sm text-text-secondary">Final Balance</p>
@@ -29,12 +28,12 @@ templ Calculations(results models.CalculationResults) {
 		</div>
 		<!-- Year by Year Breakdown using details tags -->
 		<div class="space-y-3">
-			for index, yearResult := range results.YearResults {
+			for _, yearResult := range results.YearResults {
 				<!-- Year -->
 				<details class="group">
 					<summary class="flex items-center justify-between cursor-pointer bg-bg-std border border-std rounded-lg p-4 hover:bg-std/30 dark:hover:bg-std/10">
 						<div class="flex items-center">
-							<span class="font-medium text-text-primary">Year { fmt.Sprintf("%d", index) }</span>
+							<span class="font-medium text-text-primary">Year { yearResult.YearName }</span>
 						</div>
 						<div class="flex items-center gap-4">
 							<div class="hidden md:block text-right">
@@ -56,20 +55,16 @@ templ Calculations(results models.CalculationResults) {
 						<!-- Year Summary -->
 						<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 bg-gradient-to-r from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10 p-3 rounded-lg">
 							<div>
-								<p class="text-xs text-text-secondary">Total Gain This Year</p>
-								<p class="font-semibold text-success">{ yearResult.TotalYearGains }</p>
-							</div>
-							<div>
 								<p class="text-xs text-text-secondary">Cumulative Gain</p>
 								<p class="font-semibold text-success">{ yearResult.CumGain }</p>
 							</div>
 							<div>
-								<p class="text-xs text-text-secondary">YoY Growth</p>
-								<p class="font-semibold text-success">+{ yearResult.YoyGrowth }</p>
-							</div>
-							<div>
 								<p class="text-xs text-text-secondary">Total Growth</p>
 								<p class="font-semibold text-success">+{ yearResult.TotalGrowth }</p>
+							</div>
+							<div>
+								<p class="text-xs text-text-secondary">Held Shares</p>
+								<p class="font-semibold text-success">{ yearResult.ShareAmount }</p>
 							</div>
 						</div>
 						<!-- Monthly Breakdown -->

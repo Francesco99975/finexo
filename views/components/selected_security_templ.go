@@ -13,7 +13,7 @@ import (
 	"github.com/Francesco99975/finexo/views/icons"
 )
 
-func SelectedSecurity(selectedSecurity models.SelectedSecurityView) templ.Component {
+func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -211,40 +211,40 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView) templ.Compon
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><!-- Calculator Form --><div class=\"bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-accent\"><h2 class=\"text-lg font-semibold text-text-primary mb-4\">Compound Calculator</h2><!-- Hidden input for selected security (will be populated by server) --><input type=\"hidden\" name=\"security_id\" id=\"security_id\" value=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><!-- Calculator Form --><div class=\"bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-accent\" x-data=\"{ contributionFrequency: &#39;monthly&#39; }\"><h2 class=\"text-lg font-semibold text-text-primary mb-4\">Compound Calculator</h2><input type=\"hidden\" name=\"_csrf\" id=\"_csrf\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
-		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(selectedSecurity.Ticker + ":" + selectedSecurity.Exchange)
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(csrf)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 74, Col: 124}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 73, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><!-- Principal Amount --><div><label for=\"principal\" class=\"block text-sm font-medium text-text-primary mb-1\">Initial Investment</label><div class=\"relative\"><div class=\"absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none\"><span class=\"text-text-secondary\">$</span></div><input type=\"number\" id=\"principal\" name=\"principal\" class=\"block w-full pl-8 p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"10000\" min=\"0\"></div></div><!-- Contribution Amount --><div><label for=\"contribution\" class=\"block text-sm font-medium text-text-primary mb-1\"><span id=\"contribution-frequency\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><!-- Hidden input for selected security (will be populated by server) --><input type=\"hidden\" name=\"sid\" id=\"sid\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
-		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(selectedSecurity.Frequency)
+		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(selectedSecurity.Ticker + ":" + selectedSecurity.Exchange)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 95, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 75, Col: 108}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span> Contribution</label><div class=\"relative\"><div class=\"absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none\"><span class=\"text-text-secondary\">$</span></div><input type=\"number\" id=\"contribution\" name=\"contribution\" class=\"block w-full pl-8 p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"1000\" min=\"0\"></div></div><!-- Expected Price Increase  --><div id=\"price-increase-container\"><label for=\"price-increase\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Price Increase (%)</label> <input type=\"number\" id=\"price-increase\" name=\"price_increase\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><!-- Principal Amount --><div><label for=\"principal\" class=\"block text-sm font-medium text-text-primary mb-1\">Initial Investment</label><div class=\"relative\"><div class=\"absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none\"><span class=\"text-text-secondary\">$</span></div><input type=\"number\" id=\"principal\" name=\"principal\" class=\"block w-full pl-8 p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"10000\" min=\"0\"></div></div><!-- Contribution Frequency --><div><label for=\"contribfrequency\" class=\"block text-sm font-medium text-text-primary mb-1\">Contribution Frequency</label> <select id=\"contribfrequency\" name=\"contribfrequency\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" x-model=\"contributionFrequency\"><option value=\"monthly\">Monthly</option> <option value=\"quarterly\">Quarterly</option></select></div><!-- Contribution Amount --><div><label for=\"contribution\" class=\"block text-sm font-medium text-text-primary mb-1\"><span x-text=\"contributionFrequency.charAt(0).toUpperCase() + contributionFrequency.slice(1)\">Monthly</span> Contribution</label><div class=\"relative\"><div class=\"absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none\"><span class=\"text-text-secondary\">$</span></div><input type=\"number\" id=\"contribution\" name=\"contribution\" class=\"block w-full pl-8 p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"1000\" min=\"0\"></div></div><!-- Expected Price Increase  --><div id=\"price-increase-container\"><label for=\"pricemod\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Price Increase (%)</label> <input type=\"number\" id=\"pricemod\" name=\"pricemod\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(selectedSecurity.ProjectedPriceIncrease)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 119, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 133, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
@@ -255,14 +255,14 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView) templ.Compon
 			return templ_7745c5c3_Err
 		}
 		if selectedSecurity.Yield != "" {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Expected Yield Increase  --> <div id=\"yield-increase-container\"><label for=\"yield-increase\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Yield Increase (%)</label> <input type=\"number\" id=\"yield-increase\" name=\"yield_increase\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Expected Yield Increase  --> <div id=\"yield-increase-container\"><label for=\"yieldmod\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Yield Increase (%)</label> <input type=\"number\" id=\"yieldmod\" name=\"yieldmod\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(selectedSecurity.ProjectedYieldIncrease)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 133, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/selected_security.templ`, Line: 147, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {

@@ -5,7 +5,7 @@ import (
 	"github.com/Francesco99975/finexo/views/icons"
 )
 
-templ SelectedSecurity(selectedSecurity models.SelectedSecurityView) {
+templ SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string) {
 	<!-- Security Information Display -->
 	<div id="security-info-indicator" class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 pointer-events-none">
 		@icons.SelectedLoading()
@@ -68,10 +68,11 @@ templ SelectedSecurity(selectedSecurity models.SelectedSecurityView) {
 		}
 	</div>
 	<!-- Calculator Form -->
-	<div class="bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-accent">
+	<div class="bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-accent" x-data="{ contributionFrequency: 'monthly' }">
 		<h2 class="text-lg font-semibold text-text-primary mb-4">Compound Calculator</h2>
+		<input type="hidden" name="_csrf" id="_csrf" value={ csrf }/>
 		<!-- Hidden input for selected security (will be populated by server) -->
-		<input type="hidden" name="security_id" id="security_id" value={ selectedSecurity.Ticker + ":" + selectedSecurity.Exchange }/>
+		<input type="hidden" name="sid" id="sid" value={ selectedSecurity.Ticker + ":" + selectedSecurity.Exchange }/>
 		<!-- Principal Amount -->
 		<div>
 			<label for="principal" class="block text-sm font-medium text-text-primary mb-1">Initial Investment</label>
@@ -89,10 +90,23 @@ templ SelectedSecurity(selectedSecurity models.SelectedSecurityView) {
 				/>
 			</div>
 		</div>
+		<!-- Contribution Frequency -->
+		<div>
+			<label for="contribfrequency" class="block text-sm font-medium text-text-primary mb-1">Contribution Frequency</label>
+			<select
+				id="contribfrequency"
+				name="contribfrequency"
+				class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
+				x-model="contributionFrequency"
+			>
+				<option value="monthly">Monthly</option>
+				<option value="quarterly">Quarterly</option>
+			</select>
+		</div>
 		<!-- Contribution Amount -->
 		<div>
 			<label for="contribution" class="block text-sm font-medium text-text-primary mb-1">
-				<span id="contribution-frequency">{ selectedSecurity.Frequency }</span> Contribution
+				<span x-text="contributionFrequency.charAt(0).toUpperCase() + contributionFrequency.slice(1)">Monthly</span> Contribution
 			</label>
 			<div class="relative">
 				<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -110,11 +124,11 @@ templ SelectedSecurity(selectedSecurity models.SelectedSecurityView) {
 		</div>
 		<!-- Expected Price Increase  -->
 		<div id="price-increase-container">
-			<label for="price-increase" class="block text-sm font-medium text-text-primary mb-1">Expected Annual Price Increase (%)</label>
+			<label for="pricemod" class="block text-sm font-medium text-text-primary mb-1">Expected Annual Price Increase (%)</label>
 			<input
 				type="number"
-				id="price-increase"
-				name="price_increase"
+				id="pricemod"
+				name="pricemod"
 				class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
 				value={ selectedSecurity.ProjectedPriceIncrease }
 				min="0"
@@ -124,11 +138,11 @@ templ SelectedSecurity(selectedSecurity models.SelectedSecurityView) {
 		if selectedSecurity.Yield != "" {
 			<!-- Expected Yield Increase  -->
 			<div id="yield-increase-container">
-				<label for="yield-increase" class="block text-sm font-medium text-text-primary mb-1">Expected Annual Yield Increase (%)</label>
+				<label for="yieldmod" class="block text-sm font-medium text-text-primary mb-1">Expected Annual Yield Increase (%)</label>
 				<input
 					type="number"
-					id="yield-increase"
-					name="yield_increase"
+					id="yieldmod"
+					name="yieldmod"
 					class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
 					value={ selectedSecurity.ProjectedYieldIncrease }
 					min="0"

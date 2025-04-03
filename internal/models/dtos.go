@@ -82,7 +82,11 @@ func (s *SelectedSecurityView) Scan(rows *sqlx.Rows) error {
 		return err
 	}
 
-	s.Frequency = helpers.Capitalize(s.Frequency)
+	if s.Frequency == "unknown" {
+		s.Frequency = "Monthly"
+	} else {
+		s.Frequency = helpers.Capitalize(s.Frequency)
+	}
 
 	// Format price
 	priceStr, err := helpers.FormatPrice(float64(price)/100.0, s.Currency)
@@ -148,30 +152,67 @@ func (s *SelectedSecurityView) Scan(rows *sqlx.Rows) error {
 	return nil
 }
 
-type MonthCalcResults struct {
-	MonthName     string `json:"monthName"`
-	Contributions string `json:"contributions"`
-	MonthlyGain   string `json:"monthlyGain"`
-	CumGain       string `json:"cumGain"`
-	Balance       string `json:"balance"`
-	Return        string `json:"return"`
-	DRIP          string `json:"drip"`
+type CalcInput struct {
+	SID              string  `form:"sid"`
+	Rate             float64 `form:"rate"`
+	Principal        float64 `form:"principal"`
+	ContribFrequency string  `form:"contribfrequency"`
+	Contribution     float64 `form:"contribution"`
+	ExReturn         float64 `form:"exreturn"`
+	PriceMod         float64 `form:"pricemod"`
+	YieldMod         float64 `form:"yieldmod"`
+	Years            int     `form:"years"`
 }
 
-type YearCalcResults struct {
-	TotalYearGains string             `json:"totalYearGains"`
-	CumGain        string             `json:"cumGain"`
-	YoyGrowth      string             `json:"yoyGrowth"`
-	TotalGrowth    string             `json:"totalGrowth"`
-	Balance        string             `json:"balance"`
-	MonthsResults  []MonthCalcResults `json:"monthsResults"`
+type SecurityVars struct {
+	Price        float64
+	Currency     string
+	Yield        float64
+	Frequency    string
+	ExpenseRatio float64
+	PayoutMonth  int
 }
 
-type CalculationResults struct {
-	Principal          string            `json:"principal"`
-	TotalContributions string            `json:"totalContributions"`
-	FinalBalance       string            `json:"finalBalance"`
-	YearResults        []YearCalcResults `json:"yearResults"`
+func (s *SecurityVars) Scan(rows *sqlx.Rows) error {
+
+	var price int
+	var yield int
+	var er NullableInt
+	var payoutDate NullableTime
+
+	// Scan all fields from the row
+	err := rows.Scan(
+		&price, &s.Currency,
+		&yield, &s.Frequency, &er, &payoutDate,
+	)
+	if err != nil {
+		return err
+	}
+
+	if s.Frequency == "unknown" {
+		s.Frequency = "monthly"
+	}
+
+	// Format price
+	s.Price = float64(price) / 100.0
+
+	// Format yield
+	s.Yield = float64(yield) / 100.0
+
+	if er.Valid {
+		// Format expense ratio
+		s.ExpenseRatio = float64(er.Int64)
+	} else {
+		s.ExpenseRatio = 0
+	}
+
+	if payoutDate.Valid {
+		s.PayoutMonth = int(payoutDate.Time.Month())
+	} else {
+		s.PayoutMonth = 0
+	}
+
+	return nil
 }
 
 type SecParams struct {
