@@ -201,7 +201,7 @@ func (s *SecurityVars) Scan(rows *sqlx.Rows) error {
 
 	if er.Valid {
 		// Format expense ratio
-		s.ExpenseRatio = float64(er.Int64)
+		s.ExpenseRatio = float64(er.Int64) / 100
 	} else {
 		s.ExpenseRatio = 0
 	}

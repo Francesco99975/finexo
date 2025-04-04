@@ -2,9 +2,12 @@ package helpers
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/labstack/gommon/log"
 )
 
 // MonthCalcResults stores monthly calculations
@@ -46,7 +49,7 @@ func frequencyToMonths(freq string) int {
 	case "monthly":
 		return 1
 	case "quarterly":
-		return 4
+		return 3
 	case "semi-annual":
 		return 6
 	case "annual":
@@ -63,14 +66,45 @@ func CalculateInvestment(
 	compoundingYears int, payoutMonth int, currency string,
 ) (CalculationResults, error) {
 
+	// Log input parameters
+	log.Debugf("stockPrice: %f", stockPrice)
+	log.Debugf("dividendYield: %f", dividendYield)
+	log.Debugf("expenseRatio: %f", expenseRatio)
+	log.Debugf("principal: %f", principal)
+	log.Debugf("contribution: %f", contribution)
+	log.Debugf("contributionFreqStr: %s", contributionFreqStr)
+	log.Debugf("dividendFreqStr: %s", dividendFreqStr)
+	log.Debugf("annualPriceIncreasePercent: %f", annualPriceIncreasePercent)
+	log.Debugf("annualDividendIncreasePercent: %f", annualDividendIncreasePercent)
+	log.Debugf("compoundingYears: %d", compoundingYears)
+	log.Debugf("payoutMonth: %d", payoutMonth)
+	log.Debugf("currency: %s", currency)
+
 	// ✅ Convert string frequency inputs to numeric values
 	contributionFrequency := frequencyToMonths(contributionFreqStr)
 	dividendFrequency := frequencyToMonths(dividendFreqStr)
 
+	// Calculate number of payments per year
+	mDiv := 0
+	if dividendYield > 0 {
+		mDiv = 12 / dividendFrequency
+	}
+
 	// Convert percentages to decimal
 	annualPriceIncrease := annualPriceIncreasePercent / 100
+	log.Debugf("annualPriceIncrease: %f", annualPriceIncrease)
 	annualDividendIncrease := annualDividendIncreasePercent / 100
-	expenseRate := expenseRatio / 100
+	log.Debugf("annualDividendIncrease: %f", annualDividendIncrease)
+
+	// Initial values
+	totalContributions := principal
+	cumGain := 0.0
+	shares := principal / stockPrice
+	monthlyPriceGrowth := math.Pow(1+annualPriceIncrease, 1.0/12.0)
+	log.Debugf("monthlyPriceGrowth: %f", monthlyPriceGrowth)
+	D0 := ((dividendYield - expenseRatio) / 100) * stockPrice
+	log.Debugf("D0: %f", D0)
+	totalMonth := 0
 
 	// Determine first month (payout month)
 	currentMonth := time.Now().Month()
@@ -84,79 +118,83 @@ func CalculateInvestment(
 
 	currentYear := time.Now().Year()
 
-	// Initial values
-	totalContributions := 0.0
-	totalCumGain := 0.0
-	totalShares := principal / stockPrice
-	currentStockPrice := stockPrice
-	currentDividendYield := dividendYield / 100
-	balance := principal
 	yearResults := []YearCalcResults{}
 
 	// Loop through each year
 	for year := 1; year <= compoundingYears; year++ {
-		yearGains := 0.0
+		// Annual Dividend per share this year
+		Dy := D0 * math.Pow(1+annualDividendIncrease, float64(year-1))
+		log.Debugf("Year %d Dy: %f", year, Dy)
+		dividendPerPeriod := Dy / float64(mDiv)
+		log.Debugf("Year %d dividendPerPeriod: %f", year, dividendPerPeriod)
+
 		monthResults := []MonthCalcResults{}
 
 		// Loop through each month, starting from `startMonth`
-		for month := startMonth; month <= 12; month++ {
+		for month := 1; month <= 12; month++ {
+			totalMonth++
+			monthIndex := (startMonth+totalMonth-2)%12 + 1
+			monthName := time.Month(monthIndex).String()
+
+			stockPriceBegin := stockPrice
+			sharesBefore := shares
+			balanceBeginning := sharesBefore * stockPriceBegin
 			// Check if this month is a contribution month based on frequency
 			contributionThisMonth := 0.0
-			if (month-startMonth)%contributionFrequency == 0 {
+			if (totalMonth-1)%contributionFrequency == 0 {
 				contributionThisMonth = contribution
-			}
-			totalContributions += contributionThisMonth
-
-			// Calculate stock price increase
-			prevStockPrice := currentStockPrice
-			monthlyPriceIncreaseFactor := 1 + (annualPriceIncrease / 12)
-			currentStockPrice *= monthlyPriceIncreaseFactor
-
-			// Calculate dividend yield increase
-			// prevDividendYield := currentDividendYield
-			monthlyDividendIncreaseFactor := 1 + (annualDividendIncrease / 12)
-			currentDividendYield *= monthlyDividendIncreaseFactor
-
-			// Calculate gains from price increase
-			monthlyGainedFromPriceIncrease := totalShares * (currentStockPrice - prevStockPrice)
-
-			// Calculate dividend earnings
-			monthlyGainedFromDividends := 0.0
-			if dividendFrequency > 0 && (month-startMonth)%dividendFrequency == 0 {
-				// Use CURRENT stock price instead of previous
-				monthlyGainedFromDividends = totalShares * currentStockPrice * (currentDividendYield / float64(12/dividendFrequency))
+				sharesBought := contribution / stockPrice
+				shares += sharesBought
+				totalContributions += contribution
 			}
 
-			// Total monthly gain (after expenses)
-			monthlyGain := (monthlyGainedFromPriceIncrease + monthlyGainedFromDividends) * (1 - (expenseRate / 12))
-			totalCumGain += monthlyGain
-			yearGains += monthlyGain
+			dividendReceived := 0.0
+			sharesBoughtDividend := 0.0
+			if dividendYield > 0 && (totalMonth-1)%dividendFrequency == 0 {
+				dividendReceived = shares * dividendPerPeriod
+				log.Debugf("Year %d Month %s dividendReceived: %f", year, monthName, dividendReceived)
+				sharesBoughtDividend = dividendReceived / stockPriceBegin
+				log.Debugf("Year %d Month %s sharesBoughtDividend: %f", year, monthName, sharesBoughtDividend)
+				shares += sharesBoughtDividend
+				log.Debugf("Year %d Month %s shares: %f", year, monthName, shares)
+				cumGain += dividendReceived
+			}
 
-			// Balance update
-			balance += contributionThisMonth + monthlyGain
+			balanceBeforePriceChange := shares * stockPriceBegin
+			log.Debugf("Year %d Month %s balanceBeforePriceChange: %f", year, monthName, balanceBeforePriceChange)
+			stockPrice *= monthlyPriceGrowth
+			log.Debugf("Year %d Month %s stockPrice: %f", year, monthName, stockPrice)
+			balanceEnd := shares * stockPrice
+			log.Debugf("Year %d Month %s balanceEnd: %f", year, monthName, balanceEnd)
+
+			//Calculate Gains
+			monthlyGainsFromDividends := dividendReceived
+			monthlyGainsFromPriceIncrease := balanceEnd - balanceBeforePriceChange
+			log.Debugf("Year %d Month %s monthlyGainsFromDividends: %f", year, monthName, monthlyGainsFromDividends)
+			monthlyGains := monthlyGainsFromDividends + monthlyGainsFromPriceIncrease
+			log.Debugf("Year %d Month %s monthlyGains: %f", year, monthName, monthlyGains)
+			cumGain += monthlyGainsFromPriceIncrease
+			log.Debugf("Year %d Month %s cumGain: %f", year, monthName, cumGain)
 
 			// Calculate return percentage
-			monthlyReturn := 0.0
-			if balance-contributionThisMonth > 0 {
-				monthlyReturn = (monthlyGain / (balance - contributionThisMonth)) * 100
+			returnPercent := 0.0
+			if balanceBeginning > 0 {
+				returnPercent = (balanceEnd - balanceBeginning) / balanceBeginning * 100
 			}
 
 			// Calculate DRIP (Dividend Reinvestment)
-			newShares := 0.0
+
 			DRIPStatus := "N/A"
-			if monthlyGainedFromDividends > 0 {
-				newShares = monthlyGainedFromDividends / currentStockPrice
-				if newShares >= 1 && newShares < 2 {
+
+			if dividendYield > 0 {
+				if sharesBoughtDividend >= 1 && sharesBoughtDividend < 2 {
 					DRIPStatus = "DRIP"
-				} else if newShares >= 2 {
-					DRIPStatus = "DRIPx" + fmt.Sprintf("%.0f", newShares)
+				} else if sharesBoughtDividend >= 2 {
+					DRIPStatus = "DRIPx" + fmt.Sprintf("%.0f", sharesBoughtDividend)
 				} else {
 					DRIPStatus = "NO DRIP"
 				}
 			}
-
-			// Update total shares
-			totalShares += newShares
 
 			// Store month results if it's a contribution or dividend month
 			if contributionThisMonth > 0 || (dividendFrequency > 0 && (month-startMonth)%dividendFrequency == 0) {
@@ -165,60 +203,71 @@ func CalculateInvestment(
 					return CalculationResults{}, err
 				}
 
-				formattedMonthlyGainedFromPriceIncrease, err := FormatPrice(monthlyGainedFromPriceIncrease, currency)
+				formattedMonthlyGainedFromPriceIncrease, err := FormatPrice(monthlyGainsFromPriceIncrease, currency)
 				if err != nil {
 					return CalculationResults{}, err
 				}
-				formattedMonthlyGainedFromDividends, err := FormatPrice(monthlyGainedFromDividends, currency)
+				formattedMonthlyGainedFromDividends, err := FormatPrice(monthlyGainsFromDividends, currency)
 				if err != nil {
 					return CalculationResults{}, err
 				}
-				formattedMonthlyGain, err := FormatPrice(monthlyGain, currency)
+				formattedMonthlyGain, err := FormatPrice(monthlyGains, currency)
 				if err != nil {
 					return CalculationResults{}, err
 				}
-				formattedTotalCumGain, err := FormatPrice(totalCumGain, currency)
+				formattedTotalCumGain, err := FormatPrice(cumGain, currency)
 				if err != nil {
 					return CalculationResults{}, err
 				}
-				formattedBalance, err := FormatPrice(balance, currency)
+				formattedBalance, err := FormatPrice(balanceEnd, currency)
 				if err != nil {
 					return CalculationResults{}, err
 				}
 
 				monthResults = append(monthResults, MonthCalcResults{
-					MonthName:                  time.Month(month).String(),
-					ShareAmount:                fmt.Sprintf("%.2f", totalShares),
+					MonthName:                  monthName,
+					ShareAmount:                fmt.Sprintf("%.2f", shares),
 					Contributions:              formattedTotalContributions,
 					MonthlyGainedFromPriceInc:  formattedMonthlyGainedFromPriceIncrease,
 					MonthlyGainedFromDividends: formattedMonthlyGainedFromDividends,
 					MonthlyGain:                formattedMonthlyGain,
 					CumGain:                    formattedTotalCumGain,
 					Balance:                    formattedBalance,
-					Return:                     fmt.Sprintf("%.2f%%", monthlyReturn),
+					Return:                     fmt.Sprintf("%.2f%%", returnPercent),
 					DRIP:                       DRIPStatus,
 				})
 			}
 		}
 
 		// Yearly metrics
-		cumGain := totalCumGain
+		totalYearGains := 0.0
+
+		for _, monthResult := range monthResults {
+			mg, err := parseFloat(strings.ReplaceAll(monthResult.MonthlyGain[4:], ",", ""))
+			if err != nil {
+				return CalculationResults{}, err
+			}
+			totalYearGains += mg
+		}
+
+		currentYearBalance := shares * stockPrice
+
 		yoyGrowth := 0.0
 		if year > 1 {
 			prevBalance, err := parseFloat(strings.ReplaceAll(yearResults[year-2].Balance[4:], ",", ""))
 			if err != nil {
 				return CalculationResults{}, err
 			}
-			yoyGrowth = ((balance - prevBalance) / prevBalance) * 100
+			yoyGrowth = ((currentYearBalance - prevBalance) / prevBalance) * 100
 		} else {
-			prevBalance := principal
+			prevBalance := totalContributions
 
-			yoyGrowth = ((balance - prevBalance) / prevBalance) * 100
+			yoyGrowth = ((currentYearBalance - prevBalance) / prevBalance) * 100
 		}
 
-		totalGrowth := ((balance - totalContributions) / totalContributions) * 100
+		totalGrowth := (currentYearBalance - totalContributions) / totalContributions * 100
 
-		formattedYearGains, err := FormatPrice(yearGains, currency)
+		formattedYearGains, err := FormatPrice(totalYearGains, currency)
 		if err != nil {
 			return CalculationResults{}, err
 		}
@@ -228,7 +277,7 @@ func CalculateInvestment(
 			return CalculationResults{}, err
 		}
 
-		formattedBalance, err := FormatPrice(balance, currency)
+		formattedBalance, err := FormatPrice(currentYearBalance, currency)
 		if err != nil {
 			return CalculationResults{}, err
 		}
@@ -236,7 +285,7 @@ func CalculateInvestment(
 		// Store yearly results
 		yearResults = append(yearResults, YearCalcResults{
 			YearName:       fmt.Sprintf("Year (%d) - %d", year, currentYear+year-1),
-			ShareAmount:    fmt.Sprintf("%.2f", totalShares),
+			ShareAmount:    fmt.Sprintf("%.2f", shares),
 			TotalYearGains: formattedYearGains,
 			CumGain:        formattedCumGain,
 			YoyGrowth:      fmt.Sprintf("%.2f%%", yoyGrowth),
@@ -251,12 +300,14 @@ func CalculateInvestment(
 		return CalculationResults{}, err
 	}
 
-	formattedFinalBalance, err := FormatPrice(balance, currency)
+	finalBalance := shares * stockPrice
+
+	formattedFinalBalance, err := FormatPrice(finalBalance, currency)
 	if err != nil {
 		return CalculationResults{}, err
 	}
 
-	formattedProfit, err := FormatPrice(balance-totalContributions, currency)
+	formattedProfit, err := FormatPrice(finalBalance-totalContributions, currency)
 	if err != nil {
 		return CalculationResults{}, err
 	}
