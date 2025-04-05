@@ -34,7 +34,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Security Information Display --><div id=\"security-info-indicator\" class=\"htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 pointer-events-none\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -42,7 +42,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-primary\"><div class=\"flex flex-col md:flex-row md:items-center md:justify-between mb-4\"><div><div class=\"flex items-center gap-2 mb-1\"><h2 class=\"text-xl font-bold text-primary\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -55,7 +55,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h2><span class=\"text-sm bg-std text-text-secondary px-2 py-0.5 rounded\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -68,7 +68,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span> <span class=\"text-sm bg-success/20 text-success px-2 py-0.5 rounded\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -81,7 +81,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span> <span class=\"text-sm bg-info/20 text-info px-2 py-0.5 rounded\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 5)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -94,7 +94,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div><h3 class=\"text-base font-medium text-text-secondary hidden md:block\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 6)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -107,7 +107,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h3></div><div class=\"mt-2 md:mt-0 text-right\"><div class=\"text-xl font-bold text-text-primary\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 7)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -120,7 +120,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><div class=\"text-sm text-text-secondary\">1Y Target: <span class=\"font-medium\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 8)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -133,17 +133,17 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div></div></div>")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 9)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if selectedSecurity.Yield != "" || selectedSecurity.Family != "" {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"border-t border-std pt-4\"><div class=\"grid grid-cols-1 md:grid-cols-2 gap-4\">")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 10)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if selectedSecurity.Yield != "" {
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Dividend Information --> <div class=\"bg-success/10 dark:bg-success/5 rounded-lg p-4 border-l-2 border-l-success\"><h3 class=\"font-semibold text-success mb-2\">Dividend Information</h3><div class=\"grid grid-cols-2 gap-2\"><div><div class=\"text-sm text-text-secondary\">Yield</div><div class=\"font-medium text-text-primary\">")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 11)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -156,7 +156,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><div><div class=\"text-sm text-text-secondary\">Distribution</div><div id=\"fh\" class=\"font-medium text-text-primary capitalize\">")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 12)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -169,13 +169,13 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></div></div>")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 13)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
 			if selectedSecurity.Family != "" {
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- ETF Information --> <div class=\"bg-info/10 dark:bg-info/5 rounded-lg p-4 border-l-2 border-l-info\"><h3 class=\"font-semibold text-info mb-2\">ETF Information</h3><div class=\"grid grid-cols-2 gap-2\"><div><div class=\"text-sm text-text-secondary\">Fund Family</div><div class=\"font-medium text-text-primary\">")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 14)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -188,7 +188,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><div><div class=\"text-sm text-text-secondary\">Expense Ratio</div><div class=\"font-medium text-text-primary\">")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 15)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -201,17 +201,17 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></div></div>")
+				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 16)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 17)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><!-- Calculator Form --><div class=\"bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-accent\" x-data=\"{ contributionFrequency: &#39;monthly&#39; }\"><h2 class=\"text-lg font-semibold text-text-primary mb-4\">Compound Calculator</h2><input type=\"hidden\" name=\"_csrf\" id=\"_csrf\" value=\"")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 18)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -224,7 +224,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><!-- Hidden input for selected security (will be populated by server) --><input type=\"hidden\" name=\"sid\" id=\"sid\" value=\"")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 19)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -237,7 +237,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><!-- Principal Amount --><div><label for=\"principal\" class=\"block text-sm font-medium text-text-primary mb-1\">Initial Investment</label><div class=\"relative\"><div class=\"absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none\"><span class=\"text-text-secondary\">$</span></div><input type=\"number\" id=\"principal\" name=\"principal\" class=\"block w-full pl-8 p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"10000\" min=\"0\"></div></div><!-- Contribution Frequency --><div><label for=\"contribfrequency\" class=\"block text-sm font-medium text-text-primary mb-1\">Contribution Frequency</label> <select id=\"contribfrequency\" name=\"contribfrequency\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" x-model=\"contributionFrequency\"><option value=\"monthly\">Monthly</option> <option value=\"quarterly\">Quarterly</option></select></div><!-- Contribution Amount --><div><label for=\"contribution\" class=\"block text-sm font-medium text-text-primary mb-1\"><span x-text=\"contributionFrequency.charAt(0).toUpperCase() + contributionFrequency.slice(1)\">Monthly</span> Contribution</label><div class=\"relative\"><div class=\"absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none\"><span class=\"text-text-secondary\">$</span></div><input type=\"number\" id=\"contribution\" name=\"contribution\" class=\"block w-full pl-8 p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"1000\" min=\"0\"></div></div><!-- Expected Price Increase  --><div id=\"price-increase-container\"><label for=\"pricemod\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Price Increase (%)</label> <input type=\"number\" id=\"pricemod\" name=\"pricemod\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 20)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -250,12 +250,12 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" min=\"0\" step=\"0.01\"></div>")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 21)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if selectedSecurity.Yield != "" {
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Expected Yield Increase  --> <div id=\"yield-increase-container\"><label for=\"yieldmod\" class=\"block text-sm font-medium text-text-primary mb-1\">Expected Annual Yield Increase (%)</label> <input type=\"number\" id=\"yieldmod\" name=\"yieldmod\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 22)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -268,12 +268,12 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" min=\"0\" step=\"0.01\"></div>")
+			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 23)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Compounding Years --><div><label for=\"years\" class=\"block text-sm font-medium text-text-primary mb-1\">Compounding Years</label> <input type=\"number\" id=\"years\" name=\"years\" class=\"block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent\" value=\"10\" min=\"1\" max=\"50\"></div><!-- Submit Button --><div class=\"relative mt-10\"><button type=\"submit\" class=\"w-full bg-accent text-white py-2 px-4 rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 transition-colors\">Calculate Results</button><div id=\"calculate-indicator\" class=\"htmx-indicator absolute inset-0 flex items-center justify-center bg-accent bg-opacity-75 rounded-md pointer-events-none\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 24)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -281,7 +281,7 @@ func SelectedSecurity(selectedSecurity models.SelectedSecurityView, csrf string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div></div>")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 25)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

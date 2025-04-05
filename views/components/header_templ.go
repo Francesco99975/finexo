@@ -31,7 +31,7 @@ func Header() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<header class=\"bg-primary text-white shadow-md py-4\"><div class=\"container mx-auto px-4\"><div class=\"flex items-center justify-between\" x-data=\"{\n    mobileMenuOpen: false,\n    darkMode: localStorage.getItem(&#39;darkMode&#39;) === &#39;true&#39; ? true :\n             (localStorage.getItem(&#39;darkMode&#39;) === &#39;false&#39; ? false :\n             window.matchMedia(&#39;(prefers-color-scheme: dark)&#39;).matches)\n  }\" x-init=\"\n  if(darkMode) {\n    document.documentElement.classList.add(&#39;dark&#39;);\n  } else {\n    document.documentElement.classList.remove(&#39;dark&#39;);\n  }\n\n  $watch(&#39;darkMode&#39;, val =&gt; {\n      localStorage.setItem(&#39;darkMode&#39;, val);\n      if(val) {\n        document.documentElement.classList.add(&#39;dark&#39;);\n      } else {\n        document.documentElement.classList.remove(&#39;dark&#39;);\n      }\n  });\n\n\n  window.matchMedia(&#39;(prefers-color-scheme: dark)&#39;).addEventListener(&#39;change&#39;, e =&gt; {\n      if (localStorage.getItem(&#39;darkMode&#39;) === null) {\n        darkMode = e.matches;\n      }\n    });\n  \"><div class=\"flex items-center\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -39,7 +39,7 @@ func Header() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<h1 class=\"ml-2 text-xl font-bold text-white\">Finexo</h1></div><!-- Desktop Navigation --><div class=\"hidden md:flex items-center space-x-6\"><nav class=\"flex items-center space-x-4\"><a href=\"#\" class=\"text-white hover:text-white/80 font-medium\">Home</a> <a href=\"#\" class=\"text-white hover:text-white/80 font-medium\">About</a> <a href=\"#\" class=\"text-white hover:text-white/80 font-medium\">Calculator</a></nav><!-- Dark Mode Toggle --><button @click=\"darkMode = !darkMode\" class=\"p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50\" aria-label=\"Toggle dark mode\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -51,7 +51,7 @@ func Header() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></div><!-- Mobile Menu Button --><div class=\"flex items-center md:hidden space-x-4\"><!-- Dark Mode Toggle (Mobile) --><button @click=\"darkMode = !darkMode\" class=\"p-2 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50\" aria-label=\"Toggle dark mode\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -63,7 +63,7 @@ func Header() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button><!-- Hamburger Button --><button @click=\"mobileMenuOpen = !mobileMenuOpen\" class=\"p-2 rounded-md hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50\" aria-label=\"Toggle menu\">")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -75,7 +75,7 @@ func Header() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></div><!-- Mobile Menu --><div x-show=\"mobileMenuOpen\" x-transition:enter=\"transition ease-out duration-200\" x-transition:enter-start=\"opacity-0 -translate-y-4\" x-transition:enter-end=\"opacity-100 translate-y-0\" x-transition:leave=\"transition ease-in duration-150\" x-transition:leave-start=\"opacity-100 translate-y-0\" x-transition:leave-end=\"opacity-0 -translate-y-4\" class=\"fixed inset-x-0 top-[60px] bg-primary shadow-lg z-50\" x-cloak><nav class=\"container mx-auto px-4 py-3\"><div class=\"flex flex-col space-y-3\"><a href=\"#\" class=\"text-white hover:bg-white/10 py-2 px-3 rounded-md\">Home</a> <a href=\"#\" class=\"text-white hover:bg-white/10 py-2 px-3 rounded-md\">About</a> <a href=\"#\" class=\"text-white hover:bg-white/10 py-2 px-3 rounded-md\">Calculator</a></div></nav></div></div></div></header>")
+		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 5)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

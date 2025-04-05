@@ -59,6 +59,197 @@ func frequencyToMonths(freq string) int {
 	}
 }
 
+func compoundingPeriodsPerYear(freq string) int {
+	switch freq {
+	case "daily":
+		return 365
+	case "monthly":
+		return 12
+	case "quarterly":
+		return 4
+	case "semi-annual":
+		return 2
+	case "annual":
+		return 1
+	default:
+		return 12 // Default to monthly if unrecognized
+	}
+}
+
+func CalculateHISAInvestment(principal, contribution float64, contributionFreqStr, compoundingFreqStr string, annualInterestRate float64, compoundingYears int, currency string) (CalculationResults, error) {
+	// Convert frequency strings to integers
+	contributionFreq := frequencyToMonths(contributionFreqStr)
+	n := float64(compoundingPeriodsPerYear(compoundingFreqStr))
+
+	monthlyInterestfactor := math.Pow(1+(annualInterestRate/100)/n, n/12)
+
+	balance := principal
+	totalContributions := principal
+	cumGain := 0.0
+	totalMonth := 0
+
+	// Determine first month (payout month)
+	currentMonth := time.Now().Month()
+
+	startMonth := int(currentMonth) + 1 // Default to next month if not provided
+	if startMonth > 12 {
+		startMonth = 1
+	}
+
+	currentYear := time.Now().Year()
+
+	yearResults := []YearCalcResults{}
+
+	// Loop through each year
+	for year := 1; year <= compoundingYears; year++ {
+		monthResults := []MonthCalcResults{}
+
+		// Loop through each month, starting from `startMonth`
+		for month := 1; month <= 12; month++ {
+			totalMonth++
+			monthIndex := (startMonth+totalMonth-2)%12 + 1
+			monthName := time.Month(monthIndex).String()
+
+			balanceBeginning := balance
+
+			contributionThisMonth := 0.0
+			if (totalMonth-1)%contributionFreq == 0 {
+				contributionThisMonth = contribution
+				balance += contributionThisMonth
+				totalContributions += contributionThisMonth
+			}
+
+			interestEarned := balanceBeginning * (monthlyInterestfactor - 1)
+			balance *= monthlyInterestfactor
+			cumGain += interestEarned
+
+			monthlyGain := interestEarned
+
+			returnPercent := 0.0
+			if balanceBeginning > 0 {
+				returnPercent = (balance - balanceBeginning) / balanceBeginning * 100
+			}
+
+			formattedTotalContributions, err := FormatPrice(totalContributions, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+
+			formattedMonthlyGainedFromPriceIncrease, err := FormatPrice(interestEarned, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+
+			formattedMonthlyGain, err := FormatPrice(monthlyGain, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+			formattedTotalCumGain, err := FormatPrice(cumGain, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+			formattedBalance, err := FormatPrice(balance, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+
+			monthResults = append(monthResults, MonthCalcResults{
+				MonthName:                  monthName,
+				ShareAmount:                "N/A",
+				Contributions:              formattedTotalContributions,
+				MonthlyGainedFromPriceInc:  formattedMonthlyGainedFromPriceIncrease,
+				MonthlyGainedFromDividends: "N/A",
+				MonthlyGain:                formattedMonthlyGain,
+				CumGain:                    formattedTotalCumGain,
+				Balance:                    formattedBalance,
+				Return:                     fmt.Sprintf("%.2f%%", returnPercent),
+				DRIP:                       "N/A",
+			})
+
+		}
+
+		totalYearGains := 0.0
+		for _, monthResult := range monthResults {
+			mg, err := parseFloat(strings.ReplaceAll(monthResult.MonthlyGain[4:], ",", ""))
+			if err != nil {
+				return CalculationResults{}, err
+			}
+			totalYearGains += mg
+		}
+
+		currentYearBalance := balance
+
+		yoyGrowth := 0.0
+
+		if year > 1 {
+			prevBalance, err := parseFloat(strings.ReplaceAll(yearResults[year-2].Balance[4:], ",", ""))
+			if err != nil {
+				return CalculationResults{}, err
+			}
+			yoyGrowth = ((currentYearBalance - prevBalance) / prevBalance) * 100
+		} else {
+			prevBalance := totalContributions
+
+			yoyGrowth = ((currentYearBalance - prevBalance) / prevBalance) * 100
+		}
+
+		totalGrowth := (currentYearBalance - totalContributions) / totalContributions * 100
+
+		formattedYearGains, err := FormatPrice(totalYearGains, currency)
+		if err != nil {
+			return CalculationResults{}, err
+		}
+
+		formattedCumGain, err := FormatPrice(cumGain, currency)
+		if err != nil {
+			return CalculationResults{}, err
+		}
+
+		formattedBalance, err := FormatPrice(currentYearBalance, currency)
+		if err != nil {
+			return CalculationResults{}, err
+		}
+
+		// Store yearly results
+		yearResults = append(yearResults, YearCalcResults{
+			YearName:       fmt.Sprintf("Year (%d) - %d", year, currentYear+year-1),
+			ShareAmount:    "N/A",
+			TotalYearGains: formattedYearGains,
+			CumGain:        formattedCumGain,
+			YoyGrowth:      fmt.Sprintf("%.2f%%", yoyGrowth),
+			TotalGrowth:    fmt.Sprintf("%.2f%%", totalGrowth),
+			Balance:        formattedBalance,
+			MonthsResults:  monthResults,
+		})
+
+	}
+
+	finalBalance := balance
+
+	formattedTotalContributions, err := FormatPrice(totalContributions, currency)
+	if err != nil {
+		return CalculationResults{}, err
+	}
+
+	formattedFinalBalance, err := FormatPrice(finalBalance, currency)
+	if err != nil {
+		return CalculationResults{}, err
+	}
+
+	formattedProfit, err := FormatPrice(finalBalance-totalContributions, currency)
+	if err != nil {
+		return CalculationResults{}, err
+	}
+
+	// Return final results
+	return CalculationResults{
+		Profit:             formattedProfit,
+		TotalContributions: formattedTotalContributions,
+		FinalBalance:       formattedFinalBalance,
+		YearResults:        yearResults,
+	}, nil
+}
+
 // Function to calculate investment results
 func CalculateInvestment(
 	stockPrice, dividendYield, expenseRatio, principal, contribution float64,

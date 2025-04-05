@@ -96,7 +96,11 @@ func (s *SelectedSecurityView) Scan(rows *sqlx.Rows) error {
 	s.Price = priceStr
 
 	// Format yield
-	s.Yield = fmt.Sprintf("%.2f%%", float64(yield)/100.0)
+	if yield == 0 {
+		s.Yield = ""
+	} else {
+		s.Yield = fmt.Sprintf("%.2f%%", float64(yield)/100.0)
+	}
 
 	if er.Valid {
 		// Format expense ratio
@@ -153,15 +157,16 @@ func (s *SelectedSecurityView) Scan(rows *sqlx.Rows) error {
 }
 
 type CalcInput struct {
-	SID              string  `form:"sid"`
-	Rate             float64 `form:"rate"`
-	Principal        float64 `form:"principal"`
-	ContribFrequency string  `form:"contribfrequency"`
-	Contribution     float64 `form:"contribution"`
-	ExReturn         float64 `form:"exreturn"`
-	PriceMod         float64 `form:"pricemod"`
-	YieldMod         float64 `form:"yieldmod"`
-	Years            int     `form:"years"`
+	SID                 string  `form:"sid"`
+	Rate                float64 `form:"rate"`
+	CompundingFrequency string  `form:"compoundingfrequency"`
+	Principal           float64 `form:"principal"`
+	Currency            string  `form:"currency"`
+	ContribFrequency    string  `form:"contribfrequency"`
+	Contribution        float64 `form:"contribution"`
+	PriceMod            float64 `form:"pricemod"`
+	YieldMod            float64 `form:"yieldmod"`
+	Years               int     `form:"years"`
 }
 
 type SecurityVars struct {
@@ -197,7 +202,11 @@ func (s *SecurityVars) Scan(rows *sqlx.Rows) error {
 	s.Price = float64(price) / 100.0
 
 	// Format yield
-	s.Yield = float64(yield) / 100.0
+	if yield == 0 {
+		s.Yield = 0
+	} else {
+		s.Yield = float64(yield) / 100.0
+	}
 
 	if er.Valid {
 		// Format expense ratio

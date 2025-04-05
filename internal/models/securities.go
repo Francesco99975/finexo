@@ -371,7 +371,7 @@ func GetSecurityView(db *sqlx.DB, tp, input string) (*SelectedSecurityView, erro
 
 			COALESCE(d.yield, 0),
     		d.ap , d.pr,
-     		d.frequency,
+     		COALESCE(d.frequency, 'unknown'),
 
 			COALESCE(e.family, ''), e.er
 
@@ -419,7 +419,7 @@ func GetSecurityVars(db *sqlx.DB, input string) (*SecurityVars, error) {
 			s.price, s.currency,
 
 			COALESCE(d.yield, 0),
-     		d.frequency,
+     		COALESCE(d.frequency, 'unknown'),
 			e.er, d.pd
 
 		FROM securities s
