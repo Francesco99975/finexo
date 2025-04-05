@@ -1,6 +1,10 @@
 package helpers
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -38,10 +42,55 @@ type YearCalcResults struct {
 
 // CalculationResults stores the final output
 type CalculationResults struct {
+	SID                string            `json:"sid"`
+	Principal          string            `json:"principal"`
+	Rate               string            `json:"rate"`
+	RateFreq           string            `json:"rateFreq"`
+	Currency           string            `json:"currency"`
 	Profit             string            `json:"profit"`
 	TotalContributions string            `json:"totalContributions"`
+	ContribFreq        string            `json:"contribFreq"`
 	FinalBalance       string            `json:"finalBalance"`
 	YearResults        []YearCalcResults `json:"yearResults"`
+}
+
+func DecodeResults(encoded string) (CalculationResults, error) {
+	decoded, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return CalculationResults{}, err
+	}
+
+	gzipped, err := gzip.NewReader(bytes.NewReader(decoded))
+	if err != nil {
+		return CalculationResults{}, err
+	}
+
+	gzipped.Close()
+
+	var results CalculationResults
+	if err := json.NewDecoder(gzipped).Decode(&results); err != nil {
+		return CalculationResults{}, err
+	}
+
+	return results, nil
+}
+
+func (cr CalculationResults) Encoded() (string, error) {
+	jsonBytes, err := json.Marshal(cr)
+	if err != nil {
+		return "", err
+	}
+
+	var gzipped bytes.Buffer
+	gz := gzip.NewWriter(&gzipped)
+	if _, err := gz.Write(jsonBytes); err != nil {
+		return "", err
+	}
+	gz.Close()
+
+	encoded := base64.StdEncoding.EncodeToString(gzipped.Bytes())
+
+	return encoded, nil
 }
 
 func frequencyToMonths(freq string) int {
@@ -241,10 +290,20 @@ func CalculateHISAInvestment(principal, contribution float64, contributionFreqSt
 		return CalculationResults{}, err
 	}
 
+	formattedPrincial, err := FormatPrice(principal, currency)
+	if err != nil {
+		return CalculationResults{}, err
+	}
+
 	// Return final results
 	return CalculationResults{
+		Principal:          formattedPrincial,
+		Rate:               fmt.Sprintf("%.2f%%", annualInterestRate),
+		RateFreq:           compoundingFreqStr,
+		Currency:           currency,
 		Profit:             formattedProfit,
 		TotalContributions: formattedTotalContributions,
+		ContribFreq:        contributionFreqStr,
 		FinalBalance:       formattedFinalBalance,
 		YearResults:        yearResults,
 	}, nil
@@ -486,6 +545,11 @@ func CalculateInvestment(
 		})
 	}
 
+	formattedPrincial, err := FormatPrice(principal, currency)
+	if err != nil {
+		return CalculationResults{}, err
+	}
+
 	formattedTotalContributions, err := FormatPrice(totalContributions, currency)
 	if err != nil {
 		return CalculationResults{}, err
@@ -505,8 +569,13 @@ func CalculateInvestment(
 
 	// Return final results
 	return CalculationResults{
+		Principal:          formattedPrincial,
+		Rate:               fmt.Sprintf("%.2f%%", dividendYield-expenseRatio),
+		RateFreq:           dividendFreqStr,
+		Currency:           currency,
 		Profit:             formattedProfit,
 		TotalContributions: formattedTotalContributions,
+		ContribFreq:        contributionFreqStr,
 		FinalBalance:       formattedFinalBalance,
 		YearResults:        yearResults,
 	}, nil

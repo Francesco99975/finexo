@@ -37,7 +37,14 @@ func CalculateCompound() echo.HandlerFunc {
 			}
 		}
 
-		html, err := helpers.RenderHTML(components.Calculations(results))
+		encodedResults, err := results.Encoded()
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("Could not encode results: %w", err))
+		}
+
+		csrfToken := c.Get("csrf").(string)
+
+		html, err := helpers.RenderHTML(components.Calculations(results, encodedResults, csrfToken))
 
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Could not parse page home")

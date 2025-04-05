@@ -42,12 +42,13 @@ templ Index(site models.Site, csrf, nonce string) {
 					</div>
 					<!-- Compounding Frequency -->
 					<div>
-						<label for="compoundingfrequency" class="block text-sm font-medium text-text-primary mb-1">Contribution Frequency</label>
+						<label for="compoundingfrequency" class="block text-sm font-medium text-text-primary mb-1">Compounding Frequency</label>
 						<select
 							id="compoundingfrequency"
 							name="compoundingfrequency"
 							class="block w-full p-2 border border-std rounded-md focus:ring-accent focus:border-accent"
 						>
+							<option value="daily">Daily</option>
 							<option value="weekly">Weekly</option>
 							<option value="monthly" selected>Monthly</option>
 							<option value="quarterly">Quarterly</option>
