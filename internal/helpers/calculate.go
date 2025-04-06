@@ -135,15 +135,6 @@ func CalculateHISAInvestment(principal, contribution float64, contributionFreqSt
 	balance := principal
 	totalContributions := principal
 	cumGain := 0.0
-	totalMonth := 0
-
-	// Determine first month (payout month)
-	currentMonth := time.Now().Month()
-
-	startMonth := int(currentMonth) + 1 // Default to next month if not provided
-	if startMonth > 12 {
-		startMonth = 1
-	}
 
 	currentYear := time.Now().Year()
 
@@ -152,17 +143,24 @@ func CalculateHISAInvestment(principal, contribution float64, contributionFreqSt
 	// Loop through each year
 	for year := 1; year <= compoundingYears; year++ {
 		monthResults := []MonthCalcResults{}
+		var startMonth int
+		if year == 1 {
+			// For the first year, start from the current month
+			startMonth = int(time.Now().Month())
+		} else {
+			// For subsequent years, start from January
+			startMonth = 1
+		}
 
 		// Loop through each month, starting from `startMonth`
-		for month := 1; month <= 12; month++ {
-			totalMonth++
-			monthIndex := (startMonth+totalMonth-2)%12 + 1
-			monthName := time.Month(monthIndex).String()
+		for month := startMonth; month <= 12; month++ {
+
+			monthName := time.Month(month).String()
 
 			balanceBeginning := balance
 
 			contributionThisMonth := 0.0
-			if (totalMonth-1)%contributionFreq == 0 {
+			if (month-1)%contributionFreq == 0 {
 				contributionThisMonth = contribution
 				balance += contributionThisMonth
 				totalContributions += contributionThisMonth
@@ -356,16 +354,6 @@ func CalculateInvestment(
 	log.Debugf("D0: %f", D0)
 	totalMonth := 0
 
-	// Determine first month (payout month)
-	currentMonth := time.Now().Month()
-	startMonth := payoutMonth
-	if startMonth == 0 {
-		startMonth = int(currentMonth) + 1 // Default to next month if not provided
-		if startMonth > 12 {
-			startMonth = 1
-		}
-	}
-
 	currentYear := time.Now().Year()
 
 	yearResults := []YearCalcResults{}
@@ -380,11 +368,26 @@ func CalculateInvestment(
 
 		monthResults := []MonthCalcResults{}
 
+		var startMonth int
+		if year == 1 {
+			// Determine first month (payout month)
+			currentMonth := time.Now().Month()
+			startMonth = payoutMonth
+			if startMonth == 0 {
+				startMonth = int(currentMonth) + 1 // Default to next month if not provided
+				if startMonth > 12 {
+					startMonth = 1
+				}
+			}
+		} else {
+			// If not the first year, start from January
+			startMonth = 1
+		}
+
 		// Loop through each month, starting from `startMonth`
-		for month := 1; month <= 12; month++ {
+		for month := startMonth; month <= 12; month++ {
 			totalMonth++
-			monthIndex := (startMonth+totalMonth-2)%12 + 1
-			monthName := time.Month(monthIndex).String()
+			monthName := time.Month(month).String()
 
 			stockPriceBegin := stockPrice
 			sharesBefore := shares
@@ -395,7 +398,7 @@ func CalculateInvestment(
 				contributionThisMonth = contribution
 				sharesBought := contribution / stockPrice
 				shares += sharesBought
-				totalContributions += contribution
+				totalContributions += contributionThisMonth
 			}
 
 			dividendReceived := 0.0
@@ -447,46 +450,46 @@ func CalculateInvestment(
 			}
 
 			// Store month results if it's a contribution or dividend month
-			if contributionThisMonth > 0 || (dividendFrequency > 0 && (month-startMonth)%dividendFrequency == 0) {
-				formattedTotalContributions, err := FormatPrice(totalContributions, currency)
-				if err != nil {
-					return CalculationResults{}, err
-				}
 
-				formattedMonthlyGainedFromPriceIncrease, err := FormatPrice(monthlyGainsFromPriceIncrease, currency)
-				if err != nil {
-					return CalculationResults{}, err
-				}
-				formattedMonthlyGainedFromDividends, err := FormatPrice(monthlyGainsFromDividends, currency)
-				if err != nil {
-					return CalculationResults{}, err
-				}
-				formattedMonthlyGain, err := FormatPrice(monthlyGains, currency)
-				if err != nil {
-					return CalculationResults{}, err
-				}
-				formattedTotalCumGain, err := FormatPrice(cumGain, currency)
-				if err != nil {
-					return CalculationResults{}, err
-				}
-				formattedBalance, err := FormatPrice(balanceEnd, currency)
-				if err != nil {
-					return CalculationResults{}, err
-				}
-
-				monthResults = append(monthResults, MonthCalcResults{
-					MonthName:                  monthName,
-					ShareAmount:                fmt.Sprintf("%.2f", shares),
-					Contributions:              formattedTotalContributions,
-					MonthlyGainedFromPriceInc:  formattedMonthlyGainedFromPriceIncrease,
-					MonthlyGainedFromDividends: formattedMonthlyGainedFromDividends,
-					MonthlyGain:                formattedMonthlyGain,
-					CumGain:                    formattedTotalCumGain,
-					Balance:                    formattedBalance,
-					Return:                     fmt.Sprintf("%.2f%%", returnPercent),
-					DRIP:                       DRIPStatus,
-				})
+			formattedTotalContributions, err := FormatPrice(totalContributions, currency)
+			if err != nil {
+				return CalculationResults{}, err
 			}
+
+			formattedMonthlyGainedFromPriceIncrease, err := FormatPrice(monthlyGainsFromPriceIncrease, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+			formattedMonthlyGainedFromDividends, err := FormatPrice(monthlyGainsFromDividends, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+			formattedMonthlyGain, err := FormatPrice(monthlyGains, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+			formattedTotalCumGain, err := FormatPrice(cumGain, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+			formattedBalance, err := FormatPrice(balanceEnd, currency)
+			if err != nil {
+				return CalculationResults{}, err
+			}
+
+			monthResults = append(monthResults, MonthCalcResults{
+				MonthName:                  monthName,
+				ShareAmount:                fmt.Sprintf("%.2f", shares),
+				Contributions:              formattedTotalContributions,
+				MonthlyGainedFromPriceInc:  formattedMonthlyGainedFromPriceIncrease,
+				MonthlyGainedFromDividends: formattedMonthlyGainedFromDividends,
+				MonthlyGain:                formattedMonthlyGain,
+				CumGain:                    formattedTotalCumGain,
+				Balance:                    formattedBalance,
+				Return:                     fmt.Sprintf("%.2f%%", returnPercent),
+				DRIP:                       DRIPStatus,
+			})
+
 		}
 
 		// Yearly metrics
