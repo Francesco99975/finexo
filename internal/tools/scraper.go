@@ -1220,6 +1220,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			return elem.MustText()
 		})
 
+		var gapSums []float64
 		for i := range len(relationsElementsTickersArr) {
 			seed := relationsElementsTickersArr[i]
 			log.Debugf("Scraped top holding: %s", seed)
@@ -1280,6 +1281,17 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 					continue
 				}
 			}
+
+			gap, err := models.GetSecurityTargetGapPercentage(database.DB, relatedTicker+":"+relatedExchangeInfo.Title)
+			if err != nil {
+				log.Warnf("error getting gap for %s:%s - target: %s:%s", relatedTicker, relatedExchangeInfo.Title, security.Ticker, security.Exchange)
+				continue
+			}
+
+			if gap > 0 {
+				gapSums = append(gapSums, (float64(scrapedAllocation)/100)*(float64(gap)/100))
+			}
+
 			etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchangeInfo.Title, scrapedAllocation))
 
 		}
@@ -1287,6 +1299,20 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		log.Debugf("Related securities for %s:%s -> %v", security.Ticker, security.Exchange, etf.RelatedSecurities)
 
 		etf.Holdings = len(etf.RelatedSecurities)
+
+		var increaseToTarget float64
+		for _, gapSum := range gapSums {
+			increaseToTarget += gapSum
+		}
+
+		if increaseToTarget > 0 {
+			security.Target = models.NullableInt{
+				Valid: true,
+				Int64: int64(math.Floor(float64(security.Price) * (1 + increaseToTarget))),
+			}
+
+			log.Debugf("Target for ETF %s:%s -> %d", security.Ticker, security.Exchange, security.Target.Int64)
+		}
 
 		// if scrapedSeekingAlphaData.Holdings != nil {
 		// 	etf.Holdings = *scrapedSeekingAlphaData.Holdings

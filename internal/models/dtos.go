@@ -119,9 +119,7 @@ func (s *SelectedSecurityView) Scan(rows *sqlx.Rows) error {
 
 		s.Target = targetStr
 
-		if s.Typology != "ETF" {
-			s.ProjectedPriceIncrease = fmt.Sprintf("%.2f", (math.Pow(float64(target.Int64/100)/float64(price/100), 1.0/defaultProjectedYears)-1.0)*100.0)
-		}
+		s.ProjectedPriceIncrease = fmt.Sprintf("%.2f", (math.Pow(float64(target.Int64/100)/float64(price/100), 1.0/defaultProjectedYears)-1.0)*100.0)
 
 	} else {
 		s.Target = "N/A"

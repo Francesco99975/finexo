@@ -29,7 +29,7 @@ func DownloadPDF() echo.HandlerFunc {
 
 		defer os.Remove(filename)
 
-		return c.Attachment(filename, "results.pdf")
+		return c.Attachment(filename, filename)
 
 	}
 }

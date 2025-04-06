@@ -451,3 +451,47 @@ func GetSecurityVars(db *sqlx.DB, input string) (*SecurityVars, error) {
 
 	return &vars, nil
 }
+
+func GetSecurityTargetGapPercentage(db *sqlx.DB, input string) (int, error) {
+	// Parse the input into ticker and exchange
+	parts := strings.Split(input, ":")
+	if len(parts) != 2 {
+		return 0, fmt.Errorf("invalid input format, expected: ticker:exchange")
+	}
+	ticker, exchange := parts[0], parts[1]
+
+	query := `
+		SELECT
+			s.price, s.target,
+
+		FROM securities s
+		WHERE s.ticker = :ticker AND s.exchange = :exchange
+	`
+
+	// Execute the query using NamedQuery
+	rows, err := db.NamedQuery(query, map[string]any{
+		"ticker":   ticker,
+		"exchange": exchange,
+	})
+	if err != nil {
+		return 0, fmt.Errorf("failed to retrieve selected security '%s': %w", input, err)
+	}
+	defer rows.Close()
+
+	// Check if any rows were returned
+	if !rows.Next() {
+		return 0, fmt.Errorf("selected security '%s' not found", input)
+	}
+
+	// Parse result into Security struct
+	var price int
+	var target int
+	if err := rows.Scan(&price, &target); err != nil {
+		return 0, fmt.Errorf("failed to scan selected security '%s': %w", input, err)
+	}
+
+	// Calculate the percentage increase from price to target
+	percentageIncrease := (target - price) / price * 100
+
+	return percentageIncrease, nil
+}

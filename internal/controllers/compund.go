@@ -25,7 +25,7 @@ func CalculateCompound() echo.HandlerFunc {
 				return echo.NewHTTPError(http.StatusNotFound, fmt.Errorf("data not found in databse %w", err))
 			}
 
-			results, err = helpers.CalculateInvestment(vars.Price, vars.Yield, vars.ExpenseRatio, input.Principal, input.Contribution, input.ContribFrequency, vars.Frequency, input.PriceMod, input.YieldMod, input.Years, vars.PayoutMonth, vars.Currency)
+			results, err = helpers.CalculateInvestment(input.SID, vars.Price, vars.Yield, vars.ExpenseRatio, input.Principal, input.Contribution, input.ContribFrequency, vars.Frequency, input.PriceMod, input.YieldMod, input.Years, vars.PayoutMonth, vars.Currency)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("Could not calculate investment compound: %w", err))
 			}

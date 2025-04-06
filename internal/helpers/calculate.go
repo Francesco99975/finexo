@@ -43,6 +43,7 @@ type YearCalcResults struct {
 // CalculationResults stores the final output
 type CalculationResults struct {
 	SID                string            `json:"sid"`
+	Price              string            `json:"price"`
 	Principal          string            `json:"principal"`
 	Rate               string            `json:"rate"`
 	RateFreq           string            `json:"rateFreq"`
@@ -297,18 +298,18 @@ func CalculateHISAInvestment(principal, contribution float64, contributionFreqSt
 	return CalculationResults{
 		Principal:          formattedPrincial,
 		Rate:               fmt.Sprintf("%.2f%%", annualInterestRate),
-		RateFreq:           compoundingFreqStr,
+		RateFreq:           Capitalize(compoundingFreqStr),
 		Currency:           currency,
 		Profit:             formattedProfit,
 		TotalContributions: formattedTotalContributions,
-		ContribFreq:        contributionFreqStr,
+		ContribFreq:        Capitalize(contributionFreqStr),
 		FinalBalance:       formattedFinalBalance,
 		YearResults:        yearResults,
 	}, nil
 }
 
 // Function to calculate investment results
-func CalculateInvestment(
+func CalculateInvestment(sid string,
 	stockPrice, dividendYield, expenseRatio, principal, contribution float64,
 	contributionFreqStr, dividendFreqStr string, annualPriceIncreasePercent, annualDividendIncreasePercent float64,
 	compoundingYears int, payoutMonth int, currency string,
@@ -327,6 +328,11 @@ func CalculateInvestment(
 	log.Debugf("compoundingYears: %d", compoundingYears)
 	log.Debugf("payoutMonth: %d", payoutMonth)
 	log.Debugf("currency: %s", currency)
+
+	formattedPrice, err := FormatPrice(stockPrice, currency)
+	if err != nil {
+		return CalculationResults{}, err
+	}
 
 	// ✅ Convert string frequency inputs to numeric values
 	contributionFrequency := frequencyToMonths(contributionFreqStr)
@@ -572,13 +578,15 @@ func CalculateInvestment(
 
 	// Return final results
 	return CalculationResults{
+		SID:                sid,
 		Principal:          formattedPrincial,
+		Price:              formattedPrice,
 		Rate:               fmt.Sprintf("%.2f%%", dividendYield-expenseRatio),
-		RateFreq:           dividendFreqStr,
+		RateFreq:           Capitalize(dividendFreqStr),
 		Currency:           currency,
 		Profit:             formattedProfit,
 		TotalContributions: formattedTotalContributions,
-		ContribFreq:        contributionFreqStr,
+		ContribFreq:        Capitalize(contributionFreqStr),
 		FinalBalance:       formattedFinalBalance,
 		YearResults:        yearResults,
 	}, nil

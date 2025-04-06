@@ -32,7 +32,7 @@ func Select() echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("Could not get security from db: %s", err))
 		}
 
-		log.Infof("Selected security: %+v", selectedSecurity)
+		log.Debugf("Selected security: %+v", selectedSecurity)
 
 		csrfToken := c.Get("csrf").(string)
 

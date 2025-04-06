@@ -30,14 +30,14 @@ templ Calculations(results helpers.CalculationResults, encodedResults, csrf stri
 			<a
 				class="my-7 w-full block text-center bg-green-800 text-white py-2 px-4 rounded-md hover:bg-success/20 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 transition-colors"
 				href={ templ.SafeURL("/csv/" + encodedResults) }
-				download="report.csv"
+				download
 			>
 				Download CSV Report
 			</a>
 			<a
 				class="my-7 block text-center w-full bg-red-800 text-white py-2 px-4 rounded-md hover:bg-red-800/90 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 transition-colors"
 				href={ templ.SafeURL("/pdf/" + encodedResults) }
-				download="report.pdf"
+				download
 			>
 				Download PDF Report
 			</a>
