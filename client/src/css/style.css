@@ -79,3 +79,69 @@ html.dark {
 .htmx-request.htmx-indicator {
   opacity: 1;
 }
+
+
+ /* Animation for the error code */
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+
+  /* Animation for the error code */
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Gradient animation */
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 15s ease infinite;
+  }
+
+
+   /* Custom styles for math formulas */
+  .formula-container {
+    overflow-x: auto;
+    padding: 1rem;
+    margin: 1rem 0;
+    background-color: rgba(var(--color-std), 0.5);
+    border-radius: 0.5rem;
+  }
+
+  /* Table of contents highlight */
+  .toc-link.active {
+    color: rgb(var(--color-primary));
+    font-weight: 600;
+  }

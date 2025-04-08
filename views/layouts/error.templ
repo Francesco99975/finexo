@@ -1,0 +1,47 @@
+package layouts
+
+import (
+	"github.com/Francesco99975/finexo/internal/models"
+	"github.com/Francesco99975/finexo/views/components"
+	"strconv"
+)
+
+templ Error(site models.Site) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head hx-swap="outerHTML">
+			<title>{ site.AppName } | { site.Title }</title>
+			<link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon"/>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+			<meta name="description" content={ site.Metatags.Description }/>
+			<meta name="keywords" content={ site.Metatags.Keywords }/>
+			<meta name="author" content="Kalairendev"/>
+			<meta name="robots" content="index, follow"/>
+			<link rel="robots" href="/assets/robots.txt"/>
+			<link rel="canonical" href="https://finexo.urx.ink"/>
+			@components.Stylesheet("/assets/dist/index.css")
+		</head>
+		<body class="flex flex-col min-h-screen bg-gradient-to-br from-bg-light via-std/50 to-bg-light dark:from-bg-dark dark:via-primary/5 dark:to-bg-dark animate-gradient">
+			// <div id="indicator" class="htmx-indicator w-full h-screen absolute bottom-0 right-0 z-50 flex bg-slate-700 opacity-70 justify-center items-center"><div class="loader"></div></div>
+			<div class="min-h-screen flex flex-col">
+				<!-- Header -->
+				<header class="bg-primary text-white shadow-md py-4">
+					<div class="container mx-auto px-4">
+						<div class="flex items-center">
+							<a href="/" class="flex items-center">
+								<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+								</svg>
+								<h1 class="ml-2 text-xl font-bold text-white">Finexo</h1>
+							</a>
+						</div>
+					</div>
+				</header>
+				{ children... }
+				@components.Footer(strconv.Itoa(site.Year))
+			</div>
+		</body>
+	</html>
+}

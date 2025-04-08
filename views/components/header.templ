@@ -3,7 +3,7 @@ package components
 import "github.com/Francesco99975/finexo/views/icons"
 
 templ Header() {
-	<header class="bg-primary text-white shadow-md py-4">
+	<header class="bg-primary text-white shadow-md py-4" hx-boost="true">
 		<div class="container mx-auto px-4">
 			<div
 				class="flex items-center justify-between"
@@ -44,9 +44,9 @@ templ Header() {
 				<!-- Desktop Navigation -->
 				<div class="hidden md:flex items-center space-x-6">
 					<nav class="flex items-center space-x-4">
-						<a href="#" class="text-white hover:text-white/80 font-medium">Home</a>
-						<a href="#" class="text-white hover:text-white/80 font-medium">About</a>
-						<a href="#" class="text-white hover:text-white/80 font-medium">Calculator</a>
+						<a href="/" class="text-white hover:text-white/80 font-medium">Home</a>
+						<a href="/req" class="text-white hover:text-white/80 font-medium">Request</a>
+						<a href="/about" class="text-white hover:text-white/80 font-medium" hx-boost="false">About</a>
 					</nav>
 					<!-- Dark Mode Toggle -->
 					<button
@@ -93,9 +93,9 @@ templ Header() {
 				>
 					<nav class="container mx-auto px-4 py-3">
 						<div class="flex flex-col space-y-3">
-							<a href="#" class="text-white hover:bg-white/10 py-2 px-3 rounded-md">Home</a>
-							<a href="#" class="text-white hover:bg-white/10 py-2 px-3 rounded-md">About</a>
-							<a href="#" class="text-white hover:bg-white/10 py-2 px-3 rounded-md">Calculator</a>
+							<a href="/" class="text-white hover:bg-white/10 py-2 px-3 rounded-md">Home</a>
+							<a href="/req" class="text-white hover:bg-white/10 py-2 px-3 rounded-md">Request</a>
+							<a href="/about" class="text-white hover:bg-white/10 py-2 px-3 rounded-md" hx-boost="false">About</a>
 						</div>
 					</nav>
 				</div>

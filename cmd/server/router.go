@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -24,6 +25,7 @@ func createRouter(ctx context.Context) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.RemoveTrailingSlash())
+	e.Use(middleware.Gzip())
 	e.GET("/healthcheck", func(c echo.Context) error {
 		time.Sleep(5 * time.Second)
 		return c.JSON(http.StatusOK, "OK")
@@ -58,10 +60,13 @@ func createRouter(ctx context.Context) *echo.Echo {
 	}))
 
 	web.GET("/", controllers.Index())
+	web.GET("/req", controllers.Requests())
+	web.GET("/about", controllers.About())
 	web.GET("/search", controllers.SearchHtmlSecurities())
 	web.GET("/select/:tp/:id", controllers.Select())
 	web.POST("/calculate", controllers.CalculateCompound())
 	web.GET("/pdf/:results", controllers.DownloadPDF())
+	web.GET("/csv/:results", controllers.DownloadCSV())
 
 	apigrp := e.Group("/api")
 
@@ -88,7 +93,7 @@ func createRouter(ctx context.Context) *echo.Echo {
 func serverErrorHandler(err error, c echo.Context) {
 	// Default to internal server error (500)
 	code := http.StatusInternalServerError
-	var message interface{} = "An unexpected error occurred"
+	var message any = "An unexpected error occurred"
 
 	// Check if it's an echo.HTTPError
 	if he, ok := err.(*echo.HTTPError); ok {
@@ -112,11 +117,9 @@ func serverErrorHandler(err error, c echo.Context) {
 		buf := bytes.NewBuffer(nil)
 
 		// Render based on the status code
-		if code >= 500 {
-			_ = views.ServerError(data, err).Render(context.Background(), buf)
-		} else {
-			_ = views.ClientError(data, err).Render(context.Background(), buf)
-		}
+
+		_ = views.Error(data, fmt.Sprintf("%d", code), err).Render(context.Background(), buf)
+
 		// Respond with HTML (default) if the client prefers HTML
 		_ = c.Blob(code, "text/html; charset=utf-8", buf.Bytes())
 	}
