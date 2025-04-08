@@ -1,3 +1,0 @@
-<script type=\"module\" src=\"
-\" nonce=\"
-\"></script>

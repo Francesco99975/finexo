@@ -1,4 +1,0 @@
-<!doctype html><html lang=\"en\">
-<body class=\"bg-bg-std min-h-screen transition-colors\"><div class=\"min-h-screen flex flex-col\">
-</div></body>
-</html>

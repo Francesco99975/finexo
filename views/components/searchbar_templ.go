@@ -31,7 +31,7 @@ func SearchBar() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Search Bar Component --><div class=\"relative mb-8\" x-data=\"{ showResults: false }\"><div class=\"relative\"><div class=\"absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -39,7 +39,7 @@ func SearchBar() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div><input type=\"search\" id=\"security-search\" class=\"block w-full p-4 ps-10 text-sm text-text-primary dark:text-text-primary border border-std rounded-lg bg-std focus:ring-accent focus:border-accent shadow-sm\" placeholder=\"Search for securities (e.g., AAPL, MSFT, GOOGL)...\" hx-get=\"/search\" hx-trigger=\"keyup changed delay:500ms, search\" hx-target=\"#search-results\" hx-indicator=\"#search-indicator\" name=\"q\" @input=\"showResults = true\" @click.away=\"showResults = false\"><div id=\"search-indicator\" class=\"htmx-indicator absolute right-4 top-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -47,7 +47,7 @@ func SearchBar() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div><!-- Search Results Dropdown --><div id=\"search-results\" class=\"absolute z-10 w-full mt-1 bg-std rounded-lg shadow-lg overflow-hidden\" x-show=\"showResults\" x-cloak></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -46,7 +46,7 @@ func Error(site models.Site, code string, err error) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Main Content --> <main class=\"flex-grow container mx-auto px-4 py-8 flex items-center justify-center\"><div class=\"w-full max-w-lg\"><div class=\"bg-white dark:bg-bg-dark rounded-2xl shadow-xl overflow-hidden\"><!-- Top Gradient Bar --><div class=\"h-3 bg-gradient-to-r from-primary via-accent to-primary\"></div><div class=\"p-8 md:p-12\"><!-- Error Code and Icon --><div class=\"flex flex-col md:flex-row items-center justify-center gap-6 mb-8\"><div class=\"relative\"><!-- Animated Background Circle --><div class=\"absolute inset-0 bg-error/10 dark:bg-error/20 rounded-full animate-float\" style=\"width: 120px; height: 120px;\"></div><!-- Error Icon --><div class=\"relative z-10 flex items-center justify-center w-28 h-28 md:w-32 md:h-32 bg-white dark:bg-bg-dark rounded-full border-4 border-error shadow-lg\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-16 w-16 text-error\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle> <line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"></line> <line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"></line></svg></div></div><div class=\"text-center md:text-left\"><h1 class=\"text-5xl md:text-6xl font-bold text-error\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -59,7 +59,7 @@ func Error(site models.Site, code string, err error) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h1><h2 class=\"text-xl md:text-2xl font-semibold text-text-primary mt-2\">\"An Error Occurred\"</h2></div></div><!-- Error Message --><div class=\"text-center mb-10\"><p class=\"text-lg text-text-secondary\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -72,7 +72,7 @@ func Error(site models.Site, code string, err error) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><!-- Home Button --><div class=\"flex justify-center\"><a href=\"/\" class=\"inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg transition-colors shadow-md hover:shadow-lg transform hover:-translate-y-1 duration-200\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5 mr-2\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path> <polyline points=\"9 22 9 12 15 12 15 22\"></polyline></svg> Return to Home</a></div></div></div><!-- Additional Information (Optional) --></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

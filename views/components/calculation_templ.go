@@ -34,7 +34,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- This represents what the server would return after form submission --><div class=\"bg-bg-std rounded-lg shadow-md p-6 border-l-4 border-l-success\"><h2 class=\"text-lg font-semibold text-text-primary mb-4\">Calculation Results</h2><!-- Summary Card --><div class=\"bg-gradient-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 rounded-lg p-4 mb-6\"><div class=\"grid grid-cols-1 md:grid-cols-3 gap-4\"><div class=\"text-center\"><p class=\"text-sm text-text-secondary\">Total Contributions</p><p class=\"text-xl font-bold text-text-primary\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -47,7 +47,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><div class=\"text-center\"><p class=\"text-sm text-text-secondary\">Final Profit</p><p class=\"text-xl font-bold text-text-primary\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -60,7 +60,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 3)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><div class=\"text-center\"><p class=\"text-sm text-text-secondary\">Final Balance</p><p class=\"text-xl font-bold text-primary\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -73,7 +73,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 4)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div></div></div><div class=\"my-10\"><a class=\"my-7 w-full block text-center bg-green-800 text-white py-2 px-4 rounded-md hover:bg-success/20 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 transition-colors\" href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -82,7 +82,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 5)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" download>Download CSV Report</a> <a class=\"my-7 block text-center w-full bg-red-800 text-white py-2 px-4 rounded-md hover:bg-red-800/90 focus:outline-none focus:ring-2 focus:ring-accent/50 focus:ring-offset-2 transition-colors\" href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -91,12 +91,12 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 6)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" download>Download PDF Report</a></div><!-- Year by Year Breakdown using details tags --><div class=\"space-y-3\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		for _, yearResult := range results.YearResults {
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 7)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<!-- Year --> <details class=\"group\"><summary class=\"flex items-center justify-between cursor-pointer bg-bg-std border border-std rounded-lg p-4 hover:bg-std/30 dark:hover:bg-std/10\"><div class=\"flex items-center\"><span class=\"font-medium text-text-primary\">Year ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -109,7 +109,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 8)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div><div class=\"flex items-center gap-4\"><div class=\"hidden md:block text-right\"><span class=\"block text-xs text-text-secondary\">Gain This Year</span> <span class=\"font-semibold text-success\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -122,7 +122,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 9)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div><div class=\"hidden md:block text-right\"><span class=\"block text-xs text-text-secondary\">YoY Growth</span> <span class=\"font-semibold text-success\">+")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -135,7 +135,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 10)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div><div class=\"text-right\"><span class=\"block text-sm text-text-secondary\">Balance</span> <span class=\"font-semibold text-text-primary\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -148,7 +148,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 11)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -156,7 +156,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 12)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></summary><div class=\"p-4 border-t border-std\"><!-- Year Summary --><div class=\"grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 bg-gradient-to-r from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10 p-3 rounded-lg\"><div><p class=\"text-xs text-text-secondary\">Cumulative Gain</p><p class=\"font-semibold text-success\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -169,7 +169,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 13)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><div><p class=\"text-xs text-text-secondary\">Total Growth</p><p class=\"font-semibold text-success\">+")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -182,7 +182,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 14)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><div><p class=\"text-xs text-text-secondary\">Held Shares</p><p class=\"font-semibold text-success\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -195,12 +195,12 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 15)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div></div><!-- Monthly Breakdown --><div class=\"overflow-x-auto\"><table class=\"min-w-full divide-y divide-std\"><thead><tr><th class=\"px-3 py-2 text-left text-xs font-medium text-text-secondary dark:text-text-secondary uppercase tracking-wider\">Month</th><th class=\"px-3 py-2 text-right text-xs font-medium text-text-secondary dark:text-text-secondary uppercase tracking-wider\">Contributions</th><th class=\"px-3 py-2 text-right text-xs font-medium text-text-secondary dark:text-text-secondary uppercase tracking-wider\">Gain This Month</th><th class=\"px-3 py-2 text-right text-xs font-medium text-text-secondary dark:text-text-secondary uppercase tracking-wider\">Cumulative Gain</th><th class=\"px-3 py-2 text-right text-xs font-medium text-text-secondary dark:text-text-secondary uppercase tracking-wider\">Balance</th><th class=\"px-3 py-2 text-right text-xs font-medium text-text-secondary dark:text-text-secondary uppercase tracking-wider\">Monthly Return</th><th class=\"px-3 py-2 text-center text-xs font-medium text-text-secondary dark:text-text-secondary uppercase tracking-wider\">DRIP</th></tr></thead> <tbody class=\"divide-y divide-std bg-bg-std\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			for _, monthResult := range yearResult.MonthsResults {
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 16)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<tr><td class=\"px-3 py-2 whitespace-nowrap text-sm text-text-primary\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -213,7 +213,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 17)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"px-3 py-2 whitespace-nowrap text-sm text-right text-text-primary\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -226,7 +226,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 18)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"px-3 py-2 whitespace-nowrap text-sm text-right text-success\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -239,7 +239,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 19)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"px-3 py-2 whitespace-nowrap text-sm text-right text-success\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -252,7 +252,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 20)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"px-3 py-2 whitespace-nowrap text-sm text-right font-medium text-text-primary\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -265,7 +265,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 21)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"px-3 py-2 whitespace-nowrap text-sm text-right text-success\">+")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -278,7 +278,7 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 22)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</td><td class=\"px-3 py-2 whitespace-nowrap text-sm text-center\"><span class=\"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-std text-text-secondary\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -291,17 +291,17 @@ func Calculations(results helpers.CalculationResults, encodedResults, csrf strin
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 23)
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></td></tr>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 24)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</tbody></table></div></div></details>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 25)
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

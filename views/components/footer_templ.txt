@@ -1,2 +1,0 @@
-<footer class=\"bg-primary text-white border-t border-primary/30 dark:border-primary/50 py-4 mt-8 transition-colors\"><div class=\"container mx-auto px-4 text-center text-sm\"><p>&copy; 
- Finexo. All rights reserved.</p><p class=\"mt-1 text-white/80\">Disclaimer: This calculator is for informational purposes only and does not guarantee future returns.</p></div></footer>

@@ -46,7 +46,7 @@ func ClientError(site models.Site, err error) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 1)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<main class=\"flex flex-col w-full justify-center items-center text-center h-[80vh]\"><h1 class=\"rounded-sm text-2xl p-2 my-3 bg-red-800 shadow-xl text-white text-center\">404 - Page not found</h1><p class=\" rounded-sm text-2xl p-2 my-3 bg-red-800 shadow-xl text-white w-full text-center tracking-wider\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -59,7 +59,7 @@ func ClientError(site models.Site, err error) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templ.WriteWatchModeString(templ_7745c5c3_Buffer, 2)
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p><a class=\"rounded p-2 my-5 text-center italic shadow-2xl bg-green-800 text-white w-3/4 text-xl\" href=\"/\">Go back</a></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
