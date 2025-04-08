@@ -1220,6 +1220,9 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			return elem.MustText()
 		})
 
+		log.Debugf("Scraped top holdings: %v", relationsElementsTickersArr)
+		log.Debugf("Scraped top holdings allocations: %v", relationsElementsAllocationsArr)
+
 		var gapSums []float64
 		for i := range len(relationsElementsTickersArr) {
 			seed := relationsElementsTickersArr[i]
@@ -1284,12 +1287,14 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 			gap, err := models.GetSecurityTargetGapPercentage(database.DB, relatedTicker+":"+relatedExchangeInfo.Title)
 			if err != nil {
-				log.Warnf("error getting gap for %s:%s - target: %s:%s", relatedTicker, relatedExchangeInfo.Title, security.Ticker, security.Exchange)
+				log.Warnf("error getting gap for %s:%s - target: %s:%s -> %v", relatedTicker, relatedExchangeInfo.Title, security.Ticker, security.Exchange, err)
 				continue
 			}
 
+			log.Debugf("Gap for %s:%s -> %.2f", relatedTicker, relatedExchangeInfo.Title, gap)
+
 			if gap > 0 {
-				gapSums = append(gapSums, (float64(scrapedAllocation)/100)*(float64(gap)/100))
+				gapSums = append(gapSums, (float64(scrapedAllocation)/100)*(gap/100))
 			}
 
 			etf.RelatedSecurities = append(etf.RelatedSecurities, fmt.Sprintf("%s:%s:%d", relatedTicker, relatedExchangeInfo.Title, scrapedAllocation))
@@ -1300,18 +1305,22 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 		etf.Holdings = len(etf.RelatedSecurities)
 
+		log.Debugf("GapSums  for %s:%s -> %v", security.Ticker, security.Exchange, gapSums)
+
 		var increaseToTarget float64
 		for _, gapSum := range gapSums {
 			increaseToTarget += gapSum
 		}
 
+		log.Debugf("Increase to target for %s:%s -> %.2f", security.Ticker, security.Exchange, increaseToTarget)
+
 		if increaseToTarget > 0 {
-			security.Target = models.NullableInt{
+			etf.Target = models.NullableInt{
 				Valid: true,
-				Int64: int64(math.Floor(float64(security.Price) * (1 + increaseToTarget))),
+				Int64: int64(math.Floor(float64(security.Price) * (1 + (increaseToTarget / 100)))),
 			}
 
-			log.Debugf("Target for ETF %s:%s -> %d", security.Ticker, security.Exchange, security.Target.Int64)
+			log.Debugf("Target for ETF %s:%s -> %d", security.Ticker, security.Exchange, etf.Target.Int64)
 		}
 
 		// if scrapedSeekingAlphaData.Holdings != nil {

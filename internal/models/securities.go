@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/labstack/gommon/log"
 )
 
 type Security struct {
@@ -452,7 +453,7 @@ func GetSecurityVars(db *sqlx.DB, input string) (*SecurityVars, error) {
 	return &vars, nil
 }
 
-func GetSecurityTargetGapPercentage(db *sqlx.DB, input string) (int, error) {
+func GetSecurityTargetGapPercentage(db *sqlx.DB, input string) (float64, error) {
 	// Parse the input into ticker and exchange
 	parts := strings.Split(input, ":")
 	if len(parts) != 2 {
@@ -462,7 +463,7 @@ func GetSecurityTargetGapPercentage(db *sqlx.DB, input string) (int, error) {
 
 	query := `
 		SELECT
-			s.price, s.target,
+			s.price, s.target
 
 		FROM securities s
 		WHERE s.ticker = :ticker AND s.exchange = :exchange
@@ -490,8 +491,10 @@ func GetSecurityTargetGapPercentage(db *sqlx.DB, input string) (int, error) {
 		return 0, fmt.Errorf("failed to scan selected security '%s': %w", input, err)
 	}
 
+	log.Debugf("price: %d, target: %d", price, target)
+
 	// Calculate the percentage increase from price to target
-	percentageIncrease := (target - price) / price * 100
+	percentageIncrease := float64(target-price) / float64(price) * 100
 
 	return percentageIncrease, nil
 }
