@@ -8,6 +8,7 @@ import (
 	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/tools"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 func DownloadPDF() echo.HandlerFunc {
@@ -19,11 +20,13 @@ func DownloadPDF() echo.HandlerFunc {
 
 		results, err := helpers.DecodeResults(encodedResults)
 		if err != nil {
+			log.Errorf("Could not decode results: %w", err)
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("Could not decode results: %w", err))
 		}
 
 		filename, err := tools.GeneratePDF(results)
 		if err != nil {
+			log.Errorf("Could not generate PDF: %w", err)
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("Could not generate PDF: %w", err))
 		}
 

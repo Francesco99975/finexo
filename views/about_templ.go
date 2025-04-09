@@ -46,14 +46,14 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<main class=\"flex-grow container mx-auto px-4 py-8 transition-colors\"><div class=\"flex flex-col lg:flex-row gap-8\"><!-- Sidebar / Table of Contents --><div class=\"lg:w-1/4\"><div class=\"sticky top-24\"><div class=\"bg-bg-std rounded-lg shadow-md p-5 mb-6\"><h2 class=\"text-lg font-bold text-text-primary mb-4\">Table of Contents</h2><nav class=\"space-y-2\"><a href=\"#introduction\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;introduction&#39;}\">Introduction</a> <a href=\"#inputs\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;inputs&#39;}\">Understanding Inputs</a> <a href=\"#security-calculations\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;security-calculations&#39;}\">Security Growth Calculations</a> <a href=\"#hisa-calculations\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;hisa-calculations&#39;}\">HISA Calculations</a> <a href=\"#outputs\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;outputs&#39;}\">Understanding Outputs</a> <a href=\"#examples\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;examples&#39;}\">Calculation Examples</a></nav></div></div></div><!-- Main Content Area --><div class=\"lg:w-3/4\"><div class=\"bg-bg-std rounded-lg shadow-md overflow-hidden\"><!-- Hero Banner --><div class=\"bg-gradient-to-r from-primary to-accent animate-gradient text-white p-8 md:p-12\"><h1 class=\"text-3xl md:text-4xl font-bold mb-4\">About the Calculator</h1><p class=\"text-lg md:text-xl opacity-90\">Understanding the mathematics behind compound growth and investment returns</p></div><div class=\"p-6 md:p-8 space-y-12\"><!-- Introduction Section --><section id=\"introduction\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle> <line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"></line> <line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"></line></svg> Introduction</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>The Finexo Investment Compound Calculator is a powerful tool designed to help you visualize and understand the potential growth of your investments over time. Whether you're investing in securities like stocks and ETFs or placing your money in a High Interest Savings Account (HISA), our calculator provides detailed projections based on mathematical principles of compound growth.</p><p>This calculator takes into account various factors that influence investment growth, including:</p><ul class=\"list-disc pl-6 space-y-2 mt-4\"><li><strong>Initial investment amount</strong> - Your starting capital</li><li><strong>Regular contributions</strong> - Additional money you add on a periodic basis</li><li><strong>Expected returns</strong> - Projected growth rates for your investments</li><li><strong>Dividend reinvestment</strong> - The power of automatically reinvesting dividends</li><li><strong>Time horizon</strong> - The length of your investment period</li></ul><p>The calculator uses established financial formulas to project how your investments might grow over time, providing both summary results and detailed year-by-year and month-by-month breakdowns.</p></div></section><!-- Inputs Section --><section id=\"inputs\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"22 12 18 12 15 21 9 3 6 12 2 12\"></polyline></svg> Understanding Inputs</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>The calculator requires several inputs to generate accurate projections. Here's a detailed explanation of each input field and why it matters:</p><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Initial Investment</h3><p><strong>What it is:</strong> The amount of money you start with at the beginning of your investment journey.</p><p><strong>Why it matters:</strong> Your initial investment serves as the foundation for future growth. A larger initial investment typically leads to greater absolute returns over time due to the power of compounding.</p><p><strong>Example:</strong> $10,000 invested as a lump sum at the beginning of your investment period.</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Contribution Frequency</h3><p><strong>What it is:</strong> How often you plan to add more money to your investment.</p><p><strong>Why it matters:</strong> Regular contributions accelerate the growth of your investment and can significantly impact your final balance. Different contribution schedules (monthly vs. quarterly) can affect your results.</p><p><strong>Options:</strong> Monthly or Quarterly contributions.</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Contribution Amount</h3><p><strong>What it is:</strong> The amount of money you plan to add to your investment on a regular basis.</p><p><strong>Why it matters:</strong> Consistent contributions leverage dollar-cost averaging and compound growth over time. Even small regular contributions can have a substantial impact on your final balance.</p><p><strong>Example:</strong> $500 added every month to your investment.</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Expected Return Rate</h3><p><strong>What it is:</strong> The annual percentage rate at which you expect your investment to grow.</p><p><strong>Why it matters:</strong> This is one of the most significant factors affecting long-term growth. Even small differences in return rates can lead to dramatically different outcomes over long periods.</p><p><strong>Example:</strong> 7% annual return for a diversified stock portfolio (historical average for the S&P 500 is around 7-10% before inflation).</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Security-Specific Inputs</h3><p><strong>What they are:</strong> When you select a specific security (like a stock or ETF), you'll see additional inputs:</p><ul class=\"list-disc pl-6 space-y-2 mt-2\"><li><strong>Expected Price Increase (%):</strong> Annual growth rate of the security's price</li><li><strong>Expected Yield Increase (%):</strong> Annual growth rate of the dividend yield (if applicable)</li></ul><p><strong>Why they matter:</strong> These allow for more precise modeling of specific securities, accounting for both price appreciation and dividend growth.</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Compounding Years</h3><p><strong>What it is:</strong> The number of years you plan to keep your money invested.</p><p><strong>Why it matters:</strong> Time is perhaps the most powerful factor in compound growth. Longer investment horizons allow compounding to work its magic, potentially leading to exponential growth in later years.</p><p><strong>Example:</strong> 10, 20, or 30 years until retirement or another financial goal.</p></div></div></section><section id=\"security-calculations\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"></rect> <line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"></line> <line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"></line></svg> Security Growth Calculations</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>The calculator simulates the growth of an investment over time, accounting for stock price appreciation, regular contributions, dividend payments, and reinvestment of dividends. Calculations are performed monthly for precision.</p><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Stock Price Appreciation</h3><p>The stock price grows monthly based on the annual price increase rate \\( r_p \\). The monthly growth factor is:</p><div class=\"formula-container\"><p>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<main class=\"flex-grow container mx-auto px-4 py-8 transition-colors\"><div class=\"flex flex-col lg:flex-row gap-8\"><!-- Sidebar / Table of Contents --><div class=\"lg:w-1/4\"><div class=\"sticky top-24\"><div class=\"bg-bg-std rounded-lg shadow-md p-5 mb-6\"><h2 class=\"text-lg font-bold text-text-primary mb-4\">Table of Contents</h2><nav class=\"space-y-2\"><a href=\"#introduction\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;introduction&#39;}\">Introduction</a> <a href=\"#inputs\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;inputs&#39;}\">Understanding Inputs</a> <a href=\"#security-calculations\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;security-calculations&#39;}\">Security Growth Calculations</a> <a href=\"#hisa-calculations\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;hisa-calculations&#39;}\">HISA Calculations</a> <a href=\"#outputs\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;outputs&#39;}\">Understanding Outputs</a> <a href=\"#examples\" class=\"block text-text-secondary hover:text-primary transition-colors toc-link\" :class=\"{&#39;active&#39;: activeSection === &#39;examples&#39;}\">Calculation Examples</a></nav></div></div></div><!-- Main Content Area --><div class=\"lg:w-3/4\"><div class=\"bg-bg-std rounded-lg shadow-md overflow-hidden\"><!-- Hero Banner --><div class=\"bg-gradient-to-r from-primary to-accent animate-gradient text-white p-8 md:p-12\"><h1 class=\"text-3xl md:text-4xl font-bold mb-4\">About the Calculator</h1><p class=\"text-lg md:text-xl opacity-90\">Understanding the mathematics behind compound growth and investment returns</p></div><div class=\"p-6 md:p-8 space-y-12\"><!-- Introduction Section --><section id=\"introduction\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"></circle> <line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"></line> <line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"></line></svg> Introduction</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>The Finexo Investment Compound Calculator is a powerful tool designed to help you visualize and understand the potential growth of your investments over time. Whether you're investing in securities like stocks and ETFs or placing your money in a High Interest Savings Account (HISA), our calculator provides detailed projections based on mathematical principles of compound growth.</p><p>This calculator takes into account various factors that influence investment growth, including:</p><ul class=\"list-disc pl-6 space-y-2 mt-4\"><li><strong>Initial investment amount</strong> - Your starting capital</li><li><strong>Regular contributions</strong> - Additional money you add on a periodic basis</li><li><strong>Expected returns</strong> - Projected growth rates for your investments</li><li><strong>Dividend reinvestment</strong> - The power of automatically reinvesting dividends</li><li><strong>Time horizon</strong> - The length of your investment period</li></ul><p>The calculator uses established financial formulas to project how your investments might grow over time, providing both summary results and detailed year-by-year and month-by-month breakdowns.</p></div></section><!-- Inputs Section --><section id=\"inputs\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"22 12 18 12 15 21 9 3 6 12 2 12\"></polyline></svg> Understanding Inputs</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>The calculator requires several inputs to generate accurate projections. Here's a detailed explanation of each input field and why it matters:</p><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Initial Investment</h3><p><strong>What it is:</strong> The amount of money you start with at the beginning of your investment journey.</p><p><strong>Why it matters:</strong> Your initial investment serves as the foundation for future growth. A larger initial investment typically leads to greater absolute returns over time due to the power of compounding.</p><p><strong>Example:</strong> $10,000 invested as a lump sum at the beginning of your investment period.</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Contribution Frequency</h3><p><strong>What it is:</strong> How often you plan to add more money to your investment.</p><p><strong>Why it matters:</strong> Regular contributions accelerate the growth of your investment and can significantly impact your final balance. Different contribution schedules (monthly vs. quarterly) can affect your results.</p><p><strong>Options:</strong> Monthly or Quarterly contributions.</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Contribution Amount</h3><p><strong>What it is:</strong> The amount of money you plan to add to your investment on a regular basis.</p><p><strong>Why it matters:</strong> Consistent contributions leverage dollar-cost averaging and compound growth over time. Even small regular contributions can have a substantial impact on your final balance.</p><p><strong>Example:</strong> $500 added every month to your investment.</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Security-Specific Inputs</h3><p><strong>What they are:</strong> When you select a specific security (like a stock or ETF), you'll see additional inputs:</p><ul class=\"list-disc pl-6 space-y-2 mt-2\"><li><strong>Expected Price Increase (%):</strong> Annual growth rate of the security's price</li><li><strong>Expected Yield Increase (%):</strong> Annual growth rate of the dividend yield (if applicable)</li></ul><p><strong>Why they matter:</strong> These allow for more precise modeling of specific securities, accounting for both price appreciation and dividend growth.</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h3 class=\"text-xl font-semibold text-text-primary mb-4\">Compounding Years</h3><p><strong>What it is:</strong> The number of years you plan to keep your money invested.</p><p><strong>Why it matters:</strong> Time is perhaps the most powerful factor in compound growth. Longer investment horizons allow compounding to work its magic, potentially leading to exponential growth in later years.</p><p><strong>Example:</strong> 10, 20, or 30 years until retirement or another financial goal.</p></div></div></section><section id=\"security-calculations\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"></rect> <line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"></line> <line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"></line></svg> Security Growth Calculations</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>The calculator simulates the growth of an investment over time, accounting for stock price appreciation, regular contributions, dividend payments, and reinvestment of dividends. Calculations are performed monthly for precision.</p><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Stock Price Appreciation</h3><p>The stock price grows monthly based on the annual price increase rate \\( r_p \\). The monthly growth factor is:</p><div class=\"formula-container\"><p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ r_m = (1 + r_p)^{1/12} \]`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 125, Col: 45}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 119, Col: 45}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -66,7 +66,7 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ \text{shares bought} = \frac{C}{P_{t-1}} \]`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 134, Col: 63}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 128, Col: 63}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -79,7 +79,7 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ D_y = D_0 \times (1 + r_d)^{y-1} \]`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 139, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 133, Col: 55}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -92,7 +92,7 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(`where \( D_0 = \left( \frac{\text{dividendYield} - \text{expenseRatio}}{100} \right) \times P_0 \), and \( r_d \) is the dividend increase rate. The dividend per period is:`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 141, Col: 188}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 135, Col: 188}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
@@ -105,7 +105,7 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ D_{\text{period}} = \frac{D_y \times f_d}{12} \]`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 143, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 137, Col: 68}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -118,7 +118,7 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ \text{shares bought} = \frac{S_t \times D_{\text{period}}}{P_{t-1}} \]`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 147, Col: 90}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 141, Col: 90}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -131,7 +131,7 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(`, \( S_{t-1} \).`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 152, Col: 93}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 146, Col: 93}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -144,7 +144,7 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(`, adds shares: \( S_t = S_{t-1} + \frac{C}{P_{t-1}} \).`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 153, Col: 113}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 147, Col: 113}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -157,7 +157,7 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(`, calculates dividend: \( D_{\text{received}} = S_t \times D_{\text{period}} \), and reinvests: \( S_t = S_t + \frac{D_{\text{received}}}{P_{t-1}} \).`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 154, Col: 204}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 148, Col: 204}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -170,52 +170,221 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(`: \( P_t = P_{t-1} \times r_m \).`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 155, Col: 87}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 149, Col: 87}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li><li><strong>Calculates balance</strong>: \\( B_t = S_t \\times P_t \\).</li></ol><div class=\"bg-primary/10 dark:bg-primary/20 border-l-4 border-primary p-4 rounded-r-lg my-6\"><h4 class=\"font-semibold text-text-primary\">Special Considerations</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li><strong>Expense Ratio</strong>: Subtracted from dividend yield to adjust dividends.</li><li><strong>Dividend Frequency</strong>: Adjusted per period (e.g., monthly, quarterly).</li><li><strong>Contribution Frequency</strong>: Varies when contributions are added.</li></ul></div></div></section><!-- HISA Calculations Section --><section id=\"hisa-calculations\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 3h16a2 2 0 0 1 2 2v6a10 10 0 0 1-10 10A10 10 0 0 1 2 11V5a2 2 0 0 1 2-2z\"></path> <polyline points=\"8 10 12 14 16 10\"></polyline></svg> HISA Calculations</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>High Interest Savings Accounts (HISAs) offer a different investment approach compared to securities. The calculations for HISAs focus on interest compounding, typically with more predictable returns but generally lower growth potential.</p><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">HISA Compound Interest Formula</h3><p>For a HISA with regular contributions, we use the following formula:</p><div class=\"formula-container\"><p>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li><li><strong>Calculates balance</strong>: \\( B_t = S_t \\times P_t \\).</li></ol><div class=\"bg-primary/10 dark:bg-primary/20 border-l-4 border-primary p-4 rounded-r-lg my-6\"><h4 class=\"font-semibold text-text-primary\">Special Considerations</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li><strong>Expense Ratio</strong>: Subtracted from dividend yield to adjust dividends.</li><li><strong>Dividend Frequency</strong>: Adjusted per period (e.g., monthly, quarterly).</li><li><strong>Contribution Frequency</strong>: Varies when contributions are added.</li></ul></div></div></section><!-- HISA Calculations Section --><section id=\"hisa-calculations\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"></rect> <line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"></line> <line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"></line></svg> HISA Growth Calculations</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>The calculator simulates the growth of a High-Interest Savings Account (HISA) with regular contributions and compound interest, calculated monthly over a specified period.</p><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Monthly Interest Factor</h3><p>The interest compounds monthly based on the annual rate \\( r \\) and compounding periods per year \\( n \\):</p><div class=\"formula-container text-center my-4\"><p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var13 string
-			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ FV = P(1 + \frac{r}{n})^{nt} + PMT \times \frac{(1 + \frac{r}{n})^{nt} - 1}{\frac{r}{n}} \]`)
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ r_m = \left(1 + \frac{r}{n}\right)^{n/12} \]`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 182, Col: 111}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 177, Col: 64}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><p>Where:</p><ul class=\"list-disc pl-6 space-y-1\"><li>$$FV$$ = Future Value</li><li>$$P$$ = Principal (initial deposit)</li><li>$$r$$ = Annual interest rate (as a decimal)</li><li>$$n$$ = Number of compounding periods per year</li><li>$$t$$ = Time (in years)</li><li>$$PMT$$ = Regular deposit amount</li></ul><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Compounding Frequency</h3><p>HISAs can have different compounding frequencies, which affect the growth of your savings:</p><div class=\"overflow-x-auto\"><table class=\"min-w-full border-collapse\"><thead><tr><th class=\"border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary\">Compounding Frequency</th><th class=\"border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary\">Description</th><th class=\"border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary\">Effect on Growth</th></tr></thead> <tbody><tr><td class=\"border border-std px-4 py-2\">Daily</td><td class=\"border border-std px-4 py-2\">Interest calculated and added to principal each day</td><td class=\"border border-std px-4 py-2\">Highest effective yield</td></tr><tr><td class=\"border border-std px-4 py-2\">Monthly</td><td class=\"border border-std px-4 py-2\">Interest calculated and added to principal each month</td><td class=\"border border-std px-4 py-2\">Common for most HISAs</td></tr><tr><td class=\"border border-std px-4 py-2\">Quarterly</td><td class=\"border border-std px-4 py-2\">Interest calculated and added to principal every 3 months</td><td class=\"border border-std px-4 py-2\">Lower effective yield than monthly</td></tr><tr><td class=\"border border-std px-4 py-2\">Annually</td><td class=\"border border-std px-4 py-2\">Interest calculated and added to principal once per year</td><td class=\"border border-std px-4 py-2\">Lowest effective yield</td></tr></tbody></table></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Monthly Calculation Process for HISAs</h3><p>Our calculator performs these steps for each month when calculating HISA growth:</p><ol class=\"list-decimal pl-6 space-y-2 mt-2\"><li><strong>Start with current balance</strong> from the previous month</li><li><strong>Add the monthly contribution</strong> (if applicable)</li><li><strong>Calculate interest for the month</strong>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Monthly Balance Update</h3><p>For each month \\( t \\), the balance updates as:</p><div class=\"formula-container text-center my-4\"><p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var14 string
-			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(`: $$ \text{Monthly Interest} = \text{Balance} \times \frac{r}{12} $$`)
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ B_t = (B_{t-1} + \delta_c(t) \cdot C) \cdot r_m \]`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 233, Col: 135}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 182, Col: 70}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li><li><strong>Add interest to the balance</strong></li><li><strong>Update the balance</strong> for the next month</li></ol><div class=\"bg-info/10 dark:bg-info/20 border-l-4 border-info p-4 rounded-r-lg my-6\"><h4 class=\"font-semibold text-text-primary\">Tax Considerations</h4><p class=\"mt-2\">Unlike some investment accounts, interest earned in a HISA is typically taxable in the year it's earned. The calculator shows pre-tax growth. Your actual after-tax returns may be lower depending on your tax bracket.</p></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Comparing HISA vs. Securities</h3><p>The key differences in calculation approach:</p><div class=\"overflow-x-auto\"><table class=\"min-w-full border-collapse\"><thead><tr><th class=\"border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary\">Feature</th><th class=\"border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary\">HISA</th><th class=\"border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary\">Securities (Stocks/ETFs)</th></tr></thead> <tbody><tr><td class=\"border border-std px-4 py-2\">Return Mechanism</td><td class=\"border border-std px-4 py-2\">Interest payments</td><td class=\"border border-std px-4 py-2\">Price appreciation + dividends</td></tr><tr><td class=\"border border-std px-4 py-2\">Return Predictability</td><td class=\"border border-std px-4 py-2\">Highly predictable (fixed rate)</td><td class=\"border border-std px-4 py-2\">Variable (market-dependent)</td></tr><tr><td class=\"border border-std px-4 py-2\">Growth Potential</td><td class=\"border border-std px-4 py-2\">Generally lower</td><td class=\"border border-std px-4 py-2\">Generally higher (with higher risk)</td></tr></tbody></table></div></div></section><!-- Outputs Section --><section id=\"outputs\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"></polyline> <polyline points=\"16 7 22 7 22 13\"></polyline></svg> Understanding Outputs</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>The calculator provides comprehensive results that help you understand how your investment might grow over time. Here's a detailed explanation of the output elements:</p><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Summary Results</h3><p>At the top of the results, you'll see a summary that includes:</p><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Initial Investment</h4><p>The amount you started with at the beginning of your investment period.</p><p class=\"text-sm text-text-secondary\">Example: $10,000.00</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Total Contributions</h4><p>The sum of all additional money you contributed over the investment period.</p><p class=\"text-sm text-text-secondary\">Example: $40,000.00 (from $1,000 monthly contributions over 10 years)</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Final Balance</h4><p>The total value of your investment at the end of the specified time period.</p><p class=\"text-sm text-text-secondary\">Example: $88,685.39</p></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Year-by-Year Breakdown</h3><p>The calculator provides detailed information for each year of your investment:</p><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Year Summary</h4><ul class=\"list-disc pl-6 space-y-2 mt-2\"><li><strong>Gain This Year:</strong> The amount your investment grew during this specific year</li><li><strong>YoY Growth:</strong> The percentage growth compared to the previous year's ending balance</li><li><strong>Cumulative Gain:</strong> The total growth since the beginning of your investment</li><li><strong>Total Growth:</strong> The percentage growth compared to your total invested capital</li><li><strong>Year-End Balance:</strong> The total value of your investment at the end of this year</li></ul></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Monthly Breakdown</h3><p>For each year, you can expand to see a month-by-month breakdown with these details:</p><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Monthly Details</h4><ul class=\"list-disc pl-6 space-y-2 mt-2\"><li><strong>Month:</strong> The specific month in the investment timeline</li><li><strong>Contributions:</strong> The running total of all money invested (initial + contributions)</li><li><strong>Gain This Month:</strong> The amount your investment grew during this specific month</li><li><strong>Cumulative Gain:</strong> The total growth since the beginning of your investment</li><li><strong>Balance:</strong> The total value of your investment at the end of this month</li><li><strong>Total Return:</strong> The percentage growth compared to your total invested capital</li><li><strong>DRIP:</strong> Indicates whether dividend reinvestment occurred this month</li></ul></div><div class=\"bg-warning/10 dark:bg-warning/20 border-l-4 border-warning p-4 rounded-r-lg my-6\"><h4 class=\"font-semibold text-text-primary\">Important Note on Projections</h4><p class=\"mt-2\">All results are projections based on the inputs provided and historical averages. Actual investment performance may vary significantly due to market conditions, economic factors, and other variables. Past performance is not indicative of future results.</p></div></div></section><!-- Examples Section --><section id=\"examples\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect> <line x1=\"3\" y1=\"9\" x2=\"21\" y2=\"9\"></line> <line x1=\"9\" y1=\"21\" x2=\"9\" y2=\"9\"></line></svg> Calculation Examples</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>Let's walk through some practical examples to illustrate how the calculator works:</p><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Example 1: Stock Investment with Monthly Contributions</h3><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Inputs:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Investment: $10,000</li><li>Monthly Contribution: $500</li><li>Expected Annual Return: 8%</li><li>Investment Period: 10 years</li></ul><h4 class=\"font-semibold text-text-primary mt-4\">Calculation:</h4><p class=\"mt-2\">Using the compound growth formula with monthly contributions:</p><p>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><p>Where \\( \\delta_c(t) = 1 \\) if \\( (t-1) \\mod f_c = 0 \\) (contribution month), else 0.</p><p>Interest earned this month:</p><div class=\"formula-container text-center my-4\"><p>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var15 string
-			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ FV = 10,000 \times (1 + \frac{0.08}{12})^{12 \times 10} + 500 \times \frac{(1 + \frac{0.08}{12})^{12 \times 10} - 1}{\frac{0.08}{12}} \]`)
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ I_t = B_{t-1} \cdot (r_m - 1) \]`)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 356, Col: 156}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 187, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p><h4 class=\"font-semibold text-text-primary mt-4\">Results:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Investment: $10,000.00</li><li>Total Contributions: $60,000.00</li><li>Final Balance: $112,415.92</li><li>Total Gain: $42,415.92</li><li>Total Return: 60.6%</li></ul></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Example 2: Dividend Stock with DRIP</h3><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Inputs:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Investment: $10,000</li><li>Quarterly Contribution: $1,000</li><li>Expected Price Increase: 6% annually</li><li>Dividend Yield: 3% annually</li><li>Dividend Frequency: Quarterly</li><li>DRIP: Enabled</li><li>Investment Period: 10 years</li></ul><h4 class=\"font-semibold text-text-primary mt-4\">Results:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Investment: $10,000.00</li><li>Total Contributions: $40,000.00</li><li>Final Balance: $88,685.39</li><li>Total Gain: $38,685.39</li><li>Total Return: 77.4%</li></ul><p class=\"mt-4\">Note how the combined effect of price appreciation (6%) and dividend yield (3%) creates a powerful compounding effect, especially with dividend reinvestment.</p></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Example 3: HISA Comparison</h3><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Inputs:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Deposit: $10,000</li><li>Monthly Deposit: $500</li><li>Interest Rate: 4% annually</li><li>Compounding Frequency: Monthly</li><li>Time Period: 10 years</li></ul><h4 class=\"font-semibold text-text-primary mt-4\">Results:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Deposit: $10,000.00</li><li>Total Deposits: $60,000.00</li><li>Final Balance: $82,324.87</li><li>Total Interest Earned: $12,324.87</li><li>Total Return: 17.6%</li></ul><p class=\"mt-4\">Notice that while the HISA provides more predictable returns, the overall growth is lower than the stock investment examples, illustrating the trade-off between risk and potential return.</p></div></div></section><!-- Conclusion --><section class=\"mt-12 bg-gradient-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 rounded-lg p-6\"><h2 class=\"text-xl font-bold text-text-primary mb-4\">Ready to Calculate Your Investment Growth?</h2><p class=\"text-text-secondary mb-6\">Use our calculator to see how your investments could grow over time with the power of compound returns.</p><a href=\"/\" class=\"inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5 mr-2\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"></rect> <line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"></line> <line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"></line></svg> Go to Calculator</a></section></div></div></div></div></main>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><p>Cumulative gain:</p><div class=\"formula-container text-center my-4\"><p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var16 string
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ G_t = G_{t-1} + I_t \]`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 191, Col: 42}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Simplified Total Balance with Geometric Series</h3><p>For monthly compounding (\\( n = 12 \\)) and monthly contributions (\\( f_c = 1 \\)) starting from month 1, the contribution component is a geometric series:</p><div class=\"formula-container text-center my-4\"><p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var17 string
+			templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ FV_{\text{contributions}} = C \cdot \sum_{k=0}^{12N-1} \left(1 + \frac{r}{12}\right)^{12N - k} \]`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 196, Col: 117}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><p>Rewritten as a geometric series sum:</p><div class=\"formula-container text-center my-4\"><p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var18 string
+			templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ = C \cdot \left(1 + \frac{r}{12}\right) \cdot \frac{\left(1 + \frac{r}{12}\right)^{12N} - 1}{\frac{r}{12}} \]`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 200, Col: 129}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><p>Simplified:</p><div class=\"formula-container text-center my-4\"><p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var19 string
+			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ = C \cdot \frac{\left(1 + \frac{r}{12}\right)^{12N} - 1}{\frac{r}{12}} \]`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 204, Col: 93}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><p>Total balance after \\( 12N \\) months:</p><div class=\"formula-container text-center my-4\"><p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var20 string
+			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ B_{12N} = P_0 \cdot (1 + \frac{r}{12})^{12N} + C \cdot \frac{\left(1 + \frac{r}{12}\right)^{12N} - 1}{\frac{r}{12}} \]`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 208, Col: 138}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Monthly Calculation Process</h3><p>For each month \\( t \\), the calculator:</p><ol class=\"list-decimal pl-6 space-y-2 mt-2\"><li><strong>Starts with the previous balance</strong>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var21 string
+			templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(`, \( B_{t-1} \).`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 213, Col: 83}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li><li><strong>If a contribution month</strong>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var22 string
+			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(`, adds \( C \): \( B_t = B_{t-1} + C \).`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 214, Col: 98}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li><li><strong>Applies interest</strong>: \\( B_t = B_t \\cdot r_m \\).</li><li><strong>Calculates interest earned</strong>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var23 string
+			templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(`: \( I_t = B_{t-1} \cdot (r_m - 1) \).`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 216, Col: 99}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li><li><strong>Updates cumulative gain</strong>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var24 string
+			templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(`: \( G_t = G_{t-1} + I_t \).`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 217, Col: 86}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</li></ol><div class=\"bg-primary/10 dark:bg-primary/20 border-l-4 border-primary p-4 rounded-r-lg my-6\"><h4 class=\"font-semibold text-text-primary\">Special Considerations</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li><strong>Flexible Compounding</strong>: Adjusts based on \\( n \\) (e.g., daily, monthly).</li><li><strong>Contribution Frequency</strong>: Varies when \\( C \\) is added (e.g., monthly, quarterly).</li><li><strong>Start Month</strong>: Begins from the current month in year 1.</li></ul></div></div></section><!-- Outputs Section --><section id=\"outputs\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"22 7 13.5 15.5 8.5 10.5 2 17\"></polyline> <polyline points=\"16 7 22 7 22 13\"></polyline></svg> Understanding Outputs</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>The calculator provides comprehensive results that help you understand how your investment might grow over time. Here's a detailed explanation of the output elements:</p><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Summary Results</h3><p>At the top of the results, you'll see a summary that includes:</p><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Initial Investment</h4><p>The amount you started with at the beginning of your investment period.</p><p class=\"text-sm text-text-secondary\">Example: $10,000.00</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Total Contributions</h4><p>The sum of all additional money you contributed over the investment period.</p><p class=\"text-sm text-text-secondary\">Example: $40,000.00 (from $1,000 monthly contributions over 10 years)</p></div><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Final Balance</h4><p>The total value of your investment at the end of the specified time period.</p><p class=\"text-sm text-text-secondary\">Example: $88,685.39</p></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Year-by-Year Breakdown</h3><p>The calculator provides detailed information for each year of your investment:</p><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Year Summary</h4><ul class=\"list-disc pl-6 space-y-2 mt-2\"><li><strong>Gain This Year:</strong> The amount your investment grew during this specific year</li><li><strong>YoY Growth:</strong> The percentage growth compared to the previous year's ending balance</li><li><strong>Cumulative Gain:</strong> The total growth since the beginning of your investment</li><li><strong>Total Growth:</strong> The percentage growth compared to your total invested capital</li><li><strong>Year-End Balance:</strong> The total value of your investment at the end of this year</li></ul></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Monthly Breakdown</h3><p>For each year, you can expand to see a month-by-month breakdown with these details:</p><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Monthly Details</h4><ul class=\"list-disc pl-6 space-y-2 mt-2\"><li><strong>Month:</strong> The specific month in the investment timeline</li><li><strong>Contributions:</strong> The running total of all money invested (initial + contributions)</li><li><strong>Gain This Month:</strong> The amount your investment grew during this specific month</li><li><strong>Cumulative Gain:</strong> The total growth since the beginning of your investment</li><li><strong>Balance:</strong> The total value of your investment at the end of this month</li><li><strong>Total Return:</strong> The percentage growth compared to your total invested capital</li><li><strong>DRIP:</strong> Indicates whether dividend reinvestment occurred this month</li></ul></div><div class=\"bg-warning/10 dark:bg-warning/20 border-l-4 border-warning p-4 rounded-r-lg my-6\"><h4 class=\"font-semibold text-text-primary\">Important Note on Projections</h4><p class=\"mt-2\">All results are projections based on the inputs provided and historical averages. Actual investment performance may vary significantly due to market conditions, economic factors, and other variables. Past performance is not indicative of future results.</p></div></div></section><!-- Examples Section --><section id=\"examples\" class=\"scroll-mt-24\"><h2 class=\"text-2xl font-bold text-text-primary mb-4 flex items-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-6 w-6 mr-2 text-primary\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"></rect> <line x1=\"3\" y1=\"9\" x2=\"21\" y2=\"9\"></line> <line x1=\"9\" y1=\"21\" x2=\"9\" y2=\"9\"></line></svg> Calculation Examples</h2><div class=\"prose prose-lg dark:prose-invert max-w-none\"><p>Here are practical examples demonstrating how the investment calculators work:</p><!-- CalculateInvestment Examples --><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Example 1: Stock Investment with Monthly Contributions and Dividends</h3><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Inputs:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Investment: $10,000</li><li>Stock Price: $50</li><li>Monthly Contribution: $500</li><li>Dividend Yield: 3% annually</li><li>Expense Ratio: 0.5%</li><li>Annual Price Increase: 6%</li><li>Annual Dividend Increase: 2%</li><li>Contribution Frequency: Monthly</li><li>Dividend Frequency: Quarterly</li><li>Investment Period: 10 years</li></ul><h4 class=\"font-semibold text-text-primary mt-4\">Calculation:</h4><p class=\"mt-2\">Using the iterative monthly process (simplified final balance approximation):</p><p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var25 string
+			templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ B_{120} \approx P_0 \cdot (1 + 0.06)^{10} + C \cdot \frac{(1 + 0.06)^{10} - 1}{0.06} + \text{dividend reinvestment} \]`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 319, Col: 138}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p><h4 class=\"font-semibold text-text-primary mt-4\">Results:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Investment: $10,000.00</li><li>Total Contributions: $60,000.00</li><li>Final Balance: $103,287.45</li><li>Total Gain: $33,287.45</li><li>Total Return: 55.5%</li></ul><p class=\"mt-4\">Note: Exact results vary due to monthly compounding, dividend reinvestment, and price growth, calculated iteratively per the function.</p></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Example 2: Dividend Stock with Quarterly Contributions and DRIP</h3><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Inputs:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Investment: $15,000</li><li>Stock Price: $100</li><li>Quarterly Contribution: $1,000</li><li>Dividend Yield: 4% annually</li><li>Expense Ratio: 0.3%</li><li>Annual Price Increase: 5%</li><li>Annual Dividend Increase: 3%</li><li>Contribution Frequency: Quarterly</li><li>Dividend Frequency: Quarterly</li><li>DRIP: Enabled</li><li>Investment Period: 5 years</li></ul><h4 class=\"font-semibold text-text-primary mt-4\">Results:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Investment: $15,000.00</li><li>Total Contributions: $20,000.00</li><li>Final Balance: $32,415.78</li><li>Total Gain: $12,415.78</li><li>Total Return: 62.1%</li></ul><p class=\"mt-4\">The Dividend Reinvestment Plan (DRIP) enhances growth by compounding dividends quarterly alongside price appreciation.</p></div><!-- CalculateHISAInvestment Examples --><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Example 3: HISA with Monthly Contributions</h3><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Inputs:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Deposit: $5,000</li><li>Monthly Contribution: $300</li><li>Annual Interest Rate: 4%</li><li>Compounding Frequency: Monthly</li><li>Contribution Frequency: Monthly</li><li>Investment Period: 10 years</li></ul><h4 class=\"font-semibold text-text-primary mt-4\">Calculation:</h4><p class=\"mt-2\">Using the simplified total balance formula for monthly compounding:</p><p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var26 string
+			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ B_{120} = 5,000 \cdot \left(1 + \frac{0.04}{12}\right)^{120} + 300 \cdot \frac{\left(1 + \frac{0.04}{12}\right)^{120} - 1}{\frac{0.04}{12}} \]`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 370, Col: 162}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p><p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var27 string
+			templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ B_{120} \approx 5,000 \cdot 1.489845 + 300 \cdot 148.9845 \]`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 371, Col: 80}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p><p>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var28 string
+			templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(`\[ B_{120} \approx 7,449.23 + 44,695.35 = 52,144.58 \]`)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `about.templ`, Line: 372, Col: 71}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</p><h4 class=\"font-semibold text-text-primary mt-4\">Results:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Deposit: $5,000.00</li><li>Total Contributions: $36,000.00</li><li>Final Balance: $52,144.58</li><li>Total Interest Earned: $11,144.58</li><li>Total Return: 30.96%</li></ul></div><h3 class=\"text-xl font-semibold text-text-primary mt-6 mb-3\">Example 4: HISA with Quarterly Contributions</h3><div class=\"bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6\"><h4 class=\"font-semibold text-text-primary\">Inputs:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Deposit: $10,000</li><li>Quarterly Contribution: $1,000</li><li>Annual Interest Rate: 3.5%</li><li>Compounding Frequency: Daily (n=365)</li><li>Contribution Frequency: Quarterly</li><li>Investment Period: 5 years</li></ul><h4 class=\"font-semibold text-text-primary mt-4\">Results:</h4><ul class=\"list-disc pl-6 space-y-1 mt-2\"><li>Initial Deposit: $10,000.00</li><li>Total Contributions: $20,000.00</li><li>Final Balance: $25,876.92</li><li>Total Interest Earned: $5,876.92</li><li>Total Return: 29.38%</li></ul><p class=\"mt-4\">Daily compounding slightly increases returns compared to monthly, though the effect is small over 5 years.</p></div></div></section><!-- Conclusion --><section class=\"mt-12 bg-gradient-to-r from-primary/10 to-accent/10 dark:from-primary/20 dark:to-accent/20 rounded-lg p-6\"><h2 class=\"text-xl font-bold text-text-primary mb-4\">Ready to Calculate Your Investment Growth?</h2><p class=\"text-text-secondary mb-6\">Use our calculator to see how your investments could grow over time with the power of compound returns.</p><a href=\"/\" class=\"inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors shadow-md hover:shadow-lg\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5 mr-2\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"2\" y=\"3\" width=\"20\" height=\"14\" rx=\"2\" ry=\"2\"></rect> <line x1=\"8\" y1=\"21\" x2=\"16\" y2=\"21\"></line> <line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"21\"></line></svg> Go to Calculator</a></section></div></div></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

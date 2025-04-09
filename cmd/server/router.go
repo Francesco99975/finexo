@@ -61,6 +61,7 @@ func createRouter(ctx context.Context) *echo.Echo {
 
 	web.GET("/", controllers.Index())
 	web.GET("/req", controllers.Requests())
+	web.POST("/discover", controllers.TrySeed())
 	web.GET("/about", controllers.About())
 	web.GET("/search", controllers.SearchHtmlSecurities())
 	web.GET("/select/:tp/:id", controllers.Select())

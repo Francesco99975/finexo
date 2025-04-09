@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"net/http"
-
 	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/Francesco99975/finexo/views"
@@ -16,11 +14,7 @@ func Index() echo.HandlerFunc {
 		csrfToken := c.Get("csrf").(string)
 		nonce := c.Get("nonce").(string)
 
-		html, err := helpers.RenderHTML(views.Index(data, csrfToken, nonce))
-
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Could not parse page home")
-		}
+		html := helpers.MustRenderHTML(views.Index(data, csrfToken, nonce))
 
 		return c.Blob(200, "text/html; charset=utf-8", html)
 	}

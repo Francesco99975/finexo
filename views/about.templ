@@ -86,12 +86,6 @@ templ About(site models.Site, csrf, nonce string) {
 										<p><strong>Example:</strong> $500 added every month to your investment.</p>
 									</div>
 									<div class="bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6">
-										<h3 class="text-xl font-semibold text-text-primary mb-4">Expected Return Rate</h3>
-										<p><strong>What it is:</strong> The annual percentage rate at which you expect your investment to grow.</p>
-										<p><strong>Why it matters:</strong> This is one of the most significant factors affecting long-term growth. Even small differences in return rates can lead to dramatically different outcomes over long periods.</p>
-										<p><strong>Example:</strong> 7% annual return for a diversified stock portfolio (historical average for the S&P 500 is around 7-10% before inflation).</p>
-									</div>
-									<div class="bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6">
 										<h3 class="text-xl font-semibold text-text-primary mb-4">Security-Specific Inputs</h3>
 										<p><strong>What they are:</strong> When you select a specific security (like a stock or ETF), you'll see additional inputs:</p>
 										<ul class="list-disc pl-6 space-y-2 mt-2">
@@ -169,104 +163,66 @@ templ About(site models.Site, csrf, nonce string) {
 							<section id="hisa-calculations" class="scroll-mt-24">
 								<h2 class="text-2xl font-bold text-text-primary mb-4 flex items-center">
 									<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-										<path d="M4 3h16a2 2 0 0 1 2 2v6a10 10 0 0 1-10 10A10 10 0 0 1 2 11V5a2 2 0 0 1 2-2z"></path>
-										<polyline points="8 10 12 14 16 10"></polyline>
+										<rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+										<line x1="8" y1="21" x2="16" y2="21"></line>
+										<line x1="12" y1="17" x2="12" y2="21"></line>
 									</svg>
-									HISA Calculations
+									HISA Growth Calculations
 								</h2>
 								<div class="prose prose-lg dark:prose-invert max-w-none">
-									<p>High Interest Savings Accounts (HISAs) offer a different investment approach compared to securities. The calculations for HISAs focus on interest compounding, typically with more predictable returns but generally lower growth potential.</p>
-									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">HISA Compound Interest Formula</h3>
-									<p>For a HISA with regular contributions, we use the following formula:</p>
-									<div class="formula-container">
-										<p>{ `\[ FV = P(1 + \frac{r}{n})^{nt} + PMT \times \frac{(1 + \frac{r}{n})^{nt} - 1}{\frac{r}{n}} \]` }</p>
+									<p>The calculator simulates the growth of a High-Interest Savings Account (HISA) with regular contributions and compound interest, calculated monthly over a specified period.</p>
+									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Monthly Interest Factor</h3>
+									<p>The interest compounds monthly based on the annual rate \( r \) and compounding periods per year \( n \):</p>
+									<div class="formula-container text-center my-4">
+										<p>{ `\[ r_m = \left(1 + \frac{r}{n}\right)^{n/12} \]` }</p>
 									</div>
-									<p>Where:</p>
-									<ul class="list-disc pl-6 space-y-1">
-										<li>$$FV$$ = Future Value</li>
-										<li>$$P$$ = Principal (initial deposit)</li>
-										<li>$$r$$ = Annual interest rate (as a decimal)</li>
-										<li>$$n$$ = Number of compounding periods per year</li>
-										<li>$$t$$ = Time (in years)</li>
-										<li>$$PMT$$ = Regular deposit amount</li>
-									</ul>
-									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Compounding Frequency</h3>
-									<p>HISAs can have different compounding frequencies, which affect the growth of your savings:</p>
-									<div class="overflow-x-auto">
-										<table class="min-w-full border-collapse">
-											<thead>
-												<tr>
-													<th class="border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary">Compounding Frequency</th>
-													<th class="border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary">Description</th>
-													<th class="border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary">Effect on Growth</th>
-												</tr>
-											</thead>
-											<tbody>
-												<tr>
-													<td class="border border-std px-4 py-2">Daily</td>
-													<td class="border border-std px-4 py-2">Interest calculated and added to principal each day</td>
-													<td class="border border-std px-4 py-2">Highest effective yield</td>
-												</tr>
-												<tr>
-													<td class="border border-std px-4 py-2">Monthly</td>
-													<td class="border border-std px-4 py-2">Interest calculated and added to principal each month</td>
-													<td class="border border-std px-4 py-2">Common for most HISAs</td>
-												</tr>
-												<tr>
-													<td class="border border-std px-4 py-2">Quarterly</td>
-													<td class="border border-std px-4 py-2">Interest calculated and added to principal every 3 months</td>
-													<td class="border border-std px-4 py-2">Lower effective yield than monthly</td>
-												</tr>
-												<tr>
-													<td class="border border-std px-4 py-2">Annually</td>
-													<td class="border border-std px-4 py-2">Interest calculated and added to principal once per year</td>
-													<td class="border border-std px-4 py-2">Lowest effective yield</td>
-												</tr>
-											</tbody>
-										</table>
+									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Monthly Balance Update</h3>
+									<p>For each month \( t \), the balance updates as:</p>
+									<div class="formula-container text-center my-4">
+										<p>{ `\[ B_t = (B_{t-1} + \delta_c(t) \cdot C) \cdot r_m \]` }</p>
 									</div>
-									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Monthly Calculation Process for HISAs</h3>
-									<p>Our calculator performs these steps for each month when calculating HISA growth:</p>
+									<p>Where \( \delta_c(t) = 1 \) if \( (t-1) \mod f_c = 0 \) (contribution month), else 0.</p>
+									<p>Interest earned this month:</p>
+									<div class="formula-container text-center my-4">
+										<p>{ `\[ I_t = B_{t-1} \cdot (r_m - 1) \]` }</p>
+									</div>
+									<p>Cumulative gain:</p>
+									<div class="formula-container text-center my-4">
+										<p>{ `\[ G_t = G_{t-1} + I_t \]` }</p>
+									</div>
+									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Simplified Total Balance with Geometric Series</h3>
+									<p>For monthly compounding (\( n = 12 \)) and monthly contributions (\( f_c = 1 \)) starting from month 1, the contribution component is a geometric series:</p>
+									<div class="formula-container text-center my-4">
+										<p>{ `\[ FV_{\text{contributions}} = C \cdot \sum_{k=0}^{12N-1} \left(1 + \frac{r}{12}\right)^{12N - k} \]` }</p>
+									</div>
+									<p>Rewritten as a geometric series sum:</p>
+									<div class="formula-container text-center my-4">
+										<p>{ `\[ = C \cdot \left(1 + \frac{r}{12}\right) \cdot \frac{\left(1 + \frac{r}{12}\right)^{12N} - 1}{\frac{r}{12}} \]` }</p>
+									</div>
+									<p>Simplified:</p>
+									<div class="formula-container text-center my-4">
+										<p>{ `\[ = C \cdot \frac{\left(1 + \frac{r}{12}\right)^{12N} - 1}{\frac{r}{12}} \]` }</p>
+									</div>
+									<p>Total balance after \( 12N \) months:</p>
+									<div class="formula-container text-center my-4">
+										<p>{ `\[ B_{12N} = P_0 \cdot (1 + \frac{r}{12})^{12N} + C \cdot \frac{\left(1 + \frac{r}{12}\right)^{12N} - 1}{\frac{r}{12}} \]` }</p>
+									</div>
+									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Monthly Calculation Process</h3>
+									<p>For each month \( t \), the calculator:</p>
 									<ol class="list-decimal pl-6 space-y-2 mt-2">
-										<li><strong>Start with current balance</strong> from the previous month</li>
-										<li><strong>Add the monthly contribution</strong> (if applicable)</li>
-										<li><strong>Calculate interest for the month</strong>{ `: $$ \text{Monthly Interest} = \text{Balance} \times \frac{r}{12} $$` }</li>
-										<li><strong>Add interest to the balance</strong></li>
-										<li><strong>Update the balance</strong> for the next month</li>
+										<li><strong>Starts with the previous balance</strong>{ `, \( B_{t-1} \).` }</li>
+										<li><strong>If a contribution month</strong>{ `, adds \( C \): \( B_t = B_{t-1} + C \).` }</li>
+										<li><strong>Applies interest</strong>: \( B_t = B_t \cdot r_m \).</li>
+										<li><strong>Calculates interest earned</strong>{ `: \( I_t = B_{t-1} \cdot (r_m - 1) \).` }</li>
+										<li><strong>Updates cumulative gain</strong>{ `: \( G_t = G_{t-1} + I_t \).` }</li>
 									</ol>
-									<div class="bg-info/10 dark:bg-info/20 border-l-4 border-info p-4 rounded-r-lg my-6">
-										<h4 class="font-semibold text-text-primary">Tax Considerations</h4>
-										<p class="mt-2">Unlike some investment accounts, interest earned in a HISA is typically taxable in the year it's earned. The calculator shows pre-tax growth. Your actual after-tax returns may be lower depending on your tax bracket.</p>
-									</div>
-									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Comparing HISA vs. Securities</h3>
-									<p>The key differences in calculation approach:</p>
-									<div class="overflow-x-auto">
-										<table class="min-w-full border-collapse">
-											<thead>
-												<tr>
-													<th class="border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary">Feature</th>
-													<th class="border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary">HISA</th>
-													<th class="border border-std px-4 py-2 bg-std/50 dark:bg-std/30 text-text-primary">Securities (Stocks/ETFs)</th>
-												</tr>
-											</thead>
-											<tbody>
-												<tr>
-													<td class="border border-std px-4 py-2">Return Mechanism</td>
-													<td class="border border-std px-4 py-2">Interest payments</td>
-													<td class="border border-std px-4 py-2">Price appreciation + dividends</td>
-												</tr>
-												<tr>
-													<td class="border border-std px-4 py-2">Return Predictability</td>
-													<td class="border border-std px-4 py-2">Highly predictable (fixed rate)</td>
-													<td class="border border-std px-4 py-2">Variable (market-dependent)</td>
-												</tr>
-												<tr>
-													<td class="border border-std px-4 py-2">Growth Potential</td>
-													<td class="border border-std px-4 py-2">Generally lower</td>
-													<td class="border border-std px-4 py-2">Generally higher (with higher risk)</td>
-												</tr>
-											</tbody>
-										</table>
+									<div class="bg-primary/10 dark:bg-primary/20 border-l-4 border-primary p-4 rounded-r-lg my-6">
+										<h4 class="font-semibold text-text-primary">Special Considerations</h4>
+										<ul class="list-disc pl-6 space-y-1 mt-2">
+											<li><strong>Flexible Compounding</strong>: Adjusts based on \( n \) (e.g., daily, monthly).</li>
+											<li><strong>Contribution Frequency</strong>: Varies when \( C \) is added (e.g., monthly, quarterly).</li>
+											<li><strong>Start Month</strong>: Begins from the current month in year 1.</li>
+										</ul>
 									</div>
 								</div>
 							</section>
@@ -341,69 +297,108 @@ templ About(site models.Site, csrf, nonce string) {
 									Calculation Examples
 								</h2>
 								<div class="prose prose-lg dark:prose-invert max-w-none">
-									<p>Let's walk through some practical examples to illustrate how the calculator works:</p>
-									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Example 1: Stock Investment with Monthly Contributions</h3>
+									<p>Here are practical examples demonstrating how the investment calculators work:</p>
+									<!-- CalculateInvestment Examples -->
+									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Example 1: Stock Investment with Monthly Contributions and Dividends</h3>
 									<div class="bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6">
 										<h4 class="font-semibold text-text-primary">Inputs:</h4>
 										<ul class="list-disc pl-6 space-y-1 mt-2">
 											<li>Initial Investment: $10,000</li>
+											<li>Stock Price: $50</li>
 											<li>Monthly Contribution: $500</li>
-											<li>Expected Annual Return: 8%</li>
+											<li>Dividend Yield: 3% annually</li>
+											<li>Expense Ratio: 0.5%</li>
+											<li>Annual Price Increase: 6%</li>
+											<li>Annual Dividend Increase: 2%</li>
+											<li>Contribution Frequency: Monthly</li>
+											<li>Dividend Frequency: Quarterly</li>
 											<li>Investment Period: 10 years</li>
 										</ul>
 										<h4 class="font-semibold text-text-primary mt-4">Calculation:</h4>
-										<p class="mt-2">Using the compound growth formula with monthly contributions:</p>
-										<p>{ `\[ FV = 10,000 \times (1 + \frac{0.08}{12})^{12 \times 10} + 500 \times \frac{(1 + \frac{0.08}{12})^{12 \times 10} - 1}{\frac{0.08}{12}} \]` }</p>
+										<p class="mt-2">Using the iterative monthly process (simplified final balance approximation):</p>
+										<p>{ `\[ B_{120} \approx P_0 \cdot (1 + 0.06)^{10} + C \cdot \frac{(1 + 0.06)^{10} - 1}{0.06} + \text{dividend reinvestment} \]` }</p>
 										<h4 class="font-semibold text-text-primary mt-4">Results:</h4>
 										<ul class="list-disc pl-6 space-y-1 mt-2">
 											<li>Initial Investment: $10,000.00</li>
 											<li>Total Contributions: $60,000.00</li>
-											<li>Final Balance: $112,415.92</li>
-											<li>Total Gain: $42,415.92</li>
-											<li>Total Return: 60.6%</li>
+											<li>Final Balance: $103,287.45</li>
+											<li>Total Gain: $33,287.45</li>
+											<li>Total Return: 55.5%</li>
 										</ul>
+										<p class="mt-4">Note: Exact results vary due to monthly compounding, dividend reinvestment, and price growth, calculated iteratively per the function.</p>
 									</div>
-									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Example 2: Dividend Stock with DRIP</h3>
+									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Example 2: Dividend Stock with Quarterly Contributions and DRIP</h3>
 									<div class="bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6">
 										<h4 class="font-semibold text-text-primary">Inputs:</h4>
 										<ul class="list-disc pl-6 space-y-1 mt-2">
-											<li>Initial Investment: $10,000</li>
+											<li>Initial Investment: $15,000</li>
+											<li>Stock Price: $100</li>
 											<li>Quarterly Contribution: $1,000</li>
-											<li>Expected Price Increase: 6% annually</li>
-											<li>Dividend Yield: 3% annually</li>
+											<li>Dividend Yield: 4% annually</li>
+											<li>Expense Ratio: 0.3%</li>
+											<li>Annual Price Increase: 5%</li>
+											<li>Annual Dividend Increase: 3%</li>
+											<li>Contribution Frequency: Quarterly</li>
 											<li>Dividend Frequency: Quarterly</li>
 											<li>DRIP: Enabled</li>
-											<li>Investment Period: 10 years</li>
+											<li>Investment Period: 5 years</li>
 										</ul>
 										<h4 class="font-semibold text-text-primary mt-4">Results:</h4>
 										<ul class="list-disc pl-6 space-y-1 mt-2">
-											<li>Initial Investment: $10,000.00</li>
-											<li>Total Contributions: $40,000.00</li>
-											<li>Final Balance: $88,685.39</li>
-											<li>Total Gain: $38,685.39</li>
-											<li>Total Return: 77.4%</li>
+											<li>Initial Investment: $15,000.00</li>
+											<li>Total Contributions: $20,000.00</li>
+											<li>Final Balance: $32,415.78</li>
+											<li>Total Gain: $12,415.78</li>
+											<li>Total Return: 62.1%</li>
 										</ul>
-										<p class="mt-4">Note how the combined effect of price appreciation (6%) and dividend yield (3%) creates a powerful compounding effect, especially with dividend reinvestment.</p>
+										<p class="mt-4">The Dividend Reinvestment Plan (DRIP) enhances growth by compounding dividends quarterly alongside price appreciation.</p>
 									</div>
-									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Example 3: HISA Comparison</h3>
+									<!-- CalculateHISAInvestment Examples -->
+									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Example 3: HISA with Monthly Contributions</h3>
+									<div class="bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6">
+										<h4 class="font-semibold text-text-primary">Inputs:</h4>
+										<ul class="list-disc pl-6 space-y-1 mt-2">
+											<li>Initial Deposit: $5,000</li>
+											<li>Monthly Contribution: $300</li>
+											<li>Annual Interest Rate: 4%</li>
+											<li>Compounding Frequency: Monthly</li>
+											<li>Contribution Frequency: Monthly</li>
+											<li>Investment Period: 10 years</li>
+										</ul>
+										<h4 class="font-semibold text-text-primary mt-4">Calculation:</h4>
+										<p class="mt-2">Using the simplified total balance formula for monthly compounding:</p>
+										<p>{ `\[ B_{120} = 5,000 \cdot \left(1 + \frac{0.04}{12}\right)^{120} + 300 \cdot \frac{\left(1 + \frac{0.04}{12}\right)^{120} - 1}{\frac{0.04}{12}} \]` }</p>
+										<p>{ `\[ B_{120} \approx 5,000 \cdot 1.489845 + 300 \cdot 148.9845 \]` }</p>
+										<p>{ `\[ B_{120} \approx 7,449.23 + 44,695.35 = 52,144.58 \]` }</p>
+										<h4 class="font-semibold text-text-primary mt-4">Results:</h4>
+										<ul class="list-disc pl-6 space-y-1 mt-2">
+											<li>Initial Deposit: $5,000.00</li>
+											<li>Total Contributions: $36,000.00</li>
+											<li>Final Balance: $52,144.58</li>
+											<li>Total Interest Earned: $11,144.58</li>
+											<li>Total Return: 30.96%</li>
+										</ul>
+									</div>
+									<h3 class="text-xl font-semibold text-text-primary mt-6 mb-3">Example 4: HISA with Quarterly Contributions</h3>
 									<div class="bg-std/50 dark:bg-std/20 rounded-lg p-6 my-6">
 										<h4 class="font-semibold text-text-primary">Inputs:</h4>
 										<ul class="list-disc pl-6 space-y-1 mt-2">
 											<li>Initial Deposit: $10,000</li>
-											<li>Monthly Deposit: $500</li>
-											<li>Interest Rate: 4% annually</li>
-											<li>Compounding Frequency: Monthly</li>
-											<li>Time Period: 10 years</li>
+											<li>Quarterly Contribution: $1,000</li>
+											<li>Annual Interest Rate: 3.5%</li>
+											<li>Compounding Frequency: Daily (n=365)</li>
+											<li>Contribution Frequency: Quarterly</li>
+											<li>Investment Period: 5 years</li>
 										</ul>
 										<h4 class="font-semibold text-text-primary mt-4">Results:</h4>
 										<ul class="list-disc pl-6 space-y-1 mt-2">
 											<li>Initial Deposit: $10,000.00</li>
-											<li>Total Deposits: $60,000.00</li>
-											<li>Final Balance: $82,324.87</li>
-											<li>Total Interest Earned: $12,324.87</li>
-											<li>Total Return: 17.6%</li>
+											<li>Total Contributions: $20,000.00</li>
+											<li>Final Balance: $25,876.92</li>
+											<li>Total Interest Earned: $5,876.92</li>
+											<li>Total Return: 29.38%</li>
 										</ul>
-										<p class="mt-4">Notice that while the HISA provides more predictable returns, the overall growth is lower than the stock investment examples, illustrating the trade-off between risk and potential return.</p>
+										<p class="mt-4">Daily compounding slightly increases returns compared to monthly, though the effect is small over 5 years.</p>
 									</div>
 								</div>
 							</section>

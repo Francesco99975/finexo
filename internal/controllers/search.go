@@ -8,6 +8,7 @@ import (
 	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/Francesco99975/finexo/views/components"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
 func SearchHtmlSecurities() echo.HandlerFunc {
@@ -15,7 +16,10 @@ func SearchHtmlSecurities() echo.HandlerFunc {
 		// Grab seed from params
 		query := c.QueryParam("q")
 		if query == "" {
-			return echo.NewHTTPError(http.StatusBadRequest, "Invalid query")
+			log.Warn("No query provided")
+
+			html := helpers.MustRenderHTML(components.WarnMsg("No query provided"))
+			return c.Blob(http.StatusBadRequest, "text/html; charset=utf-8", html)
 		}
 
 		// Perform the search with trigram similarity ordering
@@ -28,7 +32,10 @@ func SearchHtmlSecurities() echo.HandlerFunc {
 		LIMIT 10`, query)
 
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to seach db")
+			log.Errorf("Could not query database: %w", err)
+
+			html := helpers.MustRenderHTML(components.ErrorMsg("Could not query database"))
+			return c.Blob(http.StatusBadRequest, "text/html; charset=utf-8", html)
 		}
 		defer rows.Close()
 
@@ -40,11 +47,7 @@ func SearchHtmlSecurities() echo.HandlerFunc {
 			}
 		}
 
-		html, err := helpers.RenderHTML(components.SearchSecurityItems(seachResults))
-
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Could not parse page home")
-		}
+		html := helpers.MustRenderHTML(components.SearchSecurityItems(seachResults))
 
 		return c.Blob(200, "text/html; charset=utf-8", html)
 

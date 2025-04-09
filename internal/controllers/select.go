@@ -18,17 +18,20 @@ func Select() echo.HandlerFunc {
 		tp := c.Param("tp")
 		id := c.Param("id")
 		if id == "" {
+			log.Error("No ID provided")
 			return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID")
 		}
 
 		// Check if tp is valid
 		if tp != "stock" && tp != "etf" && tp != "reit" {
+			log.Error("Invalid typology")
 			return echo.NewHTTPError(http.StatusBadRequest, "Invalid typology")
 		}
 
 		// Get security from db
 		selectedSecurity, err := models.GetSecurityView(database.DB, tp, id)
 		if err != nil {
+			log.Errorf("Could not get security from db: %s", err)
 			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("Could not get security from db: %s", err))
 		}
 
@@ -36,11 +39,7 @@ func Select() echo.HandlerFunc {
 
 		csrfToken := c.Get("csrf").(string)
 
-		html, err := helpers.RenderHTML(components.SelectedSecurity(*selectedSecurity, csrfToken))
-
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Could not parse page home")
-		}
+		html := helpers.MustRenderHTML(components.SelectedSecurity(*selectedSecurity, csrfToken))
 
 		return c.Blob(200, "text/html; charset=utf-8", html)
 

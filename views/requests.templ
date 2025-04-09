@@ -20,29 +20,13 @@ templ Requests(site models.Site, csrf, nonce string) {
 					<div class="h-2 bg-gradient-to-r from-primary via-accent to-primary animate-gradient"></div>
 					<!-- Form Content -->
 					<div class="p-6 md:p-8">
-						<!-- Success Message (shown after form submission) -->
-						<div
-							x-show="formSubmitted"
-							x-transition:enter="transition ease-out duration-300"
-							x-transition:enter-start="opacity-0 transform -translate-y-4"
-							x-transition:enter-end="opacity-100 transform translate-y-0"
-							class="bg-success/10 dark:bg-success/20 border-l-4 border-success p-4 rounded-md mb-6"
-							x-cloak
-						>
-							<div class="flex items-center">
-								<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-									<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-									<polyline points="22 4 12 14.01 9 11.01"></polyline>
-								</svg>
-								<span class="text-success font-medium">Security added successfully!</span>
-							</div>
-						</div>
 						<form
-							@submit.prevent="validateForm() && $el.submit()"
 							hx-post="/discover"
-							hx-swap="outerHTML"
+							hx-target="#res-container"
+							hx-swap="innerHTML"
 							class="space-y-6"
 						>
+							<input type="hidden" name="_csrf" id="_csrf" value={ csrf }/>
 							<!-- Ticker Symbol Input -->
 							<div>
 								<label for="ticker" class="block text-sm font-medium text-text-primary mb-1">Ticker Symbol</label>
@@ -51,19 +35,9 @@ templ Requests(site models.Site, csrf, nonce string) {
 										type="text"
 										id="ticker"
 										name="ticker"
-										x-ref="ticker"
-										@input="tickerError = false"
 										class="block w-full p-3 border border-std rounded-lg focus:ring-2 focus:ring-accent focus:border-accent bg-bg-std text-text-primary placeholder-text-secondary/60"
 										placeholder="e.g., AAPL, MSFT, GOOGL"
-										:class="{'border-error focus:ring-error focus:border-error': tickerError}"
 									/>
-									<div
-										x-show="tickerError"
-										class="text-error text-sm mt-1"
-										x-cloak
-									>
-										Please enter a ticker symbol
-									</div>
 								</div>
 							</div>
 							<!-- Exchange Dropdown -->
@@ -73,10 +47,7 @@ templ Requests(site models.Site, csrf, nonce string) {
 									<select
 										id="exchange"
 										name="exchange"
-										x-ref="exchange"
-										@change="exchangeError = false"
 										class="block w-full p-3 border border-std rounded-lg focus:ring-2 focus:ring-accent focus:border-accent bg-bg-std text-text-primary appearance-none"
-										:class="{'border-error focus:ring-error focus:border-error': exchangeError}"
 									>
 										<option value="" disabled selected>Select an exchange</option>
 										<option value="NASDAQ">NASDAQ</option>
@@ -87,13 +58,6 @@ templ Requests(site models.Site, csrf, nonce string) {
 										<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 											<polyline points="6 9 12 15 18 9"></polyline>
 										</svg>
-									</div>
-									<div
-										x-show="exchangeError"
-										class="text-error text-sm mt-1"
-										x-cloak
-									>
-										Please select an exchange
 									</div>
 								</div>
 							</div>
@@ -110,7 +74,7 @@ templ Requests(site models.Site, csrf, nonce string) {
 									</svg>
 									Add Security
 								</button>
-								<div class="htmx-indicator absolute inset-0 flex items-center justify-center bg-primary bg-opacity-75 rounded-lg">
+								<div class="htmx-indicator absolute inset-0 flex items-center justify-center bg-primary bg-opacity-75 rounded-lg pointer-events-none">
 									<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -121,6 +85,7 @@ templ Requests(site models.Site, csrf, nonce string) {
 					</div>
 				</div>
 			</div>
+			<div id="res-container"></div>
 		</main>
 	}
 }

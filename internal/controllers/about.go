@@ -16,12 +16,8 @@ func About() echo.HandlerFunc {
 		csrfToken := c.Get("csrf").(string)
 		nonce := c.Get("nonce").(string)
 
-		html, err := helpers.RenderHTML(views.About(data, csrfToken, nonce))
+		html := helpers.MustRenderHTML(views.About(data, csrfToken, nonce))
 
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Could not parse page about")
-		}
-
-		return c.Blob(200, "text/html; charset=utf-8", html)
+		return c.Blob(http.StatusOK, "text/html; charset=utf-8", html)
 	}
 }
