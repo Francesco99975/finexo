@@ -6,7 +6,7 @@ import (
 )
 
 templ About(site models.Site, csrf, nonce string) {
-	@layouts.CoreHTML(site, nonce, []string{"/assets/dist/about.css"}, []string{"/assets/dist/about.js"}, nil) {
+	@layouts.CoreHTML(site, nonce, nil, nil, nil) {
 		<main class="flex-grow container mx-auto px-4 py-8 transition-colors">
 			<div class="flex flex-col lg:flex-row gap-8">
 				<!-- Sidebar / Table of Contents -->

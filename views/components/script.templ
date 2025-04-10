@@ -3,3 +3,11 @@ package components
 templ Script(src string, nonce string) {
 	<script type="module" src={ src } nonce={ nonce }></script>
 }
+
+templ AsyncScript(src string, nonce string) {
+	<script type="module" src={ src } nonce={ nonce } async></script>
+}
+
+templ DeferredScript(src string, nonce string) {
+	<script type="module" src={ src } nonce={ nonce } defer="true"></script>
+}

@@ -22,3 +22,16 @@ void katex;
         });
 })()
 
+// HTMX dynamic content handling
+document.addEventListener("htmx:afterSwap", (event) => {
+  renderMathInElement(document.body, {
+            delimiters: [
+            { left: '$$', right: '$$', display: true },    // Display math (block)
+            { left: '$', right: '$', display: false },     // Inline math
+            { left: '\\(', right: '\\)', display: false }, // Alternative inline math
+            { left: '\\[', right: '\\]', display: true },  // Alternative display math
+            ],
+            throwOnError: false,  // Continue rendering even if there’s an error
+        });
+});
+

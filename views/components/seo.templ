@@ -15,6 +15,7 @@ templ SEO(site models.Site, nonce string, stylesheets []string, scripts []string
 		<meta name="robots" content="index, follow"/>
 		<link rel="robots" href="/assets/robots.txt"/>
 		<link rel="canonical" href="https://finexo.urx.ink"/>
+		@Stylesheet("/assets/dist/about.css")
 		// <link rel="sitemap" type="application/xml" title="Sitemap" href="/assets/sitemap.xml"/>
 		<script type="application/ld+json" nonce={ nonce }>
                 {
@@ -34,6 +35,7 @@ templ SEO(site models.Site, nonce string, stylesheets []string, scripts []string
                 </script>
 		@Script("/assets/dist/index.js", nonce)
 		// @Script("https://js.stripe.com/v3/", nonce)
+		@AsyncScript("/assets/dist/about.js", nonce)
 		for _, script := range scripts {
 			@Script(script, nonce)
 		}

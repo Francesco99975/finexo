@@ -83,14 +83,22 @@ func SEO(site models.Site, nonce string, stylesheets []string, scripts []string)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><meta name=\"author\" content=\"Kalairendev\"><meta name=\"robots\" content=\"index, follow\"><link rel=\"robots\" href=\"/assets/robots.txt\"><link rel=\"canonical\" href=\"https://finexo.urx.ink\"><script type=\"application/ld+json\" nonce=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><meta name=\"author\" content=\"Kalairendev\"><meta name=\"robots\" content=\"index, follow\"><link rel=\"robots\" href=\"/assets/robots.txt\"><link rel=\"canonical\" href=\"https://finexo.urx.ink\">")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = Stylesheet("/assets/dist/about.css").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<script type=\"application/ld+json\" nonce=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(nonce)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/seo.templ`, Line: 19, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/seo.templ`, Line: 20, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -101,6 +109,10 @@ func SEO(site models.Site, nonce string, stylesheets []string, scripts []string)
 			return templ_7745c5c3_Err
 		}
 		templ_7745c5c3_Err = Script("/assets/dist/index.js", nonce).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = AsyncScript("/assets/dist/about.js", nonce).Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

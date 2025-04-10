@@ -3,3 +3,7 @@ package components
 templ Stylesheet(src string) {
 	<link rel="stylesheet" href={ src }/>
 }
+
+templ PreloadStylesheet(src string) {
+	<link href={ src } rel="preload" as="style" onload="this.rel='stylesheet'"/>
+}

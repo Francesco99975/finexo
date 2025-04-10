@@ -390,7 +390,7 @@ func About(site models.Site, csrf, nonce string) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = layouts.CoreHTML(site, nonce, []string{"/assets/dist/about.css"}, []string{"/assets/dist/about.js"}, nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.CoreHTML(site, nonce, nil, nil, nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

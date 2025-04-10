@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/models"
@@ -26,7 +27,8 @@ func SeedDatabase(load int) error {
 		seeds = seeds[:load]
 	}
 
-	ScraperReporter, err := helpers.NewReporter("scraper.log")
+	reportFilename := fmt.Sprintf("ScrapingReport-%d.log", time.Now().Unix())
+	ScraperReporter, err := helpers.NewReporter(reportFilename)
 	if err != nil {
 		log.Errorf("failed to create reporter: %v", err)
 	}
