@@ -1484,6 +1484,10 @@ func findExchangeInPage(ticker string, scrapingUrl string, browser *rod.Browser)
 			exchange = "NASDAQ"
 		}
 
+		if strings.Contains(exchange, "CBOE US") {
+			exchange = "CBOEUS"
+		}
+
 		return exchange, nil
 	}
 }

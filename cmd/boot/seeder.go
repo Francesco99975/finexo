@@ -2,6 +2,7 @@ package boot
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,7 +16,7 @@ import (
 
 const maxWorkers = 7
 
-func SeedDatabase(load int) error {
+func SeedDatabase(load int, suffix string) error {
 	seeds, err := tools.ReadAllSeeds()
 	if err != nil {
 		return err
@@ -23,7 +24,19 @@ func SeedDatabase(load int) error {
 
 	helpers.Shuffle(seeds)
 
-	if load > 0 {
+	if len(suffix) > 0 {
+		if suffix == "." {
+			seeds = helpers.FilteredSlice(seeds, func(s string) bool {
+				return !strings.Contains(s, ".")
+			})
+		} else {
+			seeds = helpers.FilteredSlice(seeds, func(s string) bool {
+				return strings.Contains(s, "."+suffix)
+			})
+		}
+	}
+
+	if load > 0 && load < len(seeds) {
 		seeds = seeds[:load]
 	}
 

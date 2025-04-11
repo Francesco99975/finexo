@@ -10,6 +10,7 @@ import (
 
 type Exchange struct {
 	Title     string         `db:"title" json:"title"`
+	Fullname  string         `db:"fullname" json:"fullname"`
 	Prefix    NullableString `db:"prefix" json:"prefix,omitempty"`
 	Suffix    NullableString `db:"suffix" json:"suffix,omitempty"`
 	CC        string         `db:"cc" json:"countryCode"`
@@ -17,35 +18,41 @@ type Exchange struct {
 	CloseTime NullableTime   `db:"closetime" json:"closeTime,omitempty"`
 }
 
-func InitExchanges(db *sqlx.DB) error {
+func InitExchanges(db *sqlx.DB) ([]Exchange, error) {
 
 	exchanges := []Exchange{
+		// NYSE
 		{
-			Title: "NYSE",
-			CC:    "US",
+			Title:    "NYSE",
+			Fullname: "New York Stock Exchange",
+			CC:       "US",
 			OpenTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 14, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
 			CloseTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 21, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
 		},
+		// NASDAQ
 		{
-			Title: "NASDAQ",
-			CC:    "US",
+			Title:    "NASDAQ",
+			Fullname: "National Association of Securities Dealers Automated Quotations",
+			CC:       "US",
 			OpenTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 14, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
 			CloseTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 21, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
 		},
+		// TSX
 		{
-			Title: "TSX",
+			Title:    "TSX",
+			Fullname: "Toronto Stock Exchange",
 			Prefix: NullableString{
 				String: "TSE",
 				Valid:  true,
@@ -56,16 +63,18 @@ func InitExchanges(db *sqlx.DB) error {
 			},
 			CC: "CA",
 			OpenTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 14, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
 			CloseTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 21, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
 		},
+		// TSXV
 		{
-			Title: "TSXV",
+			Title:    "TSXV",
+			Fullname: "TSX Venture Exchange",
 			Prefix: NullableString{
 				String: "CVE",
 				Valid:  true,
@@ -76,16 +85,18 @@ func InitExchanges(db *sqlx.DB) error {
 			},
 			CC: "CA",
 			OpenTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 14, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
 			CloseTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 21, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
 		},
+		// CBOE CA
 		{
-			Title: "CBOE",
+			Title:    "CBOE",
+			Fullname: "CBOE Canada",
 			Prefix: NullableString{
 				String: "NEOA",
 				Valid:  true,
@@ -96,11 +107,141 @@ func InitExchanges(db *sqlx.DB) error {
 			},
 			CC: "CA",
 			OpenTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 9, 30, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 14, 30, 0, 0, time.UTC),
 				Valid: true,
 			},
 			CloseTime: NullableTime{
-				Time:  time.Date(0, 0, 0, 16, 0, 0, 0, time.UTC),
+				Time:  time.Date(0, 0, 0, 21, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		// CBOE US
+		{
+			Title:    "CBOEUS",
+			Fullname: "Chicago Board Options Exchange",
+			CC:       "US",
+			OpenTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 14, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 21, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		// London Stock Exchange (LSE)
+		{
+			Title:    "LSE",
+			Fullname: "London Stock Exchange",
+			Prefix: NullableString{
+				String: "LON",
+				Valid:  true,
+			},
+			Suffix: NullableString{
+				String: "L",
+				Valid:  true,
+			},
+			CC: "GB",
+			OpenTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 8, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 16, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		// Milan Stock Exchange (MIL)
+		{
+			Title:    "MIL",
+			Fullname: "Milan Stock Exchange",
+			CC:       "IT",
+			Suffix: NullableString{
+				String: "MI",
+				Valid:  true,
+			},
+			OpenTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 8, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 16, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		// Tokyo Stock Exchange (Tokyo)
+		{
+			Title:    "JPY",
+			Fullname: "Tokyo Stock Exchange",
+			Suffix: NullableString{
+				String: "T",
+				Valid:  true,
+			},
+			CC: "JP",
+			OpenTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 6, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		// Frankfurt Stock Exchange (FWB)
+		{
+			Title:    "FWB",
+			Fullname: "Frankfurt Stock Exchange",
+			CC:       "DE",
+			Prefix: NullableString{
+				String: "FRA",
+				Valid:  true,
+			},
+			Suffix: NullableString{
+				String: "F",
+				Valid:  true,
+			},
+			OpenTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 8, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 16, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		// SIX Swiss Exchange (SIX) - New
+		{
+			Title:    "SIX",
+			Fullname: "SIX Swiss Exchange",
+			Suffix: NullableString{
+				String: "SW",
+				Valid:  true,
+			},
+			CC: "CH",
+			OpenTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 8, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 16, 30, 0, 0, time.UTC),
+				Valid: true,
+			},
+		},
+		// Australian Securities Exchange (ASX) - New
+		{
+			Title:    "ASX",
+			Fullname: "Australian Securities Exchange",
+			Suffix: NullableString{
+				String: "AX",
+				Valid:  true,
+			},
+			CC: "AU",
+			OpenTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 0, 0, 0, 0, time.UTC),
+				Valid: true,
+			},
+			CloseTime: NullableTime{
+				Time:  time.Date(0, 0, 0, 6, 0, 0, 0, time.UTC),
 				Valid: true,
 			},
 		},
@@ -109,11 +250,11 @@ func InitExchanges(db *sqlx.DB) error {
 	for _, exchange := range exchanges {
 		err := CreateExchange(db, &exchange)
 		if err != nil {
-			return fmt.Errorf("failed to create exchange: %w", err)
+			return nil, fmt.Errorf("failed to create exchange: %w", err)
 		}
 	}
 
-	return nil
+	return exchanges, nil
 }
 
 func CreateExchange(db *sqlx.DB, exchange *Exchange) error {
@@ -126,10 +267,10 @@ func CreateExchange(db *sqlx.DB, exchange *Exchange) error {
 
 	// Insert into exchanges table
 	query := `
-		INSERT INTO exchanges (title, prefix, suffix, cc, opentime, closetime) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (title) DO NOTHING
+		INSERT INTO exchanges (title, fullname, prefix, suffix, cc, opentime, closetime) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (title) DO NOTHING
 	`
 
-	_, err = tx.Exec(query, exchange.Title, exchange.Prefix, exchange.Suffix, exchange.CC, exchange.OpenTime, exchange.CloseTime)
+	_, err = tx.Exec(query, exchange.Title, exchange.Title, exchange.Prefix, exchange.Suffix, exchange.CC, exchange.OpenTime, exchange.CloseTime)
 
 	if err != nil {
 		return fmt.Errorf("failed to insert exchange: %w", err)
@@ -140,7 +281,7 @@ func CreateExchange(db *sqlx.DB, exchange *Exchange) error {
 
 func GetExchangeBySuffixorPrefix(db *sqlx.DB, suffix, prefix string) (*Exchange, error) {
 	query := `
-		SELECT title, prefix, suffix, cc, opentime, closetime
+		SELECT title, fullname, prefix, suffix, cc, opentime, closetime
 		FROM exchanges
 		WHERE (suffix = $1 OR prefix = $2)
 	`
@@ -154,7 +295,7 @@ func GetExchangeBySuffixorPrefix(db *sqlx.DB, suffix, prefix string) (*Exchange,
 
 func GetExchangeByTitle(db *sqlx.DB, title string) (*Exchange, error) {
 	query := `
-		SELECT title, prefix, suffix, cc, opentime, closetime
+		SELECT title, fullname, prefix, suffix, cc, opentime, closetime
 		FROM exchanges
 		WHERE title = $1
 	`

@@ -111,5 +111,8 @@ func normalizeSeed(seed string) string {
 	seed = strings.ReplaceAll(seed, "-NE", ".NE")
 	seed = strings.ReplaceAll(seed, "-L", ".L")
 	seed = strings.ReplaceAll(seed, "-V", ".V")
+	seed = strings.ReplaceAll(seed, "-T", ".T")
+	seed = strings.ReplaceAll(seed, "-MI", ".MI")
+	seed = strings.ReplaceAll(seed, "-F", ".F")
 	return seed
 }
