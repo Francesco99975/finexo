@@ -1,6 +1,7 @@
 package models
 
 import (
+	"os"
 	"sync"
 	"time"
 
@@ -32,10 +33,16 @@ func NewBrowserManager(maxRequests int) *BrowserManager {
 // 🚀 Launches a new browser with your settings
 func (bm *BrowserManager) launchNewBrowser() *rod.Browser {
 	log.Info("Starting new Chrome instance...")
-
-	u := launcher.New().NoSandbox(true).Headless(true).Devtools(false).
-		Set("disable-dev-shm-usage").
-		Set("disable-extensions").MustLaunch()
+	var u string
+	if os.Getenv("GO_ENV") == "production" {
+		u = launcher.New().Bin("/usr/bin/chromium-browser").NoSandbox(true).Headless(true).Devtools(false).
+			Set("disable-dev-shm-usage").
+			Set("disable-extensions").MustLaunch()
+	} else {
+		u = launcher.New().NoSandbox(true).Headless(true).Devtools(false).
+			Set("disable-dev-shm-usage").
+			Set("disable-extensions").MustLaunch()
+	}
 
 	browser := rod.New().ControlURL(u).MustConnect()
 	return browser

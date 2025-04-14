@@ -46,6 +46,7 @@ END $$;
 
 CREATE TABLE IF NOT EXISTS exchanges (
     title VARCHAR(50) PRIMARY KEY,
+    fullname TEXT NOT NULL,
     prefix VARCHAR(20),
     suffix VARCHAR(20),
     cc VARCHAR(20) NOT NULL,
@@ -95,7 +96,7 @@ CREATE TABLE IF NOT EXISTS securities (
     created TIMESTAMP NOT NULL DEFAULT NOW(),
     updated TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (ticker, exchange),
-    FOREIGN KEY (exchange) REFERENCES exchanges(title)
+    FOREIGN KEY (exchange) REFERENCES exchanges(title) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 SELECT apply_update_trigger('securities');
