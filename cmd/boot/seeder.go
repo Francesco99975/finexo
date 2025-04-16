@@ -67,6 +67,7 @@ func SeedDatabase(load int, suffix string) error {
 	}
 
 	manager := models.NewBrowserManager(100)
+	defer manager.Close()
 	go manager.MonitorMemory()
 	go manager.MonitorBrowserHealth()
 
@@ -113,8 +114,9 @@ func SeedDatabase(load int, suffix string) error {
 
 	failedProgress := failed.Load()
 	if failedProgress > 0 {
-		log.Errorf("Failed to scrape %d seeds", failedProgress)
+		log.Errorf("Failed to scrape %d seeds (%.2f%%)", failedProgress, (float64(failedProgress)/float64(len(seeds)))*100)
 	}
+
 	log.Infof("All seeds have been scraped. Successfully scraped %d seeds", uint32(len(seeds))-failedProgress)
 
 	return nil

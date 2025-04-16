@@ -16,7 +16,7 @@ func SetupCronJobs(exchanges []models.Exchange) {
 		}
 		err := tools.AddJob(suffix, fmt.Sprintf("%d %d * * *", exchange.CloseTime.Time.Minute(), exchange.CloseTime.Time.Hour()), func() {
 
-			err := SeedDatabase(0, suffix)
+			err := SeedDatabase(500, suffix)
 			if err != nil {
 				log.Errorf("Error while seeding database: %v", err)
 			}

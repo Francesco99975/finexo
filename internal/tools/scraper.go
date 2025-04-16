@@ -723,7 +723,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 			}
 		} else {
 			scrapedBeta, err := strconv.Atoi(betaStr)
-			if err != nil || scrapedBeta <= 0 {
+			if err != nil {
 				log.Warnf("invalid beta: %s - target: %s:%s", betaStr, security.Ticker, security.Exchange)
 				security.Beta = models.NullableInt{
 					Valid: false,
@@ -963,7 +963,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		}
 
 		scrapedEps, err := strconv.Atoi(epsStr)
-		if err != nil || scrapedEps <= 0 {
+		if err != nil {
 			log.Warnf("invalid EPS: %s - target: %s:%s", epsStr, security.Ticker, security.Exchange)
 			security.EPS = models.NullableInt{
 				Valid: false,
