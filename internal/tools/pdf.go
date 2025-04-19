@@ -2,6 +2,8 @@ package tools
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Francesco99975/finexo/internal/helpers"
@@ -24,6 +26,25 @@ func GeneratePDF(results helpers.CalculationResults) (string, error) {
 	// Generate filename with timestamp
 	timestamp := time.Now().Unix()
 	filename := fmt.Sprintf("%s-%d.pdf", results.SID, timestamp)
+
+	contributionsMonthOneStr := helpers.NormalizeFloatStrToIntStr(strings.ReplaceAll(results.YearResults[0].MonthsResults[0].Contributions[3:], " ", ""))
+
+	contributionsMonthOneInt, err := strconv.Atoi(contributionsMonthOneStr)
+	if err != nil {
+		return "", err
+	}
+
+	PrincipalStr := helpers.NormalizeFloatStrToIntStr(strings.ReplaceAll(results.Principal[3:], " ", ""))
+	PrincipalInt, err := strconv.Atoi(PrincipalStr)
+	if err != nil {
+		return "", err
+	}
+
+	contrib := float64((contributionsMonthOneInt - PrincipalInt) / 100)
+	contribStr, err := helpers.FormatPrice(contrib, results.Currency)
+	if err != nil {
+		return "", err
+	}
 
 	// Configure PDF settings (A4, horizontal orientation)
 	cfg := config.NewBuilder().
@@ -65,7 +86,7 @@ func GeneratePDF(results helpers.CalculationResults) (string, error) {
 	m.AddRows(
 		row.New(15).Add(
 			col.New(12).Add(
-				text.New(fmt.Sprintf("Calculated compounding growth with a principal of %s @ a starting rate of %s", results.Principal, results.Rate), props.Text{
+				text.New(fmt.Sprintf("Calculated compounding growth for %d years with a principal of %s @ a starting rate of %s", len(results.YearResults), results.Principal, results.Rate), props.Text{
 					Size:  12,
 					Align: align.Center,
 					Style: fontstyle.Italic,
@@ -99,6 +120,7 @@ func GeneratePDF(results helpers.CalculationResults) (string, error) {
 		{"Total Contributions", results.TotalContributions},
 		{"Contribution Frequency", results.ContribFreq},
 		{"Final Balance", results.FinalBalance},
+		{"Contribution", contribStr},
 	}
 	m.AddRows(buildOverviewTable(overviewData, lightGray, lightBlue, black)...)
 

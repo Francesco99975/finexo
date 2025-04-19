@@ -18,8 +18,7 @@ func SearchHtmlSecurities() echo.HandlerFunc {
 		if query == "" {
 			log.Warn("No query provided")
 
-			html := helpers.MustRenderHTML(components.WarnMsg("No query provided"))
-			return c.Blob(http.StatusBadRequest, "text/html; charset=utf-8", html)
+			return c.NoContent(http.StatusNoContent)
 		}
 
 		// Perform the search with trigram similarity ordering

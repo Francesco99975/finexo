@@ -52,6 +52,8 @@ func createRouter(ctx context.Context) *echo.Echo {
 		CookieName:     "csrf_token",
 		CookiePath:     "/",
 		CookieHTTPOnly: true,
+		CookieSecure:   boot.Environment.GoEnv == "production",
+		CookieSameSite: http.SameSiteLaxMode,
 		Skipper: func(c echo.Context) bool {
 			// Skip CSRF for the /webhook route
 			return c.Path() == "/webhook"

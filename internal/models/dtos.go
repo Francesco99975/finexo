@@ -119,7 +119,9 @@ func (s *SelectedSecurityView) Scan(rows *sqlx.Rows) error {
 
 		s.Target = targetStr
 
-		s.ProjectedPriceIncrease = fmt.Sprintf("%.2f", (math.Pow(float64(target.Int64/100)/float64(price/100), 1.0/defaultProjectedYears)-1.0)*100.0)
+		ppi := max((math.Pow(float64(target.Int64/100)/float64(price/100), 1.0/defaultProjectedYears)-1.0)*100.0, 0)
+
+		s.ProjectedPriceIncrease = fmt.Sprintf("%.2f", ppi)
 
 	} else {
 		s.Target = "N/A"
@@ -144,7 +146,9 @@ func (s *SelectedSecurityView) Scan(rows *sqlx.Rows) error {
 		eps := apf / prf
 		roe := eps / pricef
 
-		s.ProjectedYieldIncrease = fmt.Sprintf("%.2f", 100.0*(roe*(1-prf)))
+		pyi := max(100.0*(roe*(1-prf)), 0)
+
+		s.ProjectedYieldIncrease = fmt.Sprintf("%.2f", pyi)
 	} else {
 		s.AnnualPayout = "N/A"
 		s.PayoutRatio = "N/A"

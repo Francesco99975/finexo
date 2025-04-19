@@ -55,9 +55,14 @@ func ParseNumberString(input string) (int64, error) {
 func NormalizeFloatStrToIntStr(number string) string {
 	number = strings.ReplaceAll(number, ",", "")
 	number = strings.ReplaceAll(number, " ", "")
-	number = strings.ReplaceAll(number, ".", "")
+	if !strings.Contains(number, ".") {
+		number = strings.ReplaceAll(number, "%", "00")
+	} else {
+		number = strings.ReplaceAll(number, "%", "")
+		number = strings.ReplaceAll(number, ".", "")
+	}
 	number = strings.ReplaceAll(number, "$", "")
-	number = strings.ReplaceAll(number, "%", "")
+
 	number = strings.ReplaceAll(number, "(", "")
 	number = strings.ReplaceAll(number, ")", "")
 

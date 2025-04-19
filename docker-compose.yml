@@ -46,6 +46,7 @@ services:
     networks:
       - finexonet
       - proxy
+      - monitor
     ports:
       - 5869:5869
 
@@ -55,6 +56,8 @@ networks:
   finexonet:
     driver: bridge
     external: false
+  monitor:
+    external: true
 
 volumes:
   finexopgdata:
