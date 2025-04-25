@@ -137,7 +137,7 @@ func (bm *BrowserManager) MonitorMemory() {
 func (bm *BrowserManager) MonitorBrowserHealth() {
 	for {
 
-		if bm.activeBrowser == nil && bm.oldBrowser == nil && bm.backupBrowser == nil {
+		if bm.activeBrowser == nil {
 			break
 		}
 
