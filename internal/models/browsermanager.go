@@ -121,10 +121,17 @@ func (bm *BrowserManager) RestartBrowserSafely() {
 // 🚀 Restart Chrome if memory usage exceeds 70%
 func (bm *BrowserManager) MonitorMemory() {
 	for {
-		if bm.activeBrowser == nil && bm.oldBrowser == nil && bm.backupBrowser == nil {
+		if bm.activeBrowser == nil {
+			log.Info("🛑 Stopping Browser Memory Monitoring.")
 			break
 		}
+
 		time.Sleep(30 * time.Second) // Check memory every 30s
+
+		if bm.activeBrowser == nil {
+			log.Info("🛑 Stopping Browser Memory Monitoring.")
+			break
+		}
 
 		vm, _ := mem.VirtualMemory()
 		if vm.UsedPercent > 70 {
@@ -138,10 +145,16 @@ func (bm *BrowserManager) MonitorBrowserHealth() {
 	for {
 
 		if bm.activeBrowser == nil {
+			log.Info("🛑 Stopping Browser Health Monitoring.")
 			break
 		}
 
 		time.Sleep(30 * time.Second) // 🕒 Check every 30 seconds
+
+		if bm.activeBrowser == nil {
+			log.Info("🛑 Stopping Browser Health Monitoring.")
+			break
+		}
 
 		bm.mu.Lock()
 
