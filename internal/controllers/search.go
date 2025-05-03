@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/Francesco99975/finexo/internal/database"
 	"github.com/Francesco99975/finexo/internal/helpers"
@@ -21,6 +22,8 @@ func SearchHtmlSecurities() echo.HandlerFunc {
 			return c.NoContent(http.StatusNoContent)
 		}
 
+		start := time.Now()
+
 		// Perform the search with trigram similarity ordering
 		rows, err := database.DB.Queryx(`
 		SELECT ticker, exchange, fullname, price, typology, currency
@@ -37,6 +40,9 @@ func SearchHtmlSecurities() echo.HandlerFunc {
 			return c.Blob(http.StatusBadRequest, "text/html; charset=utf-8", html)
 		}
 		defer rows.Close()
+
+		helpers.RecordDBQueryLatency("search_securities", start)
+		helpers.RecordBusinessEvent("search_securities")
 
 		var seachResults []models.SecuritySearchView
 		for rows.Next() {

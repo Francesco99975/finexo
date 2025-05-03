@@ -1059,17 +1059,25 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		// Check if security already exists in DB
 		exists := models.SecurityExists(database.DB, security.Ticker, security.Exchange)
 		if !exists {
+			start := time.Now()
 			err = models.CreateStock(database.DB, &security)
 			if err != nil {
 				return fmt.Errorf("error creating stock: %v", err)
 			}
 			log.Infof("Created Stock based on Scraped data: %v", security.CreatePrettyPrintString())
+			helpers.RecordDBQueryLatency("create_stock", start)
+			helpers.RecordBusinessEvent("stock_created")
+			helpers.RecordBusinessEvent("security_created")
 		} else {
+			start := time.Now()
 			err = models.UpdateStock(database.DB, &security)
 			if err != nil {
 				return fmt.Errorf("error updating stock: %v", err)
 			}
 			log.Infof("Updated Stock based on Scraped data: %v", security.CreatePrettyPrintString())
+			helpers.RecordDBQueryLatency("update_stock", start)
+			helpers.RecordBusinessEvent("stock_updated")
+			helpers.RecordBusinessEvent("security_updated")
 		}
 	case "ETF":
 		var etf models.ETF
@@ -1330,17 +1338,25 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		// Check if security already exists
 		exists := models.SecurityExists(database.DB, security.Ticker, security.Exchange)
 		if !exists {
+			start := time.Now()
 			err = models.CreateETF(database.DB, &etf)
 			if err != nil {
 				return fmt.Errorf("error creating ETF for seed (%s): %v", seed, err)
 			}
 			log.Infof("Created ETF based on Scraped data: %v", etf.PrettyPrintString())
+			helpers.RecordDBQueryLatency("create_etf", start)
+			helpers.RecordBusinessEvent("etf_created")
+			helpers.RecordBusinessEvent("security_created")
 		} else {
+			start := time.Now()
 			err = models.UpdateETF(database.DB, &etf)
 			if err != nil {
 				return fmt.Errorf("error updating ETF for seed (%s): %v", seed, err)
 			}
 			log.Infof("Updated ETF based on Scraped data: %v", etf.PrettyPrintString())
+			helpers.RecordDBQueryLatency("update_etf", start)
+			helpers.RecordBusinessEvent("etf_updated")
+			helpers.RecordBusinessEvent("security_updated")
 		}
 
 	case "REIT":
@@ -1370,17 +1386,25 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		// Check if security already exists
 		exists := models.SecurityExists(database.DB, security.Ticker, security.Exchange)
 		if !exists {
+			start := time.Now()
 			err = models.CreateReit(database.DB, &reit)
 			if err != nil {
 				return fmt.Errorf("error creating REIT for seed (%s): %v", seed, err)
 			}
 			log.Infof("Created REIT based on Scraped data: %v", reit)
+			helpers.RecordDBQueryLatency("create_reit", start)
+			helpers.RecordBusinessEvent("reit_created")
+			helpers.RecordBusinessEvent("security_created")
 		} else {
+			start := time.Now()
 			err = models.UpdateREIT(database.DB, &reit)
 			if err != nil {
 				return fmt.Errorf("error updating REIT for seed (%s): %v", seed, err)
 			}
 			log.Infof("Updated REIT based on Scraped data: %v", reit)
+			helpers.RecordDBQueryLatency("update_reit", start)
+			helpers.RecordBusinessEvent("reit_updated")
+			helpers.RecordBusinessEvent("security_updated")
 		}
 	default:
 		return fmt.Errorf("invalid typology: %s - target: %s:%s", security.Typology, security.Ticker, security.Exchange)

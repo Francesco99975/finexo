@@ -31,6 +31,7 @@ func DownloadPDF() echo.HandlerFunc {
 		}
 
 		defer os.Remove(filename)
+		helpers.RecordBusinessEvent("download_pdf")
 
 		return c.Attachment(filename, filename)
 

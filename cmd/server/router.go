@@ -10,6 +10,8 @@ import (
 
 	"github.com/Francesco99975/finexo/cmd/boot"
 	"github.com/Francesco99975/finexo/internal/api"
+	"github.com/Francesco99975/finexo/internal/helpers"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/Francesco99975/finexo/internal/controllers"
 	"github.com/Francesco99975/finexo/internal/middlewares"
@@ -26,10 +28,12 @@ func createRouter(ctx context.Context) *echo.Echo {
 	e.Use(middleware.Logger())
 	e.Use(middleware.RemoveTrailingSlash())
 	e.Use(middleware.Gzip())
+	e.Use(middlewares.MonitoringMiddleware())
 	e.GET("/healthcheck", func(c echo.Context) error {
 		time.Sleep(5 * time.Second)
 		return c.JSON(http.StatusOK, "OK")
 	})
+	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
 
 	e.Static("/assets", "./static")
 
@@ -94,6 +98,7 @@ func createRouter(ctx context.Context) *echo.Echo {
 }
 
 func serverErrorHandler(err error, c echo.Context) {
+	helpers.RecordBusinessEvent("server_error") // Record the business event for server errors
 	// Default to internal server error (500)
 	code := http.StatusInternalServerError
 	var message any = "An unexpected error occurred"

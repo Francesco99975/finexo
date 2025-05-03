@@ -2,8 +2,10 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/Francesco99975/finexo/internal/database"
+	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/labstack/echo/v4"
 )
@@ -15,6 +17,8 @@ func SearchSecurities() echo.HandlerFunc {
 		if query == "" {
 			return c.JSON(http.StatusBadRequest, "Missing seach query parameter")
 		}
+
+		start := time.Now()
 
 		// Perform the search with trigram similarity ordering
 		rows, err := database.DB.Queryx(`
@@ -37,6 +41,9 @@ func SearchSecurities() echo.HandlerFunc {
 				seachResults = append(seachResults, sec)
 			}
 		}
+
+		helpers.RecordDBQueryLatency("search_securities", start)
+		helpers.RecordBusinessEvent("search_securities")
 
 		return c.JSON(http.StatusOK, seachResults)
 

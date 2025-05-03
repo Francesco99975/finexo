@@ -31,6 +31,7 @@ func DownloadCSV() echo.HandlerFunc {
 		}
 
 		defer os.Remove(filename)
+		helpers.RecordBusinessEvent("download_csv") // Record the business event for downloading a CSV file
 
 		return c.Attachment(filename, filename)
 

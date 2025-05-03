@@ -83,6 +83,7 @@ func SeedDatabase(load int, suffix string) error {
 
 			defer func() {
 				if r := recover(); r != nil {
+					helpers.RecordBusinessEvent("scrape_panic_occurred")
 					failed.Add(1)
 					log.Errorf("Panic occurred while scraping seed (%s): %v", seed, r)
 					err := ScraperReporter.Report(helpers.SeverityLevels.PANIC, fmt.Sprintf("was scraping seed (%s) -> %v", seed, r))
@@ -99,6 +100,7 @@ func SeedDatabase(load int, suffix string) error {
 
 			err := tools.Scrape(seed, nil, manager, sem, &wg, d)
 			if err != nil {
+				helpers.RecordBusinessEvent("scrape_failed")
 				failed.Add(1)
 				log.Errorf("Could not Scrape <- %v", err)
 				err := ScraperReporter.Report(helpers.SeverityLevels.ERROR, fmt.Sprintf("was scraping seed (%s) -> %v", seed, err))
@@ -106,6 +108,7 @@ func SeedDatabase(load int, suffix string) error {
 					log.Errorf("failed to report error: %v", err)
 				}
 			}
+			helpers.RecordBusinessEvent("scrape_successful")
 
 		}(seed)
 	}

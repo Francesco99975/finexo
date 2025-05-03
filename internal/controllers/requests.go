@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/Francesco99975/finexo/internal/database"
 	"github.com/Francesco99975/finexo/internal/helpers"
@@ -54,6 +55,8 @@ func TrySeed() echo.HandlerFunc {
 			return c.Blob(http.StatusBadRequest, "text/html; charset=utf-8", html)
 		}
 
+		start := time.Now()
+
 		if models.SecurityExists(database.DB, input.Ticker, input.Exchange) {
 			log.Warn("security already exists")
 			html := helpers.MustRenderHTML(components.WarnMsg("Security Already Exists"))
@@ -73,6 +76,8 @@ func TrySeed() echo.HandlerFunc {
 
 			return c.Blob(http.StatusBadRequest, "text/html; charset=utf-8", html)
 		}
+		helpers.RecordDBQueryLatency("request_security", start)
+		helpers.RecordBusinessEvent("request_security")
 
 		html := helpers.MustRenderHTML(components.SuccessMsg("Security discovered successfully!"))
 

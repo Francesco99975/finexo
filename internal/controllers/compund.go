@@ -40,6 +40,7 @@ func CalculateCompound() echo.HandlerFunc {
 				html := helpers.MustRenderHTML(components.ErrorMsg("Failed to calculate investment compound"))
 				return c.Blob(http.StatusBadRequest, "text/html; charset=utf-8", html)
 			}
+			helpers.RecordBusinessEvent("calculate_investment")
 		} else {
 			var err error
 			results, err = helpers.CalculateHISAInvestment(input.Principal, input.Contribution, input.ContribFrequency, input.CompundingFrequency, input.Rate, input.Years, input.Currency)
@@ -49,6 +50,7 @@ func CalculateCompound() echo.HandlerFunc {
 				html := helpers.MustRenderHTML(components.ErrorMsg("Failed to calculate hisa compound"))
 				return c.Blob(http.StatusBadRequest, "text/html; charset=utf-8", html)
 			}
+			helpers.RecordBusinessEvent("calculate_hisa")
 		}
 
 		encodedResults, err := results.Encoded()
