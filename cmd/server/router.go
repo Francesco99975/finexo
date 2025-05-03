@@ -27,7 +27,12 @@ func createRouter(ctx context.Context) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.RemoveTrailingSlash())
-	e.Use(middleware.Gzip())
+	// Apply Gzip middleware, but skip it for /metrics
+	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Skipper: func(c echo.Context) bool {
+			return c.Path() == "/metrics" // Skip compression for /metrics
+		},
+	}))
 	e.Use(middlewares.MonitoringMiddleware())
 	e.GET("/healthcheck", func(c echo.Context) error {
 		time.Sleep(5 * time.Second)

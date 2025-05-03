@@ -30,6 +30,7 @@ db: ## Connect to the local development database
 .PHONY: build
 build: ## Build the Docker image
 	docker buildx build -t $(IMAGE_NAME) .
+	docker save $(IMAGE_NAME) > $(PROJECT_NAME).tar
 
 .PHONY: run
 run: ## Run the app (non-development mode)
@@ -43,6 +44,7 @@ lint: ## Run linters (requires golangci-lint)
 clean: ## Clean up build artifacts
 	go clean -modcache
 	rm -rf ./bin ./dist
+	docker buildx prune -f
 
 .PHONY: deps
 deps: ## Download and tidy dependencies
@@ -58,3 +60,7 @@ vet: ## Analyze code for potential issues
 
 .PHONY: ci
 ci: test lint vet fmt ## Run all checks (tests, lint, vet, format)
+
+.PHONY: staging
+staging: ## Deploy to staging environment
+	scp finexo.tar kalairen@wix.sh:~/apps/finexo

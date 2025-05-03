@@ -12,7 +12,7 @@ RUN mv .prod.env .env
 
 RUN GOOS=linux go build -ldflags="-s -w" -o ./bin/finexo ./cmd/server/*.go
 
-FROM frolvlad/alpine-glibc:alpine-3.20 AS release
+FROM frolvlad/alpine-glibc:alpine-3.21 AS release
 
 RUN apk update && apk upgrade && apk --no-cache add ca-certificates \
     harfbuzz \
@@ -58,4 +58,4 @@ COPY --from=build /go/src/app/seeds /go/bin/seeds
 
 EXPOSE 5869
 
-ENTRYPOINT /go/bin/finexo --port 5869
+ENTRYPOINT ["/go/bin/finexo", "--port", "5869"]

@@ -48,11 +48,6 @@ var (
 	)
 )
 
-func init() {
-	// Register custom metrics
-	prometheus.MustRegister(httpRequestsTotal, httpRequestDuration, dbQueryDuration, businessEventsTotal)
-}
-
 func IncreaseHTTPRequestCount(method, path string, status int) {
 	httpRequestsTotal.WithLabelValues(method, path, fmt.Sprintf("%d", status)).Inc()
 }
