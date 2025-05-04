@@ -1,0 +1,136 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.4'
+          cache: true
+
+      - name: Build Docker image
+        run: make build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: finexo-image
+          path: finexo.tar
+          retention-days: 7
+
+      - name: Upload docker-compose file
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-compose
+          path: docker-compose.yml
+          retention-days: 7
+
+  deploy-staging:
+    name: Deploy to Staging
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://finexo.wix.sh
+    steps:
+      - name: Download Docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: finexo-image
+
+      - name: Download docker-compose
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan wix.sh >> ~/.ssh/known_hosts
+
+      - name: Deploy to staging
+        run: |
+          # Transfer files to staging server
+          scp finexo.tar docker-compose.yml kalairen@wix.sh:~/apps/finexo/
+
+          # SSH into server and deploy
+          ssh kalairen@wix.sh << 'EOF'
+            cd ~/apps/finexo
+            docker load < finexo.tar
+            docker compose up -d
+            docker system prune -f
+          EOF
+
+      - name: Verify deployment
+        run: |
+          # Give the service some time to start
+          sleep 10
+          curl -sSf https://finexo.wix.sh/healthcheck || exit 1
+
+  deploy-production:
+    name: Deploy to Production
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment:
+      name: production
+      url: https://finexo.urx.ink
+    steps:
+      - name: Download Docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: finexo-image
+
+      - name: Download docker-compose
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-compose
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+
+      - name: Add host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan urx.ink >> ~/.ssh/known_hosts
+
+      - name: Deploy to production
+        run: |
+          # Transfer files to production server
+          scp finexo.tar docker-compose.yml kalairen@urx.ink:~/apps/finexo/
+
+          # SSH into server and deploy
+          ssh kalairen@urx.ink << 'EOF'
+            cd ~/apps/finexo
+            docker load < finexo.tar
+            docker compose up -d
+            docker system prune -f
+          EOF
+
+      - name: Verify deployment
+        run: |
+          # Give the service some time to start
+          sleep 10
+          curl -sSf https://finexo.urx.ink/healthcheck || exit 1

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/Francesco99975/finexo/internal/helpers"
 	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/Francesco99975/finexo/views"
@@ -16,6 +18,6 @@ func Index() echo.HandlerFunc {
 
 		html := helpers.MustRenderHTML(views.Index(data, csrfToken, nonce))
 
-		return c.Blob(200, "text/html; charset=utf-8", html)
+		return c.Blob(http.StatusOK, "text/html; charset=utf-8", html)
 	}
 }
