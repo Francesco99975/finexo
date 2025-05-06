@@ -2,7 +2,7 @@ name: CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -38,54 +38,6 @@ jobs:
           name: docker-compose
           path: docker-compose.yml
           retention-days: 7
-
-  deploy-staging:
-    name: Deploy to Staging
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: staging
-      url: https://finexo.wix.sh
-    steps:
-      - name: Download Docker image
-        uses: actions/download-artifact@v3
-        with:
-          name: finexo-image
-
-      - name: Download docker-compose
-        uses: actions/download-artifact@v3
-        with:
-          name: docker-compose
-
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add host key
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan wix.sh >> ~/.ssh/known_hosts
-
-      - name: Deploy to staging
-        run: |
-          # Transfer files to staging server
-          scp finexo.tar docker-compose.yml kalairen@wix.sh:~/apps/finexo/
-
-          # SSH into server and deploy
-          ssh kalairen@wix.sh << 'EOF'
-            cd ~/apps/finexo
-            docker load < finexo.tar
-            docker compose up -d
-            docker system prune -f
-          EOF
-
-      - name: Verify deployment
-        run: |
-          # Give the service some time to start
-          sleep 10
-          curl -sSf https://finexo.wix.sh/healthcheck || exit 1
 
   deploy-production:
     name: Deploy to Production
