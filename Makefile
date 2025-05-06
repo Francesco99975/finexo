@@ -58,8 +58,14 @@ fmt: ## Format the code
 vet: ## Analyze code for potential issues
 	go vet ./...
 
+# Add this to your existing Makefile
+.PHONY: coverage
+coverage: ## Run tests with coverage
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
+
 .PHONY: ci
-ci: test lint vet fmt ## Run all checks (tests, lint, vet, format)
+ci: test lint vet fmt coverage ## Run all checks (tests, lint, vet, format)
 
 .PHONY: staging
 staging: ## Deploy to staging environment

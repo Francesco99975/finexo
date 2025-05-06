@@ -36,10 +36,42 @@ jobs:
       - name: Run make ci
         run: make ci
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Install coverage tools
+        run: |
+          go install github.com/axw/gocov/gocov@latest
+          go install github.com/AlekSi/gocov-xml@latest
+
+      - name: Convert coverage to XML
+        run: |
+          gocov convert coverage.out | gocov-xml > coverage.xml
+
+      - name: Generate coverage report
+        uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          fail_ci_if_error: true
+          filename: coverage.xml
+          badge: true
+          format: markdown
+          output: both
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          header: test-coverage
+          recreate: true
+          path: code-coverage-results.md
+
+      - name: Generate Coverage Badge
+        uses: tj-actions/coverage-badge-go@v2
+        with:
+          filename: coverage.out
+
+      - name: Save coverage badge
+        if: github.ref == 'refs/heads/master'  # Only update badge on main branch
+        uses: tj-actions/coverage-badge-go@v2
+        with:
+          filename: coverage.out
+          pathname: .github/badges/coverage.svg
 
   build:
     name: Build
