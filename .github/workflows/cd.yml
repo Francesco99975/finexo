@@ -16,6 +16,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      # Create the .prod.env file from GitHub secrets
+      - name: Create production environment file
+        run: |
+          echo "GO_ENV=${{ secrets.GO_ENV }}" > .prod.env
+          echo "PORT=${{ secrets.PORT }}" >> .prod.env
+          echo "HOST=${{ secrets.HOST }}" >> .prod.env
+          echo "DSN=${{ secrets.DSN }}" >> .prod.env
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
@@ -26,14 +34,14 @@ jobs:
         run: make build
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: finexo-image
           path: finexo.tar
           retention-days: 7
 
       - name: Upload docker-compose file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-compose
           path: docker-compose.yml
@@ -49,19 +57,19 @@ jobs:
       url: https://finexo.urx.ink
     steps:
       - name: Download Docker image
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: finexo-image
 
       - name: Download docker-compose
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: docker-compose
 
       - name: Set up SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Add host key
         run: |
