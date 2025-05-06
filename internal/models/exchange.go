@@ -306,3 +306,16 @@ func GetExchangeByTitle(db *sqlx.DB, title string) (*Exchange, error) {
 	}
 	return &exchange, nil
 }
+
+func GetAllExchanges(db *sqlx.DB) ([]Exchange, error) {
+	query := `
+		SELECT title, fullname, prefix, suffix, cc, opentime, closetime
+		FROM exchanges
+	`
+	var exchanges []Exchange
+	err := db.Select(&exchanges, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get exchanges: %w", err)
+	}
+	return exchanges, nil
+}

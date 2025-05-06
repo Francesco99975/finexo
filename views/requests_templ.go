@@ -13,7 +13,7 @@ import (
 	"github.com/Francesco99975/finexo/views/layouts"
 )
 
-func Requests(site models.Site, csrf, nonce string) templ.Component {
+func Requests(site models.Site, csrf, nonce string, exchanges []models.Exchange) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -59,7 +59,43 @@ func Requests(site models.Site, csrf, nonce string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><!-- Ticker Symbol Input --><div><label for=\"ticker\" class=\"block text-sm font-medium text-text-primary mb-1\">Ticker Symbol</label><div class=\"relative\"><input type=\"text\" id=\"ticker\" name=\"ticker\" class=\"block w-full p-3 border border-std rounded-lg focus:ring-2 focus:ring-accent focus:border-accent bg-bg-std text-text-primary placeholder-text-secondary/60\" placeholder=\"e.g., AAPL, MSFT, GOOGL\"></div></div><!-- Exchange Dropdown --><div><label for=\"exchange\" class=\"block text-sm font-medium text-text-primary mb-1\">Exchange</label><div class=\"relative\"><select id=\"exchange\" name=\"exchange\" class=\"block w-full p-3 border border-std rounded-lg focus:ring-2 focus:ring-accent focus:border-accent bg-bg-std text-text-primary appearance-none\"><option value=\"\" disabled selected>Select an exchange</option> <option value=\"NASDAQ\">NASDAQ</option> <option value=\"NYSE\">NYSE</option> <option value=\"TSX\">Toronto Stock Exchange</option></select><div class=\"pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-text-secondary\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg></div></div></div><!-- Submit Button --><div class=\"relative\"><button type=\"submit\" class=\"w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 flex items-center justify-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5 mr-2\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z\"></path> <polyline points=\"17 21 17 13 7 13 7 21\"></polyline> <polyline points=\"7 3 7 8 15 8\"></polyline></svg> Add Security</button><div class=\"htmx-indicator absolute inset-0 flex items-center justify-center bg-primary bg-opacity-75 rounded-lg pointer-events-none\"><svg class=\"animate-spin h-5 w-5 text-white\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\"><circle class=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\"></circle> <path class=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"></path></svg></div></div></form></div></div></div><div id=\"res-container\"></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><!-- Ticker Symbol Input --><div><label for=\"ticker\" class=\"block text-sm font-medium text-text-primary mb-1\">Ticker Symbol</label><div class=\"relative\"><input type=\"text\" id=\"ticker\" name=\"ticker\" class=\"block w-full p-3 border border-std rounded-lg focus:ring-2 focus:ring-accent focus:border-accent bg-bg-std text-text-primary placeholder-text-secondary/60\" placeholder=\"e.g., AAPL, MSFT, GOOGL\"></div></div><!-- Exchange Dropdown --><div><label for=\"exchange\" class=\"block text-sm font-medium text-text-primary mb-1\">Exchange</label><div class=\"relative\"><select id=\"exchange\" name=\"exchange\" class=\"block w-full p-3 border border-std rounded-lg focus:ring-2 focus:ring-accent focus:border-accent bg-bg-std text-text-primary appearance-none\"><option value=\"\" disabled selected>Select an exchange</option> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for _, exchange := range exchanges {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<option value=\"")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var4 string
+				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(exchange.Title)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `requests.templ`, Line: 54, Col: 41}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(exchange.Fullname)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `requests.templ`, Line: 54, Col: 63}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</option>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</select><div class=\"pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-text-secondary\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"6 9 12 15 18 9\"></polyline></svg></div></div></div><!-- Submit Button --><div class=\"relative\"><button type=\"submit\" class=\"w-full bg-primary hover:bg-primary/90 text-white py-3 px-4 rounded-lg transition-colors shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 flex items-center justify-center\"><svg xmlns=\"http://www.w3.org/2000/svg\" class=\"h-5 w-5 mr-2\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z\"></path> <polyline points=\"17 21 17 13 7 13 7 21\"></polyline> <polyline points=\"7 3 7 8 15 8\"></polyline></svg> Add Security</button><div class=\"htmx-indicator absolute inset-0 flex items-center justify-center bg-primary bg-opacity-75 rounded-lg pointer-events-none\"><svg class=\"animate-spin h-5 w-5 text-white\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\"><circle class=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\"></circle> <path class=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"></path></svg></div></div></form></div></div></div><div id=\"res-container\"></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

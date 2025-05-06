@@ -21,13 +21,15 @@ func Requests() echo.HandlerFunc {
 		csrfToken := c.Get("csrf").(string)
 		nonce := c.Get("nonce").(string)
 
-		html, err := helpers.RenderHTML(views.Requests(data, csrfToken, nonce))
-
+		exchanges, err := models.GetAllExchanges(database.DB)
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, "Could not parse page about")
+			log.Errorf("failed to get exchanges: %w", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get exchanges")
 		}
 
-		return c.Blob(200, "text/html; charset=utf-8", html)
+		html := helpers.MustRenderHTML(views.Requests(data, csrfToken, nonce, exchanges))
+
+		return c.Blob(http.StatusOK, "text/html; charset=utf-8", html)
 	}
 }
 
