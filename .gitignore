@@ -18,5 +18,4 @@ seeds
 report.txt
 *dev.sh
 views/**/*.txt
-views/**/*_templ.go
 *.acl
