@@ -31,12 +31,14 @@ func main() {
 
 	database.Setup(boot.Environment.DSN)
 
-	exchanges, err := models.InitExchanges(database.DB)
-	if err != nil {
-		panic(err)
-	}
+	// exchanges, err := models.InitExchanges(database.DB)
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	boot.SetupCronJobs(exchanges)
+	// boot.SetupCronJobs(exchanges)
+
+	boot.SetupRandomizedCronJob()
 
 	e := createRouter(ctx)
 

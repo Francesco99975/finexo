@@ -26,3 +26,16 @@ func SetupCronJobs(exchanges []models.Exchange) {
 		}
 	}
 }
+
+func SetupRandomizedCronJob() {
+	err := tools.AddJob("rng", fmt.Sprintf("%d %d * * *", 0, 9), func() {
+
+		err := SeedDatabase(500, "")
+		if err != nil {
+			log.Errorf("Error while seeding database: %v", err)
+		}
+	})
+	if err != nil {
+		log.Errorf("Error while creating job: %v", err)
+	}
+}

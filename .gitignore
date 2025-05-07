@@ -19,3 +19,4 @@ report.txt
 *dev.sh
 views/**/*.txt
 *.acl
+*.out
