@@ -95,14 +95,17 @@ jobs:
           sudo mv sops /usr/local/bin/sops
 
       - name: Restore AGE private key
+        env:
+          AGE_PRIVATE_KEY: ${{ secrets.AGE_PRIVATE_KEY }}
         run: |
-          echo ${{ secrets.AGE_PRIVATE_KEY }} > age-key.txt
+          echo "$AGE_PRIVATE_KEY" > age-key.txt
           chmod 600 age-key.txt
 
       - name: Decrypt seeds bundle
+        env:
+          SOPS_AGE_KEY_FILE: ./age-key.txt
         run: |
           sops --decrypt \
-               --age-key-file age-key.txt \
                --output seeds.tar.gz \
                seeds.tar.gz.enc
 
