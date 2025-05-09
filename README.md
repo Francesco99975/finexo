@@ -1,6 +1,8 @@
 # Finexo API
 
-![Coverage](.github/badges/coverage.svg)
+[![CI](https://github.com/Francesco99975/finexo/actions/workflows/ci.yml/badge.svg)](https://github.com/Francesco99975/finexo/actions/workflows/ci.yml)
+
+[![Coverage](.github/badges/coverage.svg)](https://github.com/Francesco99975/finexo/actions/workflows/ci.yml)
 
 Finexo is a financial data API that provides information on stocks, ETFs, and REITs. It aggregates data from multiple sources, including Yahoo Finance, DividendHistory.org, and MarketBeat. The API allows users to query securities and obtain detailed financial information.
 
