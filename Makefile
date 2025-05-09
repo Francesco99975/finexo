@@ -30,7 +30,7 @@ db: ## Connect to the local development database
 .PHONY: build
 build: ## Build the Docker image
 	cd client && npm install && npm run build && cd ..
-	docker buildx build -t $(IMAGE_NAME) .
+	docker buildx build -t $(IMAGE_NAME) . --load
 	docker save $(IMAGE_NAME) > $(PROJECT_NAME).tar
 
 .PHONY: run

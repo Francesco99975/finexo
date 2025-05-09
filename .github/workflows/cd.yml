@@ -38,11 +38,11 @@ jobs:
           chmod 600 age-key.txt
 
       - name: Decrypt seeds bundle
-      env:
+        env:
           SOPS_AGE_KEY_FILE: ./age-key.txt
         run: |
           sops --decrypt \
-               --output seeds.tar.gz \
+                --output seeds.tar.gz \
                seeds.tar.gz.enc
 
       - name: Unpack seeds
