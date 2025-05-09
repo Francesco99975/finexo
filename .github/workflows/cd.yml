@@ -14,7 +14,31 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y age sops tar
+
+      - name: Restore AGE private key
+        env:
+          AGE_PRIVATE_KEY: ${{ secrets.AGE_PRIVATE_KEY }}
+        run: |
+          echo "$AGE_PRIVATE_KEY" > age-key.txt
+          chmod 600 age-key.txt
+
+       - name: Decrypt seeds bundle
+        run: |
+          sops --decrypt \
+               --age-key-file age-key.txt \
+               --output seeds.tar.gz \
+               seeds.tar.gz.enc
+
+      - name: Unpack seeds
+        run: |
+          tar xzf seeds.tar.gz
+          rm seeds.tar.gz
 
       # Create the .prod.env file from GitHub secrets
       - name: Create production environment file

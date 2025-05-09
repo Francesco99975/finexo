@@ -67,6 +67,15 @@ coverage: ## Run tests with coverage
 .PHONY: ci
 ci: test lint vet fmt coverage ## Run all checks (tests, lint, vet, format)
 
+.PHONY: encrypt
+encrypt: ## Encrypt sensitive data
+	tar czf seeds.tar.gz seeds/ && \
+	SOPS_AGE_RECIPIENT=$$(cat age-key.pub) && \
+	sops --encrypt \
+		--age "$$SOPS_AGE_RECIPIENT" \
+		--output seeds.tar.gz.enc \
+		seeds.tar.gz
+
 .PHONY: staging
 staging: ## Deploy to staging environment
 	scp finexo.tar kalairen@wix.sh:~/apps/finexo

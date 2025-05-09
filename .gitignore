@@ -21,3 +21,5 @@ views/**/*.txt
 *.acl
 *.out
 reports/*
+age-key*
+*.tar.gz
