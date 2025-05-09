@@ -31,10 +31,8 @@ jobs:
           sudo mv sops /usr/local/bin/sops
 
       - name: Restore AGE private key
-        env:
-          AGE_PRIVATE_KEY: ${{ secrets.AGE_PRIVATE_KEY }}
         run: |
-          echo "$AGE_PRIVATE_KEY" > age-key.txt
+          echo ${{ secrets.AGE_PRIVATE_KEY }} > age-key.txt
           chmod 600 age-key.txt
 
       - name: Decrypt seeds bundle
