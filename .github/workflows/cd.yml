@@ -84,6 +84,8 @@ jobs:
           # SSH into server and deploy
           ssh kalairen@urx.ink << 'EOF'
             cd ~/apps/finexo
+            mkdir seeds
+            touch seeds/discovered.csv
             docker load < finexo.tar
             docker compose up -d
             docker system prune -f

@@ -25,6 +25,9 @@ services:
       - ROD_CACHE_DIR=/go/bin/.cache/rod
     volumes:
       - rod-cache:/go/bin/.cache/rod
+      - ./seeds/discovered.csv:/go/bin/seeds/discovered.csv
+    networks:
+      - finexonet
     cap_add:
       - SYS_ADMIN
     healthcheck:

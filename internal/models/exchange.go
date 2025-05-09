@@ -270,7 +270,7 @@ func CreateExchange(db *sqlx.DB, exchange *Exchange) error {
 		INSERT INTO exchanges (title, fullname, prefix, suffix, cc, opentime, closetime) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (title) DO NOTHING
 	`
 
-	_, err = tx.Exec(query, exchange.Title, exchange.Title, exchange.Prefix, exchange.Suffix, exchange.CC, exchange.OpenTime, exchange.CloseTime)
+	_, err = tx.Exec(query, exchange.Title, exchange.Fullname, exchange.Prefix, exchange.Suffix, exchange.CC, exchange.OpenTime, exchange.CloseTime)
 
 	if err != nil {
 		return fmt.Errorf("failed to insert exchange: %w", err)
@@ -318,4 +318,18 @@ func GetAllExchanges(db *sqlx.DB) ([]Exchange, error) {
 		return nil, fmt.Errorf("failed to get exchanges: %w", err)
 	}
 	return exchanges, nil
+}
+
+func GetAllTickerFromExchange(db *sqlx.DB, exchange string) ([]string, error) {
+	query := `
+		SELECT CONCAT(tiker, ':', exchange)
+		FROM securities
+		WHERE exchange = $1
+	`
+	var tickers []string
+	err := db.Select(&tickers, query, exchange)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tickers: %w", err)
+	}
+	return tickers, nil
 }

@@ -31,14 +31,16 @@ func main() {
 
 	database.Setup(boot.Environment.DSN)
 
-	// exchanges, err := models.InitExchanges(database.DB)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	exchanges, err := models.InitExchanges(database.DB)
+	if err != nil {
+		panic(err)
+	}
 
-	// boot.SetupCronJobs(exchanges)
+	boot.SetupCronJobs(exchanges)
 
-	boot.SetupRandomizedCronJob()
+	boot.SetupDiscoveryCronJob()
+
+	boot.SetupReportCleanupJob()
 
 	e := createRouter(ctx)
 
@@ -57,7 +59,12 @@ func main() {
 
 	if isDBEmpty {
 		go func() {
-			err = boot.SeedDatabase(500, "")
+			load := 2000
+			if boot.Environment.GoEnv == "development" {
+				load = 50
+			}
+
+			err = boot.SeedDatabase(load)
 			if err != nil {
 				e.Logger.Fatal(err)
 			}

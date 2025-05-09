@@ -70,6 +70,11 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	log.Debugf("Scraping %s:%s", security.Ticker, security.Exchange)
 
+	if discoverer != nil && models.SecurityExists(database.DB, security.Ticker, security.Exchange) {
+		log.Warnf("Security %s:%s already exists. Skipping during Discovery mode", security.Ticker, security.Exchange)
+		return nil
+	}
+
 	var yahooScrapingUrl string
 
 	if exchange.Suffix.Valid {
@@ -1056,9 +1061,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	switch security.Typology {
 	case "STOCK":
 
-		// Check if security already exists in DB
-		exists := models.SecurityExists(database.DB, security.Ticker, security.Exchange)
-		if !exists {
+		if discoverer != nil {
 			start := time.Now()
 			err = models.CreateStock(database.DB, &security)
 			if err != nil {
@@ -1335,9 +1338,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		// 	etf.Holdings = *scrapedSeekingAlphaData.Holdings
 		// }
 
-		// Check if security already exists
-		exists := models.SecurityExists(database.DB, security.Ticker, security.Exchange)
-		if !exists {
+		if discoverer != nil {
 			start := time.Now()
 			err = models.CreateETF(database.DB, &etf)
 			if err != nil {
@@ -1383,9 +1384,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		// 	}
 		// }
 
-		// Check if security already exists
-		exists := models.SecurityExists(database.DB, security.Ticker, security.Exchange)
-		if !exists {
+		if discoverer != nil {
 			start := time.Now()
 			err = models.CreateReit(database.DB, &reit)
 			if err != nil {

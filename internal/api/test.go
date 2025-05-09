@@ -50,7 +50,7 @@ func TestScrape() echo.HandlerFunc {
 			}
 		}
 
-		err = boot.SeedDatabase(load, "")
+		err = boot.SeedDatabase(load)
 		if err != nil {
 			log.Errorf("Failed to seed database: %v", err)
 		}

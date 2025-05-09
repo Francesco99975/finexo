@@ -20,3 +20,4 @@ report.txt
 views/**/*.txt
 *.acl
 *.out
+reports/*
