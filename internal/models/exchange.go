@@ -1,6 +1,7 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -257,6 +258,37 @@ func InitExchanges(db *sqlx.DB) ([]Exchange, error) {
 	return exchanges, nil
 }
 
+func GroupExachengesByTimeframe(db *sqlx.DB) (map[string][]string, error) {
+	var rawJSON []byte
+
+	// 2) Run the query into the []byte
+	err := db.Get(&rawJSON, `
+        WITH by_timeframe AS (
+          SELECT
+            to_char(opentime,  'HH24:MI')
+              || '-'
+              || to_char(closetime, 'HH24:MI') AS timeframe,
+            array_agg(title ORDER BY title)        AS titles
+          FROM exchanges
+          WHERE opentime IS NOT NULL
+            AND closetime IS NOT NULL
+          GROUP BY opentime, closetime
+        )
+        SELECT json_object_agg(timeframe, titles)
+          FROM by_timeframe;
+    `)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3) Unmarshal into a Go map
+	var exchangesByTimeframe map[string][]string
+	if err := json.Unmarshal(rawJSON, &exchangesByTimeframe); err != nil {
+		return nil, err
+	}
+	return exchangesByTimeframe, nil
+}
+
 func CreateExchange(db *sqlx.DB, exchange *Exchange) error {
 	tx, err := db.Beginx()
 	if err != nil {
@@ -320,14 +352,22 @@ func GetAllExchanges(db *sqlx.DB) ([]Exchange, error) {
 	return exchanges, nil
 }
 
-func GetAllTickerFromExchange(db *sqlx.DB, exchange string) ([]string, error) {
+func GetAllTickersFromExchanges(db *sqlx.DB, exchanges []string) ([]string, error) {
 	query := `
-		SELECT CONCAT(tiker, ':', exchange)
-		FROM securities
-		WHERE exchange = $1
+		SELECT CONCAT(ticker, ':', exchange)
+              FROM securities
+              WHERE exchange IN (?)
 	`
+
+	inQuery, args, err := sqlx.In(query, exchanges)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build query: %w", err)
+	}
+
+	inQuery = db.Rebind(inQuery)
+
 	var tickers []string
-	err := db.Select(&tickers, query, exchange)
+	err = db.Select(&tickers, inQuery, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tickers: %w", err)
 	}

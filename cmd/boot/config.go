@@ -13,6 +13,8 @@ type Config struct {
 	GoEnv          string
 	DSN            string
 	RapidApiSecret string
+	MaxWorkers     int
+	DefaultLoad    int
 }
 
 var Environment *Config
@@ -23,12 +25,22 @@ func LoadEnvVariables() error {
 		return fmt.Errorf("cannot load environment variables")
 	}
 
+	goenv := os.Getenv("GO_ENV")
+	var maxWorkers int = 7
+	var defaultLoad int = 50
+	if goenv == "production" {
+		maxWorkers = 3
+		defaultLoad = 750
+	}
+
 	Environment = &Config{
 		Port:           os.Getenv("PORT"),
 		Host:           os.Getenv("HOST"),
-		GoEnv:          os.Getenv("GO_ENV"),
+		GoEnv:          goenv,
 		DSN:            os.Getenv("DSN"),
 		RapidApiSecret: os.Getenv("RAPID_API_SECRET"),
+		MaxWorkers:     maxWorkers,
+		DefaultLoad:    defaultLoad,
 	}
 
 	return err

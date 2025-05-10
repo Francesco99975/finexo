@@ -13,8 +13,6 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-const maxWorkers = 7
-
 func SyncDatabase(seeds []string) error {
 	reportFilename := fmt.Sprintf("reports/sync/scraping-report_%s.log", time.Now().Format("2006-01-02_15-04-05"))
 	ScraperReporter, err := helpers.NewReporter(reportFilename)
@@ -34,7 +32,7 @@ func SyncDatabase(seeds []string) error {
 	go manager.MonitorBrowserHealth()
 
 	var wg sync.WaitGroup
-	sem := semaphore.NewWeighted(maxWorkers) // Control concurrency
+	sem := semaphore.NewWeighted(int64(Environment.MaxWorkers)) // Control concurrency
 	var progress atomic.Uint32
 	var failed atomic.Uint32
 
@@ -128,7 +126,7 @@ func SeedDatabase(load int) error {
 	go manager.MonitorBrowserHealth()
 
 	var wg sync.WaitGroup
-	sem := semaphore.NewWeighted(maxWorkers) // Control concurrency
+	sem := semaphore.NewWeighted(int64(Environment.MaxWorkers)) // Control concurrency
 	var progress atomic.Uint32
 	var failed atomic.Uint32
 

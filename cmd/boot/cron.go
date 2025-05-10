@@ -2,6 +2,8 @@ package boot
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Francesco99975/finexo/internal/database"
@@ -11,11 +13,23 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-func SetupCronJobs(exchanges []models.Exchange) {
-	for _, exchange := range exchanges {
+func SetupCronJobs(timeframes map[string][]string) {
+	for timeframe, exchanges := range timeframes {
 
-		err := tools.AddJob(exchange.Title, fmt.Sprintf("%d %d * * *", exchange.CloseTime.Time.Minute(), exchange.CloseTime.Time.Hour()), func() {
-			seeds, err := models.GetAllTickerFromExchange(database.DB, exchange.Title)
+		closeTime := strings.Split(timeframe, "-")[1]
+		minute, err := strconv.Atoi(strings.Split(closeTime, ":")[1])
+		if err != nil {
+			log.Errorf("<CRON> Error while parsing minute: %v", err)
+			continue
+		}
+		hour, err := strconv.Atoi(strings.Split(closeTime, ":")[0])
+		if err != nil {
+			log.Errorf("<CRON> Error while parsing hour: %v", err)
+			continue
+		}
+
+		err = tools.AddJob(timeframe, fmt.Sprintf("%d %d * * *", minute, hour), func() {
+			seeds, err := models.GetAllTickersFromExchanges(database.DB, exchanges)
 			if err != nil || len(seeds) == 0 {
 				log.Errorf("<CRON> Error while getting seeds: %v", err)
 				return
@@ -34,12 +48,7 @@ func SetupCronJobs(exchanges []models.Exchange) {
 func SetupDiscoveryCronJob() {
 	err := tools.AddJob("rng", fmt.Sprintf("%d %d * * *", 0, 9), func() {
 
-		load := 2000
-		if Environment.GoEnv == "development" {
-			load = 50
-		}
-
-		err := SeedDatabase(load)
+		err := SeedDatabase(Environment.DefaultLoad)
 		if err != nil {
 			log.Errorf("<CRON> Error while seeding database: %v", err)
 		}

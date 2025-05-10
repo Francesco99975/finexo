@@ -67,7 +67,6 @@ jobs:
           filename: coverage.out
 
       - name: Save coverage badge
-        if: github.ref == 'refs/heads/master'  # Only update badge on main branch
         uses: tj-actions/coverage-badge-go@v2
         with:
           filename: coverage.out

@@ -31,12 +31,17 @@ func main() {
 
 	database.Setup(boot.Environment.DSN)
 
-	exchanges, err := models.InitExchanges(database.DB)
+	_, err = models.InitExchanges(database.DB)
 	if err != nil {
 		panic(err)
 	}
 
-	boot.SetupCronJobs(exchanges)
+	timeframes, err := models.GroupExachengesByTimeframe(database.DB)
+	if err != nil {
+		panic(err)
+	}
+
+	boot.SetupCronJobs(timeframes)
 
 	boot.SetupDiscoveryCronJob()
 
@@ -59,12 +64,7 @@ func main() {
 
 	if isDBEmpty {
 		go func() {
-			load := 2000
-			if boot.Environment.GoEnv == "development" {
-				load = 50
-			}
-
-			err = boot.SeedDatabase(load)
+			err = boot.SeedDatabase(boot.Environment.DefaultLoad)
 			if err != nil {
 				e.Logger.Fatal(err)
 			}
