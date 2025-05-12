@@ -79,4 +79,4 @@ encrypt: ## Encrypt sensitive data
 
 .PHONY: staging
 staging: ## Deploy to staging environment
-	scp finexo.tar kalairen@wix.sh:~/apps/finexo
+	scp finexo.tar seeds/discovered.csv kalairen@wix.sh:~/apps/finexo

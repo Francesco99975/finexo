@@ -21,6 +21,10 @@ import (
 
 func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManager, sem *semaphore.Weighted, mwg *sync.WaitGroup, discoverer *Discoverer) error {
 
+	if discoverer != nil {
+		log.Info("Discovery mode enabled")
+	}
+
 	if sem != nil && mwg != nil {
 		defer mwg.Done()
 
@@ -1495,20 +1499,16 @@ func findExchangeInPage(ticker string, scrapingUrl string, browser *rod.Browser)
 
 		exchange = strings.ToUpper(exchange)
 
-		if !strings.Contains(exchange, "NYSE") && !strings.Contains(exchange, "NASDAQ") {
-			return "", fmt.Errorf("invalid exchange: %s - target: %s", exchange, ticker)
-		}
+		log.Debugf("Found Exchange: %s", exchange)
 
 		if strings.Contains(exchange, "NYSE") {
 			exchange = "NYSE"
-		}
-
-		if strings.Contains(exchange, "NASDAQ") {
+		} else if strings.Contains(exchange, "NASDAQ") {
 			exchange = "NASDAQ"
-		}
-
-		if strings.Contains(exchange, "CBOE US") {
+		} else if strings.Contains(exchange, "CBOE US") {
 			exchange = "CBOEUS"
+		} else {
+			return "", fmt.Errorf("invalid exchange: %s - target: %s", exchange, ticker)
 		}
 
 		return exchange, nil

@@ -27,6 +27,7 @@ func createRouter(ctx context.Context) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.RemoveTrailingSlash())
+	e.Use(middlewares.RateLimiter)
 	// Apply Gzip middleware, but skip it for /metrics
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
@@ -93,9 +94,11 @@ func createRouter(ctx context.Context) *echo.Echo {
 	apiv1.GET("/reits", api.GetREITs())
 	apiv1.GET("/reit/:id", api.GetREIT())
 
-	apiv1.GET("/test/:seed", api.Test())
-	apiv1.GET("/test/seeds", api.TestSeeds())
-	apiv1.GET("/test/scrape/:load", api.TestScrape())
+	if boot.Environment.GoEnv == "development" {
+		apiv1.GET("/test/:seed", api.Test())
+		apiv1.GET("/test/seeds", api.TestSeeds())
+		apiv1.GET("/test/scrape/:load", api.TestScrape())
+	}
 
 	e.HTTPErrorHandler = serverErrorHandler
 
