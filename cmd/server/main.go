@@ -71,6 +71,15 @@ func main() {
 		}()
 	}
 
+	if boot.Environment.GoEnv == "development" {
+		go func() {
+			err = boot.SyncDatabase([]string{"YNVD:CBOE", "ENB:TSX"})
+			if err != nil {
+				panic(err)
+			}
+		}()
+	}
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit

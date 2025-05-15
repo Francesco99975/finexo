@@ -361,7 +361,7 @@ func GetAllTickersFromExchanges(db *sqlx.DB, exchanges []string) ([]string, erro
 
 	inQuery, args, err := sqlx.In(query, exchanges)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build query: %w", err)
+		return nil, fmt.Errorf("failed to build query <%s>: %w", inQuery, err)
 	}
 
 	inQuery = db.Rebind(inQuery)
@@ -369,7 +369,7 @@ func GetAllTickersFromExchanges(db *sqlx.DB, exchanges []string) ([]string, erro
 	var tickers []string
 	err = db.Select(&tickers, inQuery, args...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get tickers: %w", err)
+		return nil, fmt.Errorf("failed to get tickers from query <%s> with args <%v>: %w", inQuery, args, err)
 	}
 	return tickers, nil
 }

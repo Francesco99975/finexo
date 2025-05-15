@@ -26,6 +26,7 @@ services:
     volumes:
       - rod-cache:/go/bin/.cache/rod
       - ./seeds/discovered.csv:/go/bin/seeds/discovered.csv
+      - ./reports:/go/bin/reports
     networks:
       - finexonet
     cap_add:

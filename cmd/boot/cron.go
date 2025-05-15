@@ -6,9 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Francesco99975/finexo/internal/database"
 	"github.com/Francesco99975/finexo/internal/helpers"
-	"github.com/Francesco99975/finexo/internal/models"
 	"github.com/Francesco99975/finexo/internal/tools"
 	"github.com/labstack/gommon/log"
 )
@@ -29,15 +27,7 @@ func SetupCronJobs(timeframes map[string][]string) {
 		}
 
 		err = tools.AddJob(timeframe, fmt.Sprintf("%d %d * * *", minute, hour), func() {
-			seeds, err := models.GetAllTickersFromExchanges(database.DB, exchanges)
-			if err != nil || len(seeds) == 0 {
-				log.Errorf("<CRON> Error while getting seeds: %v", err)
-				return
-			}
-			err = SyncDatabase(seeds)
-			if err != nil {
-				log.Errorf("<CRON> Error while syncing database: %v", err)
-			}
+			syncDatabaseJob(exchanges)
 		})
 		if err != nil {
 			log.Errorf("<CRON> Error while creating sync job: %v", err)

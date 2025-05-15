@@ -2,6 +2,7 @@ package boot
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,7 +40,14 @@ func SyncDatabase(seeds []string) error {
 	for _, seed := range seeds {
 		wg.Add(1)
 
-		go func(seed string) {
+		parts := strings.Split(seed, ":")
+		if len(parts) != 2 {
+			continue
+		}
+
+		ticker, exchange := parts[0], parts[1]
+
+		go func(ticker string, exchange string) {
 
 			defer func() {
 				if r := recover(); r != nil {
@@ -58,7 +66,7 @@ func SyncDatabase(seeds []string) error {
 
 			}()
 
-			err := tools.Scrape(seed, nil, manager, sem, &wg, nil)
+			err := tools.Scrape(ticker, &exchange, manager, sem, &wg, nil)
 			if err != nil {
 				helpers.RecordBusinessEvent("sync_failed")
 				failed.Add(1)
@@ -70,7 +78,7 @@ func SyncDatabase(seeds []string) error {
 			}
 			helpers.RecordBusinessEvent("sync_successful")
 
-		}(seed)
+		}(ticker, exchange)
 	}
 
 	wg.Wait()
