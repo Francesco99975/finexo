@@ -124,7 +124,7 @@ jobs:
       - name: Deploy to production
         run: |
           # Transfer files to production server
-          scp finexo.tar docker-compose.yml kalairen@urx.ink:~/apps/finexo/
+          scp finexo.tar docker-compose.yml seeds/discovery.csv kalairen@urx.ink:~/apps/finexo/
 
           # SSH into server and deploy
           ssh kalairen@urx.ink << 'EOF'
