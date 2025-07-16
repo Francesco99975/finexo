@@ -26,7 +26,7 @@ func SetupCronJobs(timeframes map[string][]string) {
 			continue
 		}
 
-		err = tools.AddJob(timeframe, fmt.Sprintf("%d %d * * *", minute, hour), func() {
+		err = tools.AddJob(timeframe, fmt.Sprintf("%d %d * * 5", minute, hour), func() {
 			syncDatabaseJob(exchanges)
 		})
 		if err != nil {
@@ -36,7 +36,7 @@ func SetupCronJobs(timeframes map[string][]string) {
 }
 
 func SetupDiscoveryCronJob() {
-	err := tools.AddJob("rng", fmt.Sprintf("%d %d * * *", 0, 9), func() {
+	err := tools.AddJob("rng", fmt.Sprintf("%d %d * * 0", 0, 9), func() {
 
 		err := SeedDatabase(Environment.DefaultLoad)
 		if err != nil {
