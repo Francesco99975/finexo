@@ -412,22 +412,22 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 
 	scrapedTypologyREITHint, err := page.Timeout(5 * time.Second).Element(YH_REIT_HINT_SELECTOR)
 	if err != nil {
-		return fmt.Errorf("typology hint not found in page - target: %s:%s", security.Ticker, security.Exchange)
+		log.Warnf("typology hint not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	scrapedTypologyREITHintStr, err := scrapedTypologyREITHint.Text()
 	if err != nil {
-		return fmt.Errorf("failed to get typology hint text: %v. For seed %s", err, seed)
+		log.Warnf("failed to get typology hint text: %v. For seed %s", err, seed)
 	}
 
 	scrapdTypologyETFHint, err := page.Timeout(5 * time.Second).Element(YH_ETF_HINT_SELECTOR)
 	if err != nil {
-		return fmt.Errorf("typology ETF hint not found in page - target: %s:%s", security.Ticker, security.Exchange)
+		log.Warnf("typology ETF hint not found in page - target: %s:%s", security.Ticker, security.Exchange)
 	}
 
 	scrapedTypologyETFHintStr, err := scrapdTypologyETFHint.Text()
 	if err != nil {
-		return fmt.Errorf("failed to get typology ETF hint text: %v. For seed %s", err, seed)
+		log.Warnf("failed to get typology ETF hint text: %v. For seed %s", err, seed)
 	}
 
 	scrapedTypology := "STOCK"
