@@ -160,6 +160,7 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	scrapedMarketBeatDataValues, err := page.Timeout(5 * time.Second).Elements(MB_DATA_VALUES)
 	if err != nil || uperr != nil || len(scrapedMarketBeatDataKeys) == 0 || len(scrapedMarketBeatDataValues) == 0 {
 		log.Warnf("failed to scrape MarketBeat data: %v. For seed %s", err, seed)
+
 	} else {
 		scrapedMarketBeatDataKeysArray := helpers.MapSlice(scrapedMarketBeatDataKeys, func(e *rod.Element) string {
 			return e.MustText()
@@ -289,9 +290,9 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 	}
 
 	tableIndex := -1
-	payoutDates, err := page.Elements("#dividend_table tr td:nth-child(2)")
+	payoutDates, err := page.Elements("dividend-table .tabulator-cell[tabulator-field='payout_date']")
 	if err != nil {
-		log.Warnf("failed to scrape Dividend History: %v. For seed %s", err, seed)
+		log.Warnf("failed to scrape Dividend History's payout dates: %v. For seed %s", err, seed)
 	} else {
 
 		for index, payoutDate := range payoutDates {
@@ -309,29 +310,31 @@ func Scrape(seed string, explicit_exchange *string, manager *models.BrowserManag
 		}
 	}
 
-	rows, err := page.Elements("table#dividend_table tr")
+	rows, err := page.Elements("dividend-table .tabulator-row")
 	if err != nil {
 		log.Warnf("failed to scrape Dividend History: %v. For seed %s", err, seed)
 	} else if tableIndex != -1 && len(rows) > tableIndex && len(rows) >= 3 {
-		relevantRowStr := rows[tableIndex].MustText()
-		log.Debugf("Scraped Dividend History data relevantRowStr: %s", relevantRowStr)
-		relevantRowArr := strings.Split(relevantRowStr, "\t")
+		pd := rows[tableIndex].MustElement(".tabulator-cell[tabulator-field='payout_date']").MustText()
+		log.Debugf("Scraped Dividend History payout date: %s", pd)
+		edd := rows[tableIndex].MustElement(".tabulator-cell[tabulator-field='ex-dividend_date']").MustText()
+		log.Debugf("Scraped Dividend History ex-dividend date: %s", edd)
 
-		scrapedExDividendDate, err := time.Parse("2006-01-02", relevantRowArr[0])
+		scrapedExDividendDate, err := time.Parse("2006-01-02", edd)
 		if err != nil {
 			log.Warnf("failed to parse ex-dividend date: %v. For seed %s", err, seed)
 		} else {
 			dividendScrap.ExDivDate = &scrapedExDividendDate
 		}
 
-		scrapedPayoutDate, err := time.Parse("2006-01-02", relevantRowArr[1])
+		scrapedPayoutDate, err := time.Parse("2006-01-02", pd)
 		if err != nil {
 			log.Warnf("failed to parse payout date: %v. For seed %s", err, seed)
 		} else {
 			dividendScrap.PayoutDate = &scrapedPayoutDate
 		}
 
-		scrapedLadStr := relevantRowArr[2]
+		scrapedLadStr := rows[tableIndex].MustElement(".tabulator-cell[tabulator-field='cash_amount']").MustText()
+		log.Debugf("Scraped Dividend History cash amount (LAD): %s", scrapedLadStr)
 		scrapedLadStr = helpers.NormalizeFloatStrToIntStr(scrapedLadStr)
 		if len(scrapedLadStr) >= 3 {
 			scrapedLadStr = scrapedLadStr[:3]

@@ -378,8 +378,10 @@ func CalculateInvestment(sid string,
 		if year == 1 {
 			// Determine first month (payout month)
 			currentMonth := time.Now().Month()
-			startMonth = payoutMonth
-			if startMonth == 0 {
+
+			if payoutMonth > int(currentMonth) {
+				startMonth = payoutMonth
+			} else {
 				startMonth = int(currentMonth) + 1 // Default to next month if not provided
 				if startMonth > 12 {
 					startMonth = 1
